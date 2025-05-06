@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+{% block content %}
+{% load static %}
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>ComercialJM</title>
+  <link rel="stylesheet" href="{% static 'registration/css/login.css' %}">
+</head>
+<body>
+  <div class="header-logo">
+    <img src="{% static 'registration/img/logo.png' %}" alt="Logo Comercial JM">
+    <span>Comercial JM</span>
+  </div>
+  <div class="welcome-container">
+    <div class="container">
+      <div class="login-container">
+        <h4 class="mb-3 text-blue text-center">Iniciar Sesión</h4>
+        {% if form.non_field_errors %}
+        <p style="color:red">Credenciales erroneas</p>
+        {% endif %}
+        <form class="login-form" action="" method="post">
+          {% csrf_token %}
+          <div class="mb-3 input-icon">
+            <label for="user" style="display: flex; align-items: center;"><i class="fas fa-user" style="margin-top: 16px; margin-left: 5px;"></i> Usuario:</label>
+            <input type="text" name="username" class="form-control" />
+            <span class="feedback body-small text-regular"></span>
+          </div>
+          <div class="mb-3 input-icon">
+            <label for="password" style="display: flex; align-items: center;"><i class="fas fa-lock" style="margin-top: 16px;margin-left: 5px;"></i> Contraseña:</label>
+            <input type="password" name="password" class="form-control" id="password" />
+            <span class="feedback body-small text-regular"></span>
+          </div>
+
+          <div class="reset-password-wrapper">
+            <a href="{% url 'password_reset' %}"
+              class="body-normal text-blue text-decoration-underline cursor-pointer reset-password-link">Olvidé mi
+              contraseña</a>
+          </div>
+          
+          <div class="submit-button-wrapper">
+            <button type="submit" class="btn btn-primary">
+              <span>Iniciar Sesión</span>
+            </button>
+          </div>
+          
+        </form>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+</html>
+
+{% endblock %}
