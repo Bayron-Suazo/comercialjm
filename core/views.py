@@ -18,14 +18,38 @@ def home(request):
     return redirect('login')
 
 @login_required
-def check_profile(request):  
+def check_profile(request):
     try:
-        profile = Profile.objects.filter(user_id=request.user.id).get()    
-    except:
-        messages.add_message(request, messages.INFO, 'Hubo un error con su usuario, por favor contactese con los administradores')              
+        profile = Profile.objects.get(user=request.user)
+    except Profile.DoesNotExist:
+        messages.error(request, 'Hubo un error con su usuario, por favor contáctese con los administradores')
         return redirect('login')
-    if profile.group_id == 1:   
-        #redirigir a dashboard de usuarios  
-        return redirect('login')
+
+    groups = profile.groups.all()
+
+    if groups.count() == 1:
+        group_name = groups.first().name
+        return redirect_to_dashboard(group_name)
+
+    elif groups.count() > 1:
+        return render(request, 'core/seleccionar_rol.html', {'groups': groups})
+    else:
+        messages.error(request, 'No tiene roles asignados')
+        return redirect('logout')
+
+def redirect_to_dashboard(group_name):
+    if group_name == 'Administrador':
+        return redirect('listado_de_usuarios')  # ruta de admin
+    elif group_name == 'Empleado':
+        return redirect('panel_empleado')  # ruta de empleado
     else:
         return redirect('logout')
+
+@csrf_exempt
+@login_required
+def seleccionar_rol(request):
+    if request.method == 'POST':
+        group_name = request.POST.get('group_name')
+        return redirect_to_dashboard(group_name)
+    else:
+        return redirect('check_profile')
