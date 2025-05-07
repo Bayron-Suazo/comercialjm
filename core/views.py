@@ -39,7 +39,7 @@ def check_profile(request):
 
 def redirect_to_dashboard(group_name):
     if group_name == 'Administrador':
-        return redirect('listado_de_usuarios')  # ruta de admin
+        return redirect('pagina_prueba')  # ruta de admin
     elif group_name == 'Empleado':
         return redirect('panel_empleado')  # ruta de empleado
     else:
@@ -53,3 +53,4 @@ def seleccionar_rol(request):
         return redirect_to_dashboard(group_name)
     else:
         return redirect('check_profile')
+    

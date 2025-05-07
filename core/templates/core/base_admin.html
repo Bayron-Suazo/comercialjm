@@ -1,0 +1,106 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Comercial JM{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'core/css/base_admin.css' %}">
+    <script src="{% static 'core/js/base_admin.js' %}" defer></script>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <img src="{% static 'core/img/logo.png' %}" alt="Logo Comercial JM" class="sidebar-logo">
+            <div class="logo-text">Comercial JM</div>
+        </div>
+
+        <ul class="nav">
+            <li>
+                <button class="dropdown-btn">Productos</button>
+                <ul class="dropdown-container">
+                    <li><a href="#">Dashboard de productos</a></li>
+                    <li><a href="#">Lotes</a></li>
+                    <li><a href="#">Mermas</a></li>
+                    <li><a href="#">Carga masiva</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <button class="dropdown-btn">Proveedores</button>
+                <ul class="dropdown-container">
+                    <li><a href="#">Dashboard de proveedores</a></li>
+                    <li><a href="#">Listado de proveedores</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <button class="dropdown-btn">Compras</button>
+                <ul class="dropdown-container">
+                    <li><a href="#">Dashboard de compras</a></li>
+                    <li><a href="#">Ordenes de compra</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <button class="dropdown-btn">Clientes</button>
+                <ul class="dropdown-container">
+                    <li><a href="#">Dashboard de clientes</a></li>
+                    <li><a href="#">Listado de clientes</a></li>
+                    <li><a href="#">Beneficios y descuentos</a></li>
+                    <li><a href="#">Ranking de clientes</a></li>
+                    <li><a href="#">Carga masiva</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <button class="dropdown-btn">Ventas</button>
+                <ul class="dropdown-container">
+                    <li><a href="#">Dashboard de ventas</a></li>
+                    <li><a href="#">Listado de ventas</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <button class="dropdown-btn">Reportería</button>
+                <ul class="dropdown-container">
+                    <li><a href="#">Ventas vs compras</a></li>
+                    <li><a href="#">Ventas</a></li>
+                    <li><a href="#">Compras</a></li>
+                    <li><a href="#">Mermas</a></li>
+                    <li><a href="#">Ganancias vs pérdidas</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <button class="dropdown-btn">Usuarios</button>
+                <ul class="dropdown-container">
+                    <li><a href="#">Dashboard</a></li>
+                    <li><a href="#">Listado</a></li>
+                    <li><a href="#">Carga masiva</a></li>
+                    <li><a href="#">Perfil</a></li>
+                </ul>
+            </li>
+            
+        </ul>
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="initials">
+                    {{ request.user.first_name|default:request.user.username|slice:":1" }}{{ request.user.last_name|slice:":1" }}
+                </div>
+                <div class="info">
+                    <div>{{ request.user.get_full_name|default:request.user.username }}</div>
+                    <div>Administrador</div>
+                </div>
+            </div>
+            <div class="volver-login">
+                <a href="{% url 'login' %}" class="btn-volver">Cerrar Sesión</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        {% block content %}
+        {% endblock %}
+    </div>
+</body>
+</html>

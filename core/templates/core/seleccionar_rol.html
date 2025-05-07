@@ -16,6 +16,9 @@
                 <button type="submit">{{ group.name }}</button>
             </form>
         {% endfor %}
+        <div class="volver-login">
+            <a href="{% url 'login' %}" class="btn-volver">Cerrar Sesión</a>
+        </div>
     </div>
 </body>
 </html>
