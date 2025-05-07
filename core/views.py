@@ -41,7 +41,7 @@ def redirect_to_dashboard(group_name):
     if group_name == 'Administrador':
         return redirect('pagina_prueba')  # ruta de admin
     elif group_name == 'Empleado':
-        return redirect('panel_empleado')  # ruta de empleado
+        return redirect('pagina_prueba_empleado')  # ruta de empleado
     else:
         return redirect('logout')
 

@@ -14,7 +14,7 @@
 <button class="menu-toggle-admin" onclick="toggleSidebar()">☰</button>
     <div class="contenedor-grid">
         <!-- Sidebar -->
-        <aside class="sidebar_administrador">
+        <aside class="sidebar_empleado">
             <div class="logos">
                 <img class="logo_comercialjm" src="{% static 'core/img/logo.png' %}" alt="Logo logo_comercialjm">
                 <span class="nombre_empresa">Comercial JM</span>
@@ -40,11 +40,12 @@
                     <a href="#">Ventas</a>
                 </li>
                 <li>
-                    <a href="#">Reportería</a>
+                    <a href="#">Perfil</a>
                 </li>
-                <li>
-                    <a href="#">Usuarios</a>
+                <li class="espacio-placeholder">
+                    <a href="#">&nbsp;</a>
                 </li>
+                
                 <hr class="divider divider_logout">
                 <div class="sidebar-user">
                     <div class="initials">
@@ -52,7 +53,7 @@
                     </div>
                     <div class="info">
                         <div>{{ request.user.get_full_name|default:request.user.username }}</div>
-                        <div>Administrador</div>
+                        <div>Empleado</div>
                     </div>
                 </div>
             </ul>

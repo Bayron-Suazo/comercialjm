@@ -26,6 +26,7 @@ urlpatterns = [
     path('accounts/',include('django.contrib.auth.urls')),
     path('accounts/',include('registration.urls')),
     path('administrador/', include('administrador.urls')),
+    path('empleado/', include('empleado.urls')),
 ]
 
 admin.site.site_header = 'AdministradorBussiness_Solutions'
