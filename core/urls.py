@@ -9,6 +9,6 @@ usaremos para la url consultada, esta debe existir, el tercer parametro el nombr
 '''
 core_urlpatterns = [
     path('', views.home, name='home'),    
-    path('check_profile', views.check_profile, name='check_profile'),           
-
+    path('check_profile', views.check_profile, name='check_profile'),
+    path('seleccionar_rol',views.seleccionar_rol, name='seleccionar_rol'),           
     ]

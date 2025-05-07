@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <title>Seleccionar Rol</title>
+    <link rel="stylesheet" href="{% static 'core/css/seleccionar_rol.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h2>Seleccione con qué rol desea ingresar</h2>
+        {% for group in groups %}
+            <form method="post" action="{% url 'seleccionar_rol' %}">
+                {% csrf_token %}
+                <input type="hidden" name="group_name" value="{{ group.name }}">
+                <button type="submit">{{ group.name }}</button>
+            </form>
+        {% endfor %}
+    </div>
+</body>
+</html>
