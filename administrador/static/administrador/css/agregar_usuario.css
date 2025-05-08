@@ -1,0 +1,157 @@
+body {
+    background-color: #f7f5db;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+h2.titulo {
+    text-align: center;
+    margin-bottom: 50px;
+    font-weight: normal;
+    font-size: 48px;
+    color: #000;
+}
+
+.form-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 100px;
+    max-width: 1000px;
+    margin: 0 auto;
+    flex-wrap: wrap;
+}
+
+.form-column {
+    flex: 1;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group {
+    flex: 0 1 42%;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+label {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    font-size: 20px;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="date"],
+select {
+    padding: 15px 20px;
+    font-size: 20px;
+    border: none;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    outline: none;
+    margin-top: -5px;
+}
+
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    background: #ffff;
+    padding: 10px;
+    border-bottom-left-radius: 20px;
+    margin-top: -5px;
+}
+
+.radio-group label {
+    background: none;
+    color: black;
+    padding: 0;
+    border-radius: 0;
+    font-weight: normal;
+}
+
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    max-width: 500px;
+    margin: 30px auto 0;
+}
+
+button.cancelar,
+button.añadir {
+    padding: 12px 25px;
+    font-size: 20px;
+    border: none;
+    border-radius: 12px;
+    color: white;
+    cursor: pointer;
+}
+
+button.cancelar {
+    background-color: #A91B0D;
+    opacity: 90%;
+}
+
+button.añadir {
+    background-color: #4CAF50;
+}
+
+.sexo-checkbox input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 10px solid #000;
+    border-radius: 50%;
+    margin-right: 10px;
+    position: relative;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.sexo-checkbox input[type="checkbox"]:checked::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 8px;
+    height: 8px;
+    background-color: #4CAF50;
+    border-radius: 50%;
+}
+
+.checkbox-wrapper {
+    background-color: #fff;
+    padding: 15px 20px;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    margin-top: -5px;
+    font-size: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.checkbox-wrapper label {
+    background-color: transparent;
+    color: #000;
+    padding: 0;
+    font-size: 20px;
+    border-radius: 0;
+}
+
+.invisible-group label {
+    background-color: transparent;
+    color: transparent;
+    padding: 10px 20px;
+    font-size: 20px;
+}
+
+.dummy-field {
+    background-color: transparent;
+    padding: 15px;
+    border-radius: 20px;
+}

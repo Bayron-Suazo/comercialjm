@@ -37,11 +37,14 @@ body {
 
 .boton-agregar {
     background-color: transparent;
-    color: #003400;
     border: none;
     border-radius: 10px;
     cursor: pointer;
     font-size: 75px;
+}
+
+.boton-agregar i{
+    color: #003400;
 }
 
 .tabla-usuarios thead th:first-child {
