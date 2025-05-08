@@ -1,0 +1,82 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+
+{% block title %}Listado de Usuarios{% endblock %}
+<head>
+{% block extra_head%}
+    <link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% endblock %}
+</head>
+
+{% block content %}
+<h2 class="titulo">Listado de Usuarios</h2>
+
+<div class="busqueda-agregar">
+    <input type="text" placeholder="Buscar Usuario .........." class="input-busqueda">
+
+    <button class="boton-agregar" title="Agregar">
+        <i class="fa-regular fa-square-plus"></i>
+    </button>
+</div>
+
+<table class="tabla-usuarios">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Rut</th>
+            <th>Cargo</th>
+            <th>Correo</th>
+            <th>Teléfono</th>            
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in usuarios %}
+        <tr>
+            <td>{{ user.get_full_name }}</td>
+            <td>{{ user.profile.rut }}</td>
+            <td>
+                {% if user.groups.count > 1 %}
+                    Ambos
+                {% elif user.groups.count == 1 %}
+                    {{ user.groups.first.name }}
+                {% else %}
+                    Sin rol
+                {% endif %}
+            </td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.profile.telefono }}</td>
+
+            
+            <td>
+                <button title="Bloquear"><img src="{% static 'core/svg/lock-open-solid.svg' %}" alt="Bloquear"></button>
+                <button title="Mostrar"><img src="{% static 'core/svg/user-regular.svg' %}" alt="Mostrar"></button>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">No hay usuarios registrados.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="custom-pagination">
+    {% if usuarios.has_previous %}
+      <a href="?page=1" class="page-btn">&laquo;</a>
+      <a href="?page={{ usuarios.previous_page_number }}" class="page-btn">&lsaquo;</a>
+    {% else %}
+      <span class="page-btn disabled">&laquo;</span>
+      <span class="page-btn disabled">&lsaquo;</span>
+    {% endif %}
+  
+    <span class="page-btn current">{{ usuarios.number }}</span>
+  
+    {% if usuarios.has_next %}
+      <a href="?page={{ usuarios.next_page_number }}" class="page-btn">&rsaquo;</a>
+      <a href="?page={{ usuarios.paginator.num_pages }}" class="page-btn">&raquo;</a>
+    {% else %}
+      <span class="page-btn disabled">&rsaquo;</span>
+      <span class="page-btn disabled">&raquo;</span>
+    {% endif %}
+  </div>
+{% endblock %}

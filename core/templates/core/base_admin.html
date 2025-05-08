@@ -9,6 +9,7 @@
     <title>{% block title %}Comercial JM{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'core/css/grid.css' %}">
     <link rel="stylesheet" href="{% static 'core/css/normalize.css' %}">
+    {% block extra_head %}{% endblock %}
 </head>
 
 <button class="menu-toggle-admin" onclick="toggleSidebar()">☰</button>

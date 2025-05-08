@@ -1,0 +1,136 @@
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f9f8e8;
+    margin: 0;
+    padding: 0;
+    color: #2e2e2e;
+}
+
+.titulo {
+    text-align: center;
+    margin: 30px 0 10px;
+    font-size: 48px;
+    font-weight: normal;
+}
+
+.busqueda-agregar {
+    width: 90%;
+    margin: 0 auto 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.input-busqueda {
+    width: 85%;
+    padding: 16px 20px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    font-size: 20px;
+    background-color: #fff;
+    background-image: url('/static/core/svg/filter-solid.svg');
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 28px;
+    padding-right: 40px;
+}
+
+.boton-agregar {
+    background-color: transparent;
+    color: #003400;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 75px;
+}
+
+.tabla-usuarios thead th:first-child {
+    border-top-left-radius: 25px;
+}
+
+.tabla-usuarios thead th:last-child {
+    border-top-right-radius: 25px;
+}
+
+.tabla-usuarios {
+    width: 90%;
+    margin: 0 auto;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+}
+
+.tabla-usuarios thead {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.tabla-usuarios thead th {
+    padding: 20px 12px;
+    text-align: center;
+    border-bottom: none;
+    font-weight: normal;
+    font-size: 24px;
+}
+
+.tabla-usuarios tbody tr {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    font-size: 20px;
+}
+
+.tabla-usuarios tbody td {
+    padding: 16px 12px;
+    border-bottom: none;
+    text-align: center;
+}
+
+.tabla-usuarios td:last-child {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+}
+
+.tabla-usuarios button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.tabla-usuarios img {
+    width: 40px;
+    height: 40px;
+}
+
+.custom-pagination {
+    display: flex;
+    justify-content: center;
+    margin: 30px 0;
+    gap: 10px;
+}
+
+.page-btn {
+    display: inline-block;
+    padding: 8px 14px;
+    font-size: 20px;
+    color: black;
+    background-color: #FFFFFF;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+.page-btn.current {
+    background-color: #FFFFFF;
+    color: black;
+    font-weight: normal;
+    pointer-events: none;
+}
+
+.page-btn.disabled {
+    background-color: #FFFFFF;
+    color: black;
+    pointer-events: none;
+}
