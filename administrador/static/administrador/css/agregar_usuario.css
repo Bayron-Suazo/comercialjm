@@ -78,16 +78,19 @@ select {
     justify-content: space-between;
     max-width: 500px;
     margin: 30px auto 0;
+    gap: 10rem;
 }
 
 button.cancelar,
 button.añadir {
-    padding: 15px 30px;
+    flex: 1;
+    padding: 15px 0;
     font-size: 20px;
     border: none;
     border-radius: 12px;
     color: white;
     cursor: pointer;
+    text-align: center;
 }
 
 button.cancelar {
