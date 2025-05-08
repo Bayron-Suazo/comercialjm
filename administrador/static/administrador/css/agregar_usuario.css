@@ -82,7 +82,7 @@ select {
 
 button.cancelar,
 button.añadir {
-    padding: 12px 25px;
+    padding: 15px 30px;
     font-size: 20px;
     border: none;
     border-radius: 12px;
