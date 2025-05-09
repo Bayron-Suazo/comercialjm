@@ -14,14 +14,24 @@ def is_admin(user):
     return user.groups.filter(name='Administrador').exists()
 
 @login_required
-def lista_usuarios(request):
-    usuarios_list = User.objects.all().order_by('username')
+def lista_usuarios_activos(request):
+    usuarios_list = User.objects.select_related('profile').filter(profile__is_active = True).order_by('username')
     paginator = Paginator(usuarios_list, 10)
 
     page_number = request.GET.get('page')
     usuarios = paginator.get_page(page_number)
 
     return render(request, 'administrador/lista_usuarios.html', {'usuarios': usuarios})
+
+@login_required
+def lista_usuarios_bloqueados(request):
+    usuarios_list = User.objects.select_related('profile').filter(profile__is_active = False).order_by('username')
+    paginator = Paginator(usuarios_list, 10)
+
+    page_number = request.GET.get('page')
+    usuarios = paginator.get_page(page_number)
+
+    return render(request, 'administrador/lista_usuarios_bloqueados.html', {'usuarios': usuarios})
 
 @login_required
 def agregar_usuario(request):

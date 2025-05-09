@@ -8,7 +8,7 @@ body {
 
 .titulo {
     text-align: center;
-    margin: 30px 0 10px;
+    margin: 50px 0 25px;
     font-size: 48px;
     font-weight: normal;
 }
@@ -28,7 +28,7 @@ body {
     border: 1px solid #ccc;
     font-size: 20px;
     background-color: #fff;
-    background-image: url('/static/core/svg/filter-solid.svg');
+    background-image: url('/static/administrador/svg/lupa.svg');
     background-repeat: no-repeat;
     background-position: right 15px center;
     background-size: 28px;
@@ -44,7 +44,7 @@ body {
 }
 
 .boton-agregar i{
-    color: #003400;
+    color: #4CAF50;
 }
 
 .tabla-usuarios thead th:first-child {
@@ -136,4 +136,142 @@ body {
     background-color: #FFFFFF;
     color: black;
     pointer-events: none;
+}
+
+.ancho-contenido {
+    width: 90%;
+    margin: 0 auto;
+}
+
+.acciones-derecha {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.boton-header {
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    padding: 15px 25px;
+    border-radius: 25px;
+    font-size: 20px;
+    font-weight: 500;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.boton-header img {
+    width: 28px;
+    height: 28px;
+}
+
+.boton-header:hover {
+    background-color: #45a049;
+}
+
+.ancho-contenido {
+    width: 90%;
+    margin: 0 auto;
+}
+
+.boton-header img {
+    filter: brightness(0) invert(1);
+}
+
+.barra-acciones-usuarios {
+    width: 90%;
+    margin: 0 auto 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.barra-acciones-usuarios {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    position: relative;
+}
+
+.boton-bloquear-seleccionados {
+    flex: 1;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.boton-bloquear-seleccionados button {
+    background-color: #A5D6A7;
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 25px;
+    font-size: 18px;
+    cursor: not-allowed;
+    transition: background-color 0.3s ease, cursor 0.3s ease;
+}
+
+.boton-bloquear-seleccionados button.activo {
+    background-color: #4CAF50;
+    cursor: pointer;
+}
+
+.toggle-estado-usuarios {
+    display: flex;
+    width: 240px;
+    border-radius: 25px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.estado-btn {
+    flex: 1;
+    padding: 15px 0;
+    font-size: 20px;
+    border: none;
+    cursor: pointer;
+    background-color: #fff;
+    color: #4CAF50;
+    font-weight: normal;
+    transition: background-color 0.3s ease;
+    text-decoration: none;
+    text-align: center;
+}
+
+.estado-btn.activo {
+    background-color: #4CAF50;
+    color: #fff;
+    text-align: center;
+
+}
+
+.boton-bloquear-seleccionados button {
+    background-color: #A5D6A7;
+    color: #fff;
+    border: none;
+    padding: 15px 25px;
+    border-radius: 25px;
+    font-size: 20px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background-color 0.3s ease;
+    cursor: not-allowed;
+}
+
+.boton-bloquear-seleccionados button.activo {
+    background-color: #4CAF50;
+    cursor: pointer;
 }

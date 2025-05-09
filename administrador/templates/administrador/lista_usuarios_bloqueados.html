@@ -1,7 +1,7 @@
 {% extends 'core/base_admin.html' %}
 {% load static %}
 
-{% block title %}Listado de Usuarios Activos{% endblock %}
+{% block title %}Listado de Usuarios Bloqueados{% endblock %}
 <head>
 {% block extra_head%}
     <link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
@@ -35,7 +35,7 @@
 
 </div>
 
-<h2 class="titulo">Listado de Usuarios Activos</h2>
+<h2 class="titulo">Listado de Usuarios Bloqueados</h2>
 
 <div class="busqueda-agregar">
     <input type="text" placeholder="Buscar Usuario .........." class="input-busqueda">
@@ -48,12 +48,12 @@
 
 <div class="barra-acciones-usuarios ancho-contenido">
     <div class="boton-bloquear-seleccionados">
-        <button id="bloquearBtn" disabled>Bloquear</button>
+        <button id="bloquearBtn" disabled>Activar</button>
     </div>
 
     <div class="toggle-estado-usuarios">
-        <a href="{% url 'lista_usuarios_activos' %}" class="estado-btn activo">Activos</a>
-        <a href="{% url 'lista_usuarios_bloqueados' %}" class="estado-btn">Bloqueados</a>
+        <a href="{% url 'lista_usuarios_activos' %}" class="estado-btn">Activos</a>
+        <a href="{% url 'lista_usuarios_bloqueados' %}" class="estado-btn activo">Bloqueados</a>
     </div>
 </div>
 
