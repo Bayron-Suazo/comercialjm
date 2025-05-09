@@ -2,23 +2,22 @@
 {% load static %}
 
 {% block title %}Listado de Usuarios Bloqueados{% endblock %}
-<head>
-{% block extra_head%}
+
+{% block extra_head %}
     <link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 {% endblock %}
-</head>
 
 {% block content %}
 
 <div class="acciones-derecha ancho-contenido">
-    <a href="#" class="boton-header">
+    <a href="#" class="boton-header" id="carga-masiva-btn">
         Carga masiva
         <img src="{% static 'administrador/svg/carga-masiva.svg' %}">
     </a>
 
     <a href="#" class="boton-header">
-        Dashboard usuarios
+        Dashboard
         <img src="{% static 'administrador/svg/reporteria.svg' %}">
     </a>
 
@@ -46,15 +45,33 @@
     </a>
 </div>
 
+<form id="form-carga-masiva" action="{% url 'cargar_usuarios' %}" method="POST" enctype="multipart/form-data" style="display: none;">
+    {% csrf_token %}
+    <input type="file" name="archivo" accept=".csv" id="archivo-csv" required>
+    <button type="submit" style="display: none;">Cargar archivo</button>
+</form>
+
 <div class="barra-acciones-usuarios ancho-contenido">
-    <div class="boton-bloquear-seleccionados">
-        <button id="bloquearBtn" disabled>Activar</button>
+    <div class="boton-activar-seleccionados">
+        <button id="activarBtn" disabled>Activar</button>
     </div>
 
     <div class="toggle-estado-usuarios">
         <a href="{% url 'lista_usuarios_activos' %}" class="estado-btn">Activos</a>
         <a href="{% url 'lista_usuarios_bloqueados' %}" class="estado-btn activo">Bloqueados</a>
     </div>
+</div>
+
+<!-- Modal de confirmación -->
+<div id="confirmModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>¿Activar Usuario?</h3>
+    <p>Los usuarios activados pasarán al listado de usuarios activos y podrán acceder a su cuenta con sus credenciales de acceso.</p>
+    <div class="modal-actions">
+      <button type = "button"   id="confirmNo">Cancelar</button>
+      <button type = "button"   id="confirmYes">Confirmar</button>
+    </div>
+  </div>
 </div>
 
 {% if usuarios %}
@@ -73,7 +90,7 @@
         <tbody>
             {% for user in usuarios %}
             <tr>
-                <td><input type="checkbox" class="select-user"></td>
+                <td><input type="checkbox" class="select-user" data-user-id="{{ user.id }}"></td>
                 <td>{{ user.get_full_name }}</td>
                 <td>{{ user.profile.rut }}</td>
                 <td>
@@ -88,7 +105,9 @@
                 <td>{{ user.email }}</td>
                 <td>{{ user.profile.telefono }}</td>
                 <td>
-                    <button title="Bloquear"><img src="{% static 'core/svg/lock-open-solid.svg' %}" alt="Bloquear"></button>
+                    <button title="Activar" class="btn-activar" data-user-id="{{ user.id }}">
+                        <img src="{% static 'core/svg/lock-solid.svg' %}" alt="Activar">
+                    </button>
                     <button title="Mostrar"><img src="{% static 'core/svg/user-regular.svg' %}" alt="Mostrar"></button>
                 </td>
             </tr>
@@ -118,41 +137,107 @@
 {% else %}
     <p style="text-align: center; font-size: 24px; margin-top: 40px;">No hay usuarios registrados.</p>
 {% endif %}
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
+
     document.addEventListener('DOMContentLoaded', () => {
-        const selectAll = document.getElementById('select-all');
-        const checkboxes = document.querySelectorAll('.select-user');
-        const bloquearBtn = document.querySelector('.boton-bloquear-seleccionados button');
-    
-        function updateBloquearButton() {
-            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
-            if (anyChecked) {
-                bloquearBtn.classList.add('activo');
-                bloquearBtn.disabled = false;
-            } else {
-                bloquearBtn.classList.remove('activo');
-                bloquearBtn.disabled = true;
+        const cargaMasivaBtn = document.getElementById('carga-masiva-btn');
+        const archivoInput = document.getElementById('archivo-csv');
+        const formCargaMasiva = document.getElementById('form-carga-masiva');
+
+        // Al hacer clic en "Carga masiva", abrir el selector de archivo
+        cargaMasivaBtn.addEventListener('click', () => {
+            archivoInput.click();
+        });
+
+        // Cuando el archivo es seleccionado, enviar el formulario
+        archivoInput.addEventListener('change', () => {
+            if (archivoInput.files.length > 0) {
+                formCargaMasiva.submit();
             }
-        }
-    
-        // Al cambiar cualquier checkbox individual
-        checkboxes.forEach(cb => {
-            cb.addEventListener('change', updateBloquearButton);
         });
-    
-        // Al cambiar el "select-all"
-        selectAll.addEventListener('change', () => {
-            checkboxes.forEach(cb => {
-                cb.checked = selectAll.checked;
-            });
-            updateBloquearButton();
-        });
-    
-        // Desactiva por defecto
-        bloquearBtn.disabled = true;
     });
-    </script>
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        const activarBtn = document.querySelector('#activarBtn');
+        const checkboxes = document.querySelectorAll('.select-user');
+        const selectAll = document.getElementById('select-all');
+        const modal = document.getElementById('confirmModal');
+        const confirmYes = document.getElementById('confirmYes');
+        const confirmNo = document.getElementById('confirmNo');
+        let confirmCallback = null;
+
+        function showConfirmModal(onConfirm) {
+            modal.classList.remove('hidden');
+            confirmCallback = onConfirm;
+        }
+
+        confirmYes.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            if (confirmCallback) confirmCallback();
+        });
+
+        confirmNo.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            confirmCallback = null;
+        });
+
+        function updateActivarButton() {
+            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+            activarBtn.disabled = !anyChecked;
+            activarBtn.classList.toggle('activo', anyChecked);
+        }
+
+        checkboxes.forEach(cb => cb.addEventListener('change', updateActivarButton));
+        selectAll.addEventListener('change', () => {
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+            updateActivarButton();
+        });
+
+        activarBtn.addEventListener('click', () => {
+            const userIds = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.dataset.userId);
+
+            if (userIds.length === 0) return;
+
+            showConfirmModal(() => {
+                fetch("{% url 'activar_usuario' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: new URLSearchParams({ 'user_ids': JSON.stringify(userIds) })
+                }).then(res => res.json()).then(data => {
+                    if (data.success) location.reload();
+                });
+            });
+        });
+
+        document.querySelectorAll('.btn-activar').forEach(button => {
+            button.addEventListener('click', () => {
+                const userId = button.dataset.userId;
+
+                showConfirmModal(() => {
+                    fetch("{% url 'activar_usuario' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: new URLSearchParams({ 'user_id': userId })
+                    }).then(res => res.json()).then(data => {
+                        if (data.success) location.reload();
+                    });
+                });
+            });
+        });
+
+        updateActivarButton();
+    });
+</script>
 {% endblock %}

@@ -18,7 +18,7 @@
     </a>
 
     <a href="#" class="boton-header">
-        Dashboard usuarios
+        Dashboard
         <img src="{% static 'administrador/svg/reporteria.svg' %}">
     </a>
 
@@ -69,6 +69,17 @@
     </div>
 </div>
 
+<div id="confirmModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>¿Bloquear Usuario?</h3>
+    <p>Los usuarios bloqueados pasarán al listado de usuarios bloqueados y no podrán acceder a su cuenta hasta que sean activados nuevamente.</p>
+    <div class="modal-actions">
+      <button type="button" id="confirmNo">Cancelar</button>
+      <button type="button" id="confirmYes">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 {% if usuarios %}
     <table class="tabla-usuarios">
         <thead>
@@ -85,7 +96,7 @@
         <tbody>
             {% for user in usuarios %}
             <tr>
-                <td><input type="checkbox" class="select-user"></td>
+                <td><input type="checkbox" class="select-user" data-user-id="{{ user.id }}"></td>
                 <td>{{ user.get_full_name }}</td>
                 <td>{{ user.profile.rut }}</td>
                 <td>
@@ -100,7 +111,9 @@
                 <td>{{ user.email }}</td>
                 <td>{{ user.profile.telefono }}</td>
                 <td>
-                    <button title="Bloquear"><img src="{% static 'core/svg/lock-open-solid.svg' %}" alt="Bloquear"></button>
+                    <button title="Bloquear" class="btn-bloquear" data-user-id="{{ user.id }}">
+                        <img src="{% static 'core/svg/lock-open-solid.svg' %}" alt="Bloquear">
+                    </button>
                     <button title="Mostrar"><img src="{% static 'core/svg/user-regular.svg' %}" alt="Mostrar"></button>
                 </td>
             </tr>
@@ -151,5 +164,127 @@
             }
         });
     });
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const bloquearBtn = document.querySelector('#bloquearBtn');
+        const checkboxes = document.querySelectorAll('.select-user');
+        const selectAll = document.getElementById('select-all');
+
+        function updateBloquearButton() {
+            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+            bloquearBtn.disabled = !anyChecked;
+            bloquearBtn.classList.toggle('activo', anyChecked);
+        }
+
+        checkboxes.forEach(cb => cb.addEventListener('change', updateBloquearButton));
+        selectAll.addEventListener('change', () => {
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+            updateBloquearButton();
+        });
+
+        bloquearBtn.addEventListener('click', () => {
+            const userIds = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.getAttribute('data-user-id'));
+
+            if (userIds.length === 0) return;
+        });
+
+        updateBloquearButton();
+    });
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const modal = document.getElementById('confirmModal');
+        const modalText = document.getElementById('modalText');
+        const confirmYes = document.getElementById('confirmYes');
+        const confirmNo = document.getElementById('confirmNo');
+
+        let onConfirmAction = null;
+
+        function showModal(message, onConfirm) {
+            modalText.textContent = message;
+            modal.classList.remove('hidden');
+            onConfirmAction = onConfirm;
+        }
+
+        confirmYes.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            if (onConfirmAction) onConfirmAction();
+        });
+
+        confirmNo.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            onConfirmAction = null;
+        });
+        
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const modal = document.getElementById('confirmModal');
+        const confirmYes = document.getElementById('confirmYes');
+        const confirmNo = document.getElementById('confirmNo');
+
+        let confirmCallback = null;
+
+        function showConfirmModal(onConfirm) {
+            modal.classList.remove('hidden');
+            confirmCallback = onConfirm;
+        }
+
+        confirmYes.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            if (confirmCallback) confirmCallback();
+        });
+
+        confirmNo.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            confirmCallback = null;
+        });
+
+        const bloquearBtn = document.querySelector('#bloquearBtn');
+        const checkboxes = document.querySelectorAll('.select-user');
+
+        bloquearBtn.addEventListener('click', () => {
+            const userIds = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.dataset.userId);
+
+            if (userIds.length === 0) return;
+
+            showConfirmModal(() => {
+                fetch("{% url 'bloquear_usuario' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: new URLSearchParams({ 'user_ids': JSON.stringify(userIds) })
+                }).then(res => res.json()).then(data => {
+                    if (data.success) location.reload();
+                });
+            });
+        });
+
+        document.querySelectorAll('.btn-bloquear').forEach(button => {
+            button.addEventListener('click', () => {
+                const userId = button.dataset.userId;
+                showConfirmModal(() => {
+                    fetch("{% url 'bloquear_usuario' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: new URLSearchParams({ 'user_id': userId })
+                    }).then(res => res.json()).then(data => {
+                        if (data.success) location.reload();
+                    });
+                });
+            });
+        });
+    });
+
 </script>
 {% endblock %}

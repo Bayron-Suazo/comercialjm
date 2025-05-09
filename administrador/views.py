@@ -1,3 +1,5 @@
+import csv
+import json
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User, Group
@@ -10,7 +12,6 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .forms import CargaMasivaUsuariosForm
 from registration.models import Profile
-import csv
 from datetime import datetime
 from django.core.exceptions import ValidationError
 from django.contrib import messages
@@ -162,3 +163,49 @@ def cargar_usuarios(request):
             return redirect("lista_usuarios_activos")
 
     return redirect("lista_usuarios_activos")
+
+
+from django.views.decorators.http import require_POST
+# Solo administradores pueden bloquear
+@user_passes_test(lambda u: u.is_superuser)
+@require_POST
+@login_required
+def bloquear_usuario(request):
+    try:
+        user_id = request.POST.get('user_id')
+        user_ids = json.loads(request.POST.get('user_ids', '[]')) if request.POST.get('user_ids') else []
+
+        if user_id:
+            if int(user_id) == request.user.id:
+                return JsonResponse({'success': False})
+            user_ids = [user_id]
+
+        user_ids = [int(uid) for uid in user_ids if int(uid) != request.user.id]
+        users = User.objects.filter(id__in=user_ids, is_active=True)
+        updated_count = users.update(is_active=False)
+
+        return JsonResponse({'success': True, 'updated': updated_count})
+    except:
+        return JsonResponse({'success': False})
+
+
+@user_passes_test(lambda u: u.is_superuser)
+@require_POST
+@login_required
+def activar_usuario(request):
+    try:
+        user_id = request.POST.get('user_id')
+        user_ids = json.loads(request.POST.get('user_ids', '[]')) if request.POST.get('user_ids') else []
+
+        if user_id:
+            if int(user_id) == request.user.id:
+                return JsonResponse({'success': False})
+            user_ids = [user_id]
+
+        user_ids = [int(uid) for uid in user_ids if int(uid) != request.user.id]
+        users = User.objects.filter(id__in=user_ids, is_active=False)
+        updated_count = users.update(is_active=True)
+
+        return JsonResponse({'success': True, 'updated': updated_count})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
