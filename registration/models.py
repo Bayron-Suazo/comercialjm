@@ -15,7 +15,6 @@ class Profile(models.Model):
     fecha_nacimiento = models.DateField(blank=True, null=True)  # Fecha de nacimiento
     direccion = models.CharField(max_length=255, blank=True, null=True)  # Dirección
     sexo = models.CharField(max_length=1, choices=(('M', 'Masculino'), ('F', 'Femenino')), blank=True, null=True)
-    is_active = models.BooleanField(default=True)
     class Meta:
         ordering = ['user__username']
     def __str__(self):

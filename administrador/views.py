@@ -5,6 +5,9 @@ from django.core.paginator import Paginator
 from .forms import UserProfileForm
 from django.core.mail import send_mail
 from django.conf import settings
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 # Create your views here.
 def pagina_prueba(request):
@@ -15,7 +18,7 @@ def is_admin(user):
 
 @login_required
 def lista_usuarios_activos(request):
-    usuarios_list = User.objects.select_related('profile').filter(profile__is_active = True).order_by('username')
+    usuarios_list = User.objects.filter(is_active=True).order_by('username')
     paginator = Paginator(usuarios_list, 10)
 
     page_number = request.GET.get('page')
@@ -25,7 +28,7 @@ def lista_usuarios_activos(request):
 
 @login_required
 def lista_usuarios_bloqueados(request):
-    usuarios_list = User.objects.select_related('profile').filter(profile__is_active = False).order_by('username')
+    usuarios_list = User.objects.filter(is_active=False).order_by('username')
     paginator = Paginator(usuarios_list, 10)
 
     page_number = request.GET.get('page')
@@ -70,7 +73,7 @@ def agregar_usuario(request):
                 fail_silently=False,
             )
 
-            return redirect('lista_usuarios')
+            return redirect('lista_usuarios_activos')
     else:
         form = UserProfileForm()
     return render(request, 'administrador/agregar_usuario.html', {'form': form})
