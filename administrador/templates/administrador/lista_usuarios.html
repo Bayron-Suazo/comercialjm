@@ -12,7 +12,7 @@
 {% block content %}
 
 <div class="acciones-derecha ancho-contenido">
-    <a href="#" class="boton-header">
+    <a href="#" class="boton-header" id="carga-masiva-btn">
         Carga masiva
         <img src="{% static 'administrador/svg/carga-masiva.svg' %}">
     </a>
@@ -31,9 +31,15 @@
         Agregar Usuario
         <img src="{% static 'administrador/svg/plus.svg' %}">
     </a>
-
-
 </div>
+
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
 
 <h2 class="titulo">Listado de Usuarios Activos</h2>
 
@@ -45,6 +51,12 @@
         <img src="{% static 'administrador/svg/filter-solid.svg' %}">
     </a>
 </div>
+
+<form id="form-carga-masiva" action="{% url 'cargar_usuarios' %}" method="POST" enctype="multipart/form-data" style="display: none;">
+    {% csrf_token %}
+    <input type="file" name="archivo" accept=".csv" id="archivo-csv" required>
+    <button type="submit" style="display: none;">Cargar archivo</button>
+</form>
 
 <div class="barra-acciones-usuarios ancho-contenido">
     <div class="boton-bloquear-seleccionados">
@@ -123,36 +135,21 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const selectAll = document.getElementById('select-all');
-        const checkboxes = document.querySelectorAll('.select-user');
-        const bloquearBtn = document.querySelector('.boton-bloquear-seleccionados button');
-    
-        function updateBloquearButton() {
-            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
-            if (anyChecked) {
-                bloquearBtn.classList.add('activo');
-                bloquearBtn.disabled = false;
-            } else {
-                bloquearBtn.classList.remove('activo');
-                bloquearBtn.disabled = true;
+        const cargaMasivaBtn = document.getElementById('carga-masiva-btn');
+        const archivoInput = document.getElementById('archivo-csv');
+        const formCargaMasiva = document.getElementById('form-carga-masiva');
+
+        // Al hacer clic en "Carga masiva", abrir el selector de archivo
+        cargaMasivaBtn.addEventListener('click', () => {
+            archivoInput.click();
+        });
+
+        // Cuando el archivo es seleccionado, enviar el formulario
+        archivoInput.addEventListener('change', () => {
+            if (archivoInput.files.length > 0) {
+                formCargaMasiva.submit();
             }
-        }
-    
-        // Al cambiar cualquier checkbox individual
-        checkboxes.forEach(cb => {
-            cb.addEventListener('change', updateBloquearButton);
         });
-    
-        // Al cambiar el "select-all"
-        selectAll.addEventListener('change', () => {
-            checkboxes.forEach(cb => {
-                cb.checked = selectAll.checked;
-            });
-            updateBloquearButton();
-        });
-    
-        // Desactiva por defecto
-        bloquearBtn.disabled = true;
     });
-    </script>
+</script>
 {% endblock %}

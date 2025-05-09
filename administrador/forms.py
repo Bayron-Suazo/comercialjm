@@ -56,3 +56,5 @@ class UserProfileForm(forms.ModelForm):
         # Devuelve el perfil y la contraseña para que la vista la use
         return profile, password
     
+class CargaMasivaUsuariosForm(forms.Form):
+    archivo = forms.FileField()
