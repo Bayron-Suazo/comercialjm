@@ -114,7 +114,9 @@
                     <button title="Bloquear" class="btn-bloquear" data-user-id="{{ user.id }}">
                         <img src="{% static 'core/svg/lock-open-solid.svg' %}" alt="Bloquear">
                     </button>
-                    <button title="Mostrar"><img src="{% static 'core/svg/user-regular.svg' %}" alt="Mostrar"></button>
+                    <a href="{% url 'mostrar_usuario' user.id %}" title="Mostrar">
+                        <img src="{% static 'core/svg/user-regular.svg' %}" alt="Mostrar">
+                    </a>
                 </td>
             </tr>
             {% endfor %}

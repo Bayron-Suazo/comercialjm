@@ -1,0 +1,69 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+
+{% block title %}Listado de Usuarios Activos{% endblock %}
+
+{% block content %}
+
+
+{% block extra_head%}
+    <link rel="stylesheet" href="{% static 'administrador/css/mostrar_usuario.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% endblock %}
+
+<head>
+{% if user.is_active%}
+    <a class="back-arrow" href="{% url 'lista_usuarios_activos' %}">
+        <img src="{% static 'administrador/svg/Volver-atras.svg' %}" alt="">
+    </a>
+{% else %}
+    <a class="back-arrow" href="{% url 'lista_usuarios_bloqueados' %}">
+        <img src="{% static 'administrador/svg/Volver-atras.svg' %}" alt="">
+    </a>
+{% endif %}
+<h1>Usuario {{user.first_name}} {{user.last_name}}</h1>
+</header>  
+
+<div class="container-usuario">
+    <div class="card-usuario">
+        <div class="icon-container" onclick="window.location.href='#'">
+            <img src="{% static 'administrador/svg/lapiz.svg' %}" class="icon">
+        </div>
+
+        <div class="columna izquierda">
+            <p><strong>Rut:</strong><br> <span>{{ user.profile.rut }}</span></p>
+            <p><strong>Nombre:</strong><br><span>{{user.first_name}}</span></p>
+            <p><strong>Apellido:</strong><br> <span>{{ user.last_name }}</span></p>
+            <p><strong>Fecha de Nacimiento:</strong><br> <span>{{ user.profile.fecha_nacimiento }}</span></p>
+            <p><strong>Sexo:</strong><br> <span>{{ user.profile.sexo }}</span></p>
+
+        </div>
+        <div class="columna derecha">
+            <p><strong>Correo:</strong><br> <span>{{ user.email }}</span></p>
+            <p><strong>Teléfono:</strong><br> <span>{{ user.profile.telefono }}</span></p>
+            <p><strong>Dirección:</strong><br> <span>{{ user.profile.direccion }}</span></p>
+            <p><strong>Cargo:</strong><br>
+                <span>
+                    {% for grupo in user.groups.all %}
+                        {{ grupo.name }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                        Sin grupo asignado
+                    {% endfor %}
+                </span>
+            </p>
+            <p>
+                Credenciales de Acceso:
+                <button id="actualizar-credenciales-button" class="btn-actualizar-credenciales">
+                    Actualizar
+                </button>
+            </p> 
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block extra_js %}
+
+{% endblock %}

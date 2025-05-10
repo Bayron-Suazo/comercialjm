@@ -209,3 +209,8 @@ def activar_usuario(request):
         return JsonResponse({'success': True, 'updated': updated_count})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
+    
+@login_required
+def mostrar_usuario(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    return render(request, 'administrador/mostrar_usuario.html', {'user': user})

@@ -8,4 +8,5 @@ urlpatterns = [
     path('cargar-usuarios/', views.cargar_usuarios, name='cargar_usuarios'),
     path('bloquear-usuario/', views.bloquear_usuario, name='bloquear_usuario'),
     path('activar-usuario/', views.activar_usuario, name='activar_usuario'),
+    path('usuarios/<int:user_id>/', views.mostrar_usuario, name='mostrar_usuario'),
 ]
