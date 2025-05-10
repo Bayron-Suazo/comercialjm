@@ -15,7 +15,8 @@ from registration.models import Profile
 from datetime import datetime
 from django.core.exceptions import ValidationError
 from django.contrib import messages
-
+from administrador.forms import EditUserProfileForm
+from django.views.decorators.http import require_POST
 
 
 
@@ -165,8 +166,8 @@ def cargar_usuarios(request):
     return redirect("lista_usuarios_activos")
 
 
-from django.views.decorators.http import require_POST
-# Solo administradores pueden bloquear
+
+
 @user_passes_test(lambda u: u.is_superuser)
 @require_POST
 @login_required
@@ -214,3 +215,22 @@ def activar_usuario(request):
 def mostrar_usuario(request, user_id):
     user = get_object_or_404(User, id=user_id)
     return render(request, 'administrador/mostrar_usuario.html', {'user': user})
+
+
+def editar_usuario(request, user_id):
+    user = get_object_or_404(User, pk=user_id)
+    profile = get_object_or_404(Profile, user=user)
+
+    if request.method == 'POST':
+        form = EditUserProfileForm(request.POST, instance=profile, user_instance=user)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+    else:
+        form = EditUserProfileForm(instance=profile, user_instance=user)
+        return render(request, 'administrador/editar_usuario.html', {
+            'user_form': form,
+            'user': user
+        })

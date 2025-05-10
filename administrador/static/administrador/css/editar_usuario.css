@@ -1,0 +1,178 @@
+body {
+    background-color: #f7f5db;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+
+h2.titulo {
+    text-align: center;
+    margin-bottom: 50px;
+    font-weight: normal;
+    font-size: 48px;
+    color: #000;
+}
+
+.form-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 100px;
+    max-width: 1000px;
+    margin: 0 auto;
+    flex-wrap: wrap;
+}
+
+.form-column {
+    flex: 1;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group {
+    flex: 0 1 42%;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+label {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    font-size: 20px;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="date"],
+select {
+    padding: 15px 20px;
+    font-size: 20px;
+    border: none;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    outline: none;
+    margin-top: -5px;
+}
+
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    background: #ffff;
+    padding: 10px;
+    border-bottom-left-radius: 20px;
+    margin-top: -5px;
+}
+
+.radio-group label {
+    background: none;
+    color: black;
+    padding: 0;
+    border-radius: 0;
+    font-weight: normal;
+}
+
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    max-width: 500px;
+    margin: 30px auto 0;
+    gap: 10rem;
+}
+
+button.cancelar,
+button.añadir {
+    flex: 1;
+    padding: 15px 0;
+    font-size: 20px;
+    border: none;
+    border-radius: 12px;
+    color: white;
+    cursor: pointer;
+    text-align: center;
+}
+
+button.cancelar {
+    background-color: #A91B0D;
+    opacity: 90%;
+}
+
+button.añadir {
+    background-color: #4CAF50;
+}
+
+
+.invisible-group label {
+    background-color: transparent;
+    color: transparent;
+    padding: 10px 20px;
+    font-size: 20px;
+}
+
+.dummy-field {
+    background-color: transparent;
+    padding: 15px;
+    border-radius: 20px;
+}
+
+/* Modal de éxito */
+.contenido-modal {
+    display: flex;
+    padding: 20px;
+    background-color: #fefefe;
+    flex-direction: column;
+    gap: 1.25rem;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border-radius: 0.625rem;
+    width: 30rem;
+    height: 20rem;
+    margin: auto;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+}
+
+.contenido-modal img {
+    width: 120px; 
+    height: auto; 
+    margin-bottom: 1rem;
+}
+
+.contenido-modal h1, .contenido-modal h2, .contenido-modal p {
+    font-size: 1.75rem;
+}
+
+.contenido-modal p {
+    font-size: 1.25rem; 
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    padding: 15px 20px;
+    margin-top: -5px;
+}
+
+.checkbox-group label {
+    background: none;
+    color: black;
+    padding: 0;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    margin: 0;
+    vertical-align: middle;
+    transform: translateY(2px);
+}

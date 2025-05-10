@@ -58,3 +58,51 @@ class UserProfileForm(forms.ModelForm):
     
 class CargaMasivaUsuariosForm(forms.Form):
     archivo = forms.FileField()
+
+
+class EditUserProfileForm(forms.ModelForm):
+    email = forms.EmailField()
+    first_name = forms.CharField(max_length=30)
+    last_name = forms.CharField(max_length=30)
+
+    group = forms.ModelMultipleChoiceField(
+        label="Cargo",
+        queryset=Group.objects.filter(name__in=["Administrador", "Empleado"]),
+        widget=forms.CheckboxSelectMultiple,
+        required=True
+    )
+
+    sexo = forms.ChoiceField(
+        label="Sexo",
+        choices=[('M', 'Masculino'), ('F', 'Femenino')],
+        widget=forms.RadioSelect
+    )
+
+    class Meta:
+        model = Profile
+        fields = ['rut', 'telefono', 'fecha_nacimiento', 'direccion', 'sexo']
+
+    def __init__(self, *args, **kwargs):
+        self.user_instance = kwargs.pop('user_instance', None)
+        super().__init__(*args, **kwargs)
+
+        if self.user_instance:
+            self.fields['email'].initial = self.user_instance.email
+            self.fields['first_name'].initial = self.user_instance.first_name
+            self.fields['last_name'].initial = self.user_instance.last_name
+            self.fields['group'].initial = self.user_instance.groups.all()
+
+    def save(self, commit=True):
+        profile = super().save(commit=False)
+        user = self.user_instance
+
+        user.email = self.cleaned_data['email']
+        user.first_name = self.cleaned_data['first_name']
+        user.last_name = self.cleaned_data['last_name']
+        if commit:
+            user.save()
+            user.groups.set(self.cleaned_data['group'])
+            profile.user = user
+            profile.save()
+
+        return profile
