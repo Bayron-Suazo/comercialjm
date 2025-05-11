@@ -25,23 +25,50 @@ from django.db.models import Count
 # Create your views here.
 @login_required
 def lista_usuarios_activos(request):
-    usuarios_list = User.objects.filter(is_active=True).order_by('username')
-    paginator = Paginator(usuarios_list, 10)
+    order_by = request.GET.get('order_by', '')
 
-    page_number = request.GET.get('page')
-    usuarios = paginator.get_page(page_number)
+    usuarios_activos = User.objects.filter(is_active=True)
 
-    return render(request, 'administrador/lista_usuarios.html', {'usuarios': usuarios})
+    if order_by:
+        if order_by == 'first_name':
+            usuarios = usuarios_activos.order_by('first_name')
+        elif order_by == 'last_name':
+            usuarios = usuarios_activos.order_by('last_name')
+        elif order_by == 'rut':
+            usuarios = usuarios_activos.order_by('profile__rut')
+        else:
+            usuarios = usuarios_activos
+    else:
+        usuarios = usuarios_activos
+
+    return render(request, 'administrador/lista_usuarios.html', {'usuarios': usuarios, 'order_by': order_by})
+
 
 @login_required
 def lista_usuarios_bloqueados(request):
-    usuarios_list = User.objects.filter(is_active=False).order_by('username')
-    paginator = Paginator(usuarios_list, 10)
+    order_by = request.GET.get('order_by', '')
 
+    usuarios_bloqueados = User.objects.filter(is_active=False)
+
+    if order_by:
+        if order_by == 'first_name':
+            usuarios = usuarios_bloqueados.order_by('first_name')
+        elif order_by == 'last_name':
+            usuarios = usuarios_bloqueados.order_by('last_name')
+        elif order_by == 'rut':
+            usuarios = usuarios_bloqueados.order_by('profile__rut')
+        elif order_by == 'group':
+            usuarios = usuarios_bloqueados.order_by('groups__name')
+        else:
+            usuarios = usuarios_bloqueados 
+    else:
+        usuarios = usuarios_bloqueados  
+
+    paginator = Paginator(usuarios, 10)
     page_number = request.GET.get('page')
     usuarios = paginator.get_page(page_number)
 
-    return render(request, 'administrador/lista_usuarios_bloqueados.html', {'usuarios': usuarios})
+    return render(request, 'administrador/lista_usuarios_bloqueados.html', {'usuarios': usuarios, 'order_by': order_by})
 
 @login_required
 def agregar_usuario(request):

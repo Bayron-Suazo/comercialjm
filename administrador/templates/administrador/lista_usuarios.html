@@ -46,10 +46,19 @@
 <div class="busqueda-agregar">
     <input type="text" placeholder="Buscar Usuario .........." class="input-busqueda">
 
-    <a href="#" class="boton-header">
-        Filtrar
-        <img src="{% static 'administrador/svg/filter-solid.svg' %}">
-    </a>
+
+    <div class="dropdown">
+        <a href="#" class="boton-header" id="dropdownMenuButton">
+            Filtrar
+            <img src="{% static 'administrador/svg/filter-solid.svg' %}">
+        </a>
+        <ul id="filterOptions" class="dropdown-content" style="display:none;">
+            <li><a href="#" onclick="applyFilter('first_name')" data-filter="first_name" class="{% if order_by == 'first_name' %}filtro-activo{% endif %}">Nombre</a></li>
+            <li><a href="#" onclick="applyFilter('last_name')" data-filter="last_name" class="{% if order_by == 'last_name' %}filtro-activo{% endif %}">Apellido</a></li>
+            <li><a href="#" onclick="applyFilter('rut')" data-filter="rut" class="{% if order_by == 'rut' %}filtro-activo{% endif %}">Rut</a></li>
+            <li><a href="#" onclick="clearOrderFilter()">Limpiar filtro</a></li>
+        </ul>
+    </div>
 </div>
 
 <form id="form-carga-masiva" action="{% url 'cargar_usuarios' %}" method="POST" enctype="multipart/form-data" style="display: none;">
@@ -290,6 +299,7 @@
 
 </script>
 
+<script src="{% static 'administrador/js/filtro_orden_usuario.js' %}"></script>
 <script src="{% static 'administrador/js/busca_usuarios.js' %}"></script>
 
 
