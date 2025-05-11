@@ -106,3 +106,18 @@ class EditUserProfileForm(forms.ModelForm):
             profile.save()
 
         return profile
+    
+class PerfilForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'email', 'password']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'placeholder': 'Nombre'}),
+            'email': forms.EmailInput(attrs={'placeholder': 'Correo'}),
+            'password': forms.PasswordInput(render_value=True, attrs={'placeholder': '********'}),
+        }
+        labels = {
+            'first_name': 'Nombre',
+            'email': 'Correo',
+            'password': 'Contraseña'
+        }

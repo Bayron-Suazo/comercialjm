@@ -17,6 +17,7 @@ from django.core.exceptions import ValidationError
 from django.contrib import messages
 from administrador.forms import EditUserProfileForm
 from django.views.decorators.http import require_POST
+from .forms import PerfilForm
 
 
 
@@ -234,3 +235,23 @@ def editar_usuario(request, user_id):
             'user_form': form,
             'user': user
         })
+    
+@login_required
+def perfil_view(request):
+    user = request.user
+    profile = user.profile
+
+    if request.method == 'POST':
+        
+        user.first_name = request.POST.get('first_name')
+        user.last_name = request.POST.get('last_name')
+        user.email = request.POST.get('email')
+        user.save()
+
+        profile.telefono = request.POST.get('telefono')
+        profile.direccion = request.POST.get('direccion')
+        profile.save()
+
+        return redirect('perfil')
+
+    return render(request, 'administrador/perfil.html')
