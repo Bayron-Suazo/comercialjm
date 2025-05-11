@@ -18,16 +18,11 @@ from django.contrib import messages
 from administrador.forms import EditUserProfileForm
 from django.views.decorators.http import require_POST
 from .forms import PerfilForm
+from django.db.models import Count
 
 
 
 # Create your views here.
-def pagina_prueba(request):
-    return render(request, 'administrador/pagina_prueba.html')
-
-def is_admin(user):
-    return user.groups.filter(name='Administrador').exists()
-
 @login_required
 def lista_usuarios_activos(request):
     usuarios_list = User.objects.filter(is_active=True).order_by('username')
@@ -255,3 +250,33 @@ def perfil_view(request):
         return redirect('perfil')
 
     return render(request, 'administrador/perfil.html')
+
+
+def dashboard_usuarios(request):
+    total_users = User.objects.count()
+    active_users = User.objects.filter(is_active=True).count()
+    inactive_users = total_users - active_users
+
+    percent_active = (active_users / total_users * 100) if total_users else 0
+    percent_inactive = 100 - percent_active
+
+    empleados_group = Group.objects.get(name="Empleado")
+    administradores_group = Group.objects.get(name="Administrador")
+
+    empleados = User.objects.filter(groups=empleados_group).count()
+    administradores = User.objects.filter(groups=administradores_group).count()
+    ambos = User.objects.annotate(num_groups=Count('groups')).filter(num_groups__gt=1).count()
+
+    ultimo_usuario = User.objects.latest('date_joined')
+
+    context = {
+        'total_users': total_users,
+        'percent_active': round(percent_active, 2),
+        'percent_inactive': round(percent_inactive, 2),
+        'empleados': empleados,
+        'administradores': administradores,
+        'ambos': ambos,
+        'ultimo_usuario': ultimo_usuario,
+    }
+
+    return render(request, 'administrador/dashboard_usuarios.html', context)
