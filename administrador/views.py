@@ -40,6 +40,10 @@ def lista_usuarios_activos(request):
             usuarios = usuarios_activos
     else:
         usuarios = usuarios_activos
+    
+    paginator = Paginator(usuarios, 10)
+    page_number = request.GET.get('page')
+    usuarios = paginator.get_page(page_number)
 
     return render(request, 'administrador/lista_usuarios.html', {'usuarios': usuarios, 'order_by': order_by})
 

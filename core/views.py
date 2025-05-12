@@ -39,7 +39,7 @@ def check_profile(request):
 
 def redirect_to_dashboard(group_name):
     if group_name == 'Administrador':
-        return redirect('lista_usuarios_activos')
+        return redirect('dashboard_usuarios')
     elif group_name == 'Empleado':
         #return redirect('pagina_prueba_empleado')
         return redirect('logout')
