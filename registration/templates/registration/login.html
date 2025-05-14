@@ -21,11 +21,18 @@
         {% if form.non_field_errors %}
         <p style="color:red">Credenciales erroneas</p>
         {% endif %}
+        
+
+        {% if messages %}
+          {% for message in messages %}
+            <p style="color: red;">{{ message }}</p>
+          {% endfor %}
+        {% endif %}
         <form class="login-form" action="" method="post">
           {% csrf_token %}
           <div class="mb-3 input-icon">
             <label for="user" style="display: flex; align-items: center;"><i class="fas fa-user" style="margin-top: 16px; margin-left: 5px;"></i> Usuario:</label>
-            <input type="text" name="username" class="form-control" />
+            <input type="text" name="username" class="form-control" value="{{ form.username.value|default:'' }}">
             <span class="feedback body-small text-regular"></span>
           </div>
           <div class="mb-3 input-icon">

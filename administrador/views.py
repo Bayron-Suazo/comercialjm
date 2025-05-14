@@ -232,7 +232,15 @@ def activar_usuario(request):
 
         user_ids = [int(uid) for uid in user_ids if int(uid) != request.user.id]
         users = User.objects.filter(id__in=user_ids, is_active=False)
-        updated_count = users.update(is_active=True)
+
+        from registration.models import Profile
+        updated_count = 0
+
+        for user in users:
+            user.is_active = True
+            user.save()
+            Profile.objects.filter(user=user).update(failed_attempts=0)
+            updated_count += 1
 
         return JsonResponse({'success': True, 'updated': updated_count})
     except Exception as e:
