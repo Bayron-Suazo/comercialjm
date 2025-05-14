@@ -44,10 +44,10 @@
                     <a href="#">Reportería</a>
                 </li>
                 <li>
-                    <a href="{% url 'lista_usuarios_activos' %}">Usuarios</a>
+                    <a href="{% url 'dashboard_usuarios' %}">Usuarios</a>
                 </li>
                 <hr class="divider divider_logout">
-                <div class="sidebar-user">
+                <a href="{% url 'perfil' %}" class="sidebar-user">
                     <div class="initials">
                         {{ request.user.first_name|default:request.user.username|slice:":1" }}{{ request.user.last_name|slice:":1" }}
                     </div>
@@ -55,14 +55,17 @@
                         <div>{{ request.user.get_full_name|default:request.user.username }}</div>
                         <div>Administrador</div>
                     </div>
-                </div>
+                </a>
             </ul>
             <hr class="divider divider_logout">
             <div class="logout">
-                <a href="{% url 'login' %}">
-                    <img src="{% static 'core/svg/log-out.svg' %}" alt="Cerrar sesión">
-                    Salir
-                </a>
+                <form method="POST" action="{% url 'logout' %}" style="margin: 0;">
+                    {% csrf_token %}
+                    <button type="submit">
+                        <img src="{% static 'core/svg/log-out.svg' %}" alt="Cerrar sesión">
+                        Salir
+                    </button>
+                </form>
             </div>
         </aside>
 

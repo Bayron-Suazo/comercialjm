@@ -243,7 +243,7 @@ def mostrar_usuario(request, user_id):
     user = get_object_or_404(User, id=user_id)
     return render(request, 'administrador/mostrar_usuario.html', {'user': user})
 
-
+@login_required
 def editar_usuario(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     profile = get_object_or_404(Profile, user=user)
@@ -282,7 +282,7 @@ def perfil_view(request):
 
     return render(request, 'administrador/perfil.html')
 
-
+@login_required
 def dashboard_usuarios(request):
     total_users = User.objects.count()
     active_users = User.objects.filter(is_active=True).count()

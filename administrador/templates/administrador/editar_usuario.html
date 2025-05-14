@@ -109,8 +109,8 @@
     
 
     <div class="button-group">
-        <button type="button" class="cancelar" onclick="history.back()">Cancelar</button>
-        <button type="submit" class="añadir">Confirmar</button>
+        <button type="button" class="cancelar" onclick="window.location.href='{% url 'mostrar_usuario' user.id %}'">Volver</button>
+        <button type="submit" class="añadir">Guardar</button>
     </div>
 
     <!-- Modal de éxito -->
