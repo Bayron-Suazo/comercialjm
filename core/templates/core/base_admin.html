@@ -47,7 +47,7 @@
                     <a href="{% url 'dashboard_usuarios' %}">Usuarios</a>
                 </li>
                 <hr class="divider divider_logout">
-                <a href="{% url 'perfil' %}" class="sidebar-user">
+                <a href="{% url 'perfil_admin' %}" class="sidebar-user">
                     <div class="initials">
                         {{ request.user.first_name|default:request.user.username|slice:":1" }}{{ request.user.last_name|slice:":1" }}
                     </div>

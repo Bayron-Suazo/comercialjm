@@ -40,15 +40,17 @@
                 <li>
                     <a href="#">Ventas</a>
                 </li>
-                <li>
-                    <a href="#">Perfil</a>
+
+                <li class="espacio-placeholder">
+                    <a href="#">&nbsp;</a>
                 </li>
+                
                 <li class="espacio-placeholder">
                     <a href="#">&nbsp;</a>
                 </li>
                 
                 <hr class="divider divider_logout">
-                <a href="{% url 'perfil' %}" class="sidebar-user">
+                <a href="{% url 'perfil_empleado' %}" class="sidebar-user">
                     <div class="initials">
                         {{ request.user.first_name|default:request.user.username|slice:":1" }}{{ request.user.last_name|slice:":1" }}
                     </div>
