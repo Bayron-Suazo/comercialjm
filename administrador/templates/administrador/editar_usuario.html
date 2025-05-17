@@ -127,6 +127,9 @@
     document.getElementById("editar-form").addEventListener("submit", function(event) {
         event.preventDefault();
 
+        // Limpiar errores previos
+        document.querySelectorAll(".error").forEach(el => el.innerHTML = "");
+
         const form = event.target;
         const formData = new FormData(form);
 
@@ -146,15 +149,38 @@
                     document.getElementById("modalExito").style.display = "none";
                 }, 3000);
             } else {
-                console.error('Errores en formulario:', data.errors);
-                alert("Error al guardar los datos. Verifica los campos.");
+                // Mostrar errores por campo
+                for (const [fieldName, errorList] of Object.entries(data.errors)) {
+                    const field = document.querySelector(`[name="${fieldName}"]`);
+                    if (field) {
+                        const formGroup = field.closest(".form-group");
+                        const errorDiv = formGroup ? formGroup.querySelector(".error") : null;
+                        if (errorDiv) {
+                            errorDiv.innerHTML = errorList.join("<br>");
+                        }
+                    }
+                }
+
+                // Mostrar errores generales (no-field errors)
+                if (data.errors.__all__) {
+                    alert(data.errors.__all__.join("\n"));
+                }
             }
         })
         .catch(error => {
             console.error('Error:', error);
+            alert("Ocurrió un error inesperado. Intenta nuevamente.");
         });
     });
 
 </script>
+
+
+{% block extra_js %}
+<script src="{% static 'administrador/js/formatear_rut.js' %}"></script>
+<script src="{% static 'administrador/js/formatear_telefono.js' %}"></script>
+<script src="{% static 'administrador/js/formatear_nombre.js' %}"></script>
+<script src="{% static 'administrador/js/formatear_apellido.js' %}"></script>
+{% endblock %}
 
 {% endblock %}

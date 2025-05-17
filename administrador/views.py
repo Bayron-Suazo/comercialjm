@@ -286,7 +286,7 @@ def perfil_view(request):
         profile.direccion = request.POST.get('direccion')
         profile.save()
 
-        return redirect('perfil')
+        return redirect('perfil_admin')
 
     return render(request, 'administrador/perfil.html')
 

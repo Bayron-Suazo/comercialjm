@@ -18,6 +18,6 @@ def perfil_view(request):
         profile.direccion = request.POST.get('direccion')
         profile.save()
 
-        return redirect('perfil')
+        return redirect('perfil_empleado')
 
     return render(request, 'empleado/perfil.html')

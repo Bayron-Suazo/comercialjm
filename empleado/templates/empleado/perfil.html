@@ -51,7 +51,7 @@
                         </div>
 
                         <label>Correo</label>
-                        <input type="email" name="email" value="{{ user.email }}" readonly>
+                        <input type="email" name="email" value="{{ user.email }}" required class="editable">
 
                         <div class="contenedor-actualizar">
                             <a href="{% url 'password_change' %}" class="btn-actualizar">Actualizar Credenciales</a>
