@@ -8,10 +8,12 @@ from datetime import date
 from itertools import cycle
 
 
+# ------------------ AGREGAR USUARIO ------------------
+
 class UserProfileForm(forms.ModelForm):
-    email = forms.EmailField()
-    first_name = forms.CharField(max_length=30, label="Nombres")
-    last_name = forms.CharField(max_length=30, label="Apellidos")
+    email = forms.EmailField(required=True)
+    first_name = forms.CharField(max_length=30, label="Nombres",required=True)
+    last_name = forms.CharField(max_length=30, label="Apellidos",required=True)
     groups = forms.ModelMultipleChoiceField(
         label="Cargo",
         queryset=Group.objects.filter(name__in=["Administrador", "Empleado"]),
@@ -22,7 +24,8 @@ class UserProfileForm(forms.ModelForm):
     sexo = forms.ChoiceField(
         label="Sexo",
         choices=[('M', 'Masculino'), ('F', 'Femenino')],
-        widget=forms.RadioSelect
+        widget=forms.RadioSelect,
+        required=True
     )
 
     class Meta:
@@ -31,6 +34,14 @@ class UserProfileForm(forms.ModelForm):
         widgets = {
             'fecha_nacimiento': forms.DateInput(attrs={'type': 'date'})
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['rut'].required = True
+        self.fields['telefono'].required = True
+        self.fields['fecha_nacimiento'].required = True
+        self.fields['direccion'].required = True
+        self.fields['sexo'].required = True
 
     # ---------------- VALIDACIONES ----------------
 
@@ -141,8 +152,20 @@ class UserProfileForm(forms.ModelForm):
 
         return profile, password
     
+
+
+# ------------------ CARGA MASIVA ------------------
+ 
+ 
+    
 class CargaMasivaUsuariosForm(forms.Form):
     archivo = forms.FileField()
+
+
+
+
+# ------------------ EDITAR USUARIO ------------------
+
 
 
 class EditUserProfileForm(forms.ModelForm):
@@ -181,6 +204,13 @@ class EditUserProfileForm(forms.ModelForm):
             self.fields['first_name'].initial = self.user_instance.first_name
             self.fields['last_name'].initial = self.user_instance.last_name
             self.fields['group'].initial = self.user_instance.groups.all()
+
+        # Hacer que todos los campos del modelo sean requeridos
+        self.fields['rut'].required = True
+        self.fields['telefono'].required = True
+        self.fields['fecha_nacimiento'].required = True
+        self.fields['direccion'].required = True
+        self.fields['sexo'].required = True
 
     # ---------------- VALIDACIONES ----------------
 
@@ -267,6 +297,12 @@ class EditUserProfileForm(forms.ModelForm):
             profile.save()
 
         return profile
+    
+
+
+# ------------------ PERFIL USUARIO ------------------
+
+
     
 class PerfilForm(forms.ModelForm):
     class Meta:

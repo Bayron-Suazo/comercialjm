@@ -11,10 +11,19 @@ from django import forms
 from .models import Profile
 from django.contrib.auth import authenticate, login
 from django.shortcuts import redirect
+from django.urls import reverse
+
+
+
+# ------------------ LOGIN PERSONALIZADO ------------------
+
 
 
 class CustomLoginView(LoginView):
     template_name = 'registration/login.html'
+
+    def get_success_url(self):
+        return reverse('check_profile')
 
     def post(self, request, *args, **kwargs):
         username = request.POST.get('username')

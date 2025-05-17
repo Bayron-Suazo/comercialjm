@@ -22,7 +22,14 @@ from django.db.models import Count
 
 
 
-# Create your views here.
+# ------------------------------------ GESTIÓN DE USUARIOS ------------------------------------
+
+
+
+# ------------------ LISTADO DE USUARIOS ACTIVOS Y BLOQUEADOS ------------------
+
+
+
 @login_required
 def lista_usuarios_activos(request):
     order_by = request.GET.get('order_by', '')
@@ -46,6 +53,7 @@ def lista_usuarios_activos(request):
     usuarios = paginator.get_page(page_number)
 
     return render(request, 'administrador/lista_usuarios.html', {'usuarios': usuarios, 'order_by': order_by})
+
 
 
 @login_required
@@ -73,6 +81,12 @@ def lista_usuarios_bloqueados(request):
     usuarios = paginator.get_page(page_number)
 
     return render(request, 'administrador/lista_usuarios_bloqueados.html', {'usuarios': usuarios, 'order_by': order_by})
+
+
+
+# ------------------ AGREGAR - MOSTRAR - EDITAR - ACTIVAR - BLOQUEAR ------------------
+
+
 
 @login_required
 def agregar_usuario(request):
@@ -116,13 +130,130 @@ def agregar_usuario(request):
         form = UserProfileForm()
     return render(request, 'administrador/agregar_usuario.html', {'form': form})
 
-# Función para convertir las fechas al formato YYYY-MM-DD
-def convert_date(date_str):
+
+
+@login_required
+def mostrar_usuario(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    return render(request, 'administrador/mostrar_usuario.html', {'user': user})
+
+
+
+@login_required
+def editar_usuario(request, user_id):
+    user = get_object_or_404(User, pk=user_id)
+    profile = get_object_or_404(Profile, user=user)
+
+    if request.method == 'POST':
+        form = EditUserProfileForm(request.POST, instance=profile, user_instance=user)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+    else:
+        form = EditUserProfileForm(instance=profile, user_instance=user)
+        return render(request, 'administrador/editar_usuario.html', {
+            'user_form': form,
+            'user': user
+        })
+
+
+
+@user_passes_test(lambda u: u.is_superuser)
+@require_POST
+@login_required
+def activar_usuario(request):
     try:
-        # Convertir de 'DD/MM/YYYY' a 'YYYY-MM-DD'
-        return datetime.strptime(date_str, '%d/%m/%Y').date()
-    except ValueError:
-        return None
+        user_id = request.POST.get('user_id')
+        user_ids = json.loads(request.POST.get('user_ids', '[]')) if request.POST.get('user_ids') else []
+
+        if user_id:
+            if int(user_id) == request.user.id:
+                return JsonResponse({'success': False})
+            user_ids = [user_id]
+
+        user_ids = [int(uid) for uid in user_ids if int(uid) != request.user.id]
+        users = User.objects.filter(id__in=user_ids, is_active=False)
+
+        from registration.models import Profile
+        updated_count = 0
+
+        for user in users:
+            user.is_active = True
+            user.save()
+            Profile.objects.filter(user=user).update(failed_attempts=0)
+            updated_count += 1
+
+        return JsonResponse({'success': True, 'updated': updated_count})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+
+@user_passes_test(lambda u: u.is_superuser)
+@require_POST
+@login_required
+def bloquear_usuario(request):
+    try:
+        user_id = request.POST.get('user_id')
+        user_ids = json.loads(request.POST.get('user_ids', '[]')) if request.POST.get('user_ids') else []
+
+        if user_id:
+            if int(user_id) == request.user.id:
+                return JsonResponse({'success': False})
+            user_ids = [user_id]
+
+        user_ids = [int(uid) for uid in user_ids if int(uid) != request.user.id]
+        users = User.objects.filter(id__in=user_ids, is_active=True)
+        updated_count = users.update(is_active=False)
+
+        return JsonResponse({'success': True, 'updated': updated_count})
+    except:
+        return JsonResponse({'success': False})
+    
+
+
+# ------------------ VISTA PERFIL ------------------
+
+
+
+@login_required
+def perfil_view(request):
+    user = request.user
+    profile = user.profile
+
+    if request.method == 'POST':
+        # Obtener datos del formulario
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        telefono = request.POST.get('telefono', '').strip()
+        direccion = request.POST.get('direccion', '').strip()
+
+        # Validar que no haya campos vacíos
+        if not all([first_name, last_name, email, telefono, direccion]):
+            return render(request, 'administrador/perfil.html', {'user': user})
+
+        # Si pasa validación, actualizar datos
+        user.first_name = first_name
+        user.last_name = last_name
+        user.email = email
+        user.save()
+
+        profile.telefono = telefono
+        profile.direccion = direccion
+        profile.save()
+
+        return redirect('perfil_admin')
+
+    return render(request, 'administrador/perfil.html', {'user': user})
+
+
+
+# ------------------ CARGA MASIVA ------------------
+
+
 
 def cargar_usuarios(request):
     if request.method == "POST" and request.FILES.get("archivo"):
@@ -194,112 +325,19 @@ def cargar_usuarios(request):
 
 
 
-
-@user_passes_test(lambda u: u.is_superuser)
-@require_POST
-@login_required
-def bloquear_usuario(request):
+# Función para convertir las fechas al formato YYYY-MM-DD
+def convert_date(date_str):
     try:
-        user_id = request.POST.get('user_id')
-        user_ids = json.loads(request.POST.get('user_ids', '[]')) if request.POST.get('user_ids') else []
-
-        if user_id:
-            if int(user_id) == request.user.id:
-                return JsonResponse({'success': False})
-            user_ids = [user_id]
-
-        user_ids = [int(uid) for uid in user_ids if int(uid) != request.user.id]
-        users = User.objects.filter(id__in=user_ids, is_active=True)
-        updated_count = users.update(is_active=False)
-
-        return JsonResponse({'success': True, 'updated': updated_count})
-    except:
-        return JsonResponse({'success': False})
+        # Convertir de 'DD/MM/YYYY' a 'YYYY-MM-DD'
+        return datetime.strptime(date_str, '%d/%m/%Y').date()
+    except ValueError:
+        return None
 
 
-@user_passes_test(lambda u: u.is_superuser)
-@require_POST
-@login_required
-def activar_usuario(request):
-    try:
-        user_id = request.POST.get('user_id')
-        user_ids = json.loads(request.POST.get('user_ids', '[]')) if request.POST.get('user_ids') else []
 
-        if user_id:
-            if int(user_id) == request.user.id:
-                return JsonResponse({'success': False})
-            user_ids = [user_id]
+# ------------------ DASHBOARD DE USUARIOS ------------------
 
-        user_ids = [int(uid) for uid in user_ids if int(uid) != request.user.id]
-        users = User.objects.filter(id__in=user_ids, is_active=False)
 
-        from registration.models import Profile
-        updated_count = 0
-
-        for user in users:
-            user.is_active = True
-            user.save()
-            Profile.objects.filter(user=user).update(failed_attempts=0)
-            updated_count += 1
-
-        return JsonResponse({'success': True, 'updated': updated_count})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
-    
-@login_required
-def mostrar_usuario(request, user_id):
-    user = get_object_or_404(User, id=user_id)
-    return render(request, 'administrador/mostrar_usuario.html', {'user': user})
-
-@login_required
-def editar_usuario(request, user_id):
-    user = get_object_or_404(User, pk=user_id)
-    profile = get_object_or_404(Profile, user=user)
-
-    if request.method == 'POST':
-        form = EditUserProfileForm(request.POST, instance=profile, user_instance=user)
-        if form.is_valid():
-            form.save()
-            return JsonResponse({'success': True})
-        else:
-            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-    else:
-        form = EditUserProfileForm(instance=profile, user_instance=user)
-        return render(request, 'administrador/editar_usuario.html', {
-            'user_form': form,
-            'user': user
-        })
-    
-@login_required
-def perfil_view(request):
-    user = request.user
-    profile = user.profile
-
-    if request.method == 'POST':
-        # Obtener datos del formulario
-        first_name = request.POST.get('first_name', '').strip()
-        last_name = request.POST.get('last_name', '').strip()
-        email = request.POST.get('email', '').strip()
-        telefono = request.POST.get('telefono', '').strip()
-        direccion = request.POST.get('direccion', '').strip()
-
-        # Validar que no haya campos vacíos
-        if not all([first_name, last_name, email, telefono, direccion]):
-            return render(request, 'administrador/perfil.html', {'user': user})
-
-        # Si pasa validación, actualizar datos
-        user.first_name = first_name
-        user.last_name = last_name
-        user.email = email
-        user.save()
-
-        profile.telefono = telefono
-        profile.direccion = direccion
-        profile.save()
-
-        return redirect('perfil_admin')
-
-    return render(request, 'administrador/perfil.html', {'user': user})
 
 @login_required
 def dashboard_usuarios(request):
@@ -330,3 +368,7 @@ def dashboard_usuarios(request):
     }
 
     return render(request, 'administrador/dashboard_usuarios.html', context)
+
+
+
+# ------------------------------------ FIN GESTIÓN DE USUARIOS ------------------------------------

@@ -2,6 +2,12 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .forms import PerfilForm
 
+
+
+# ------------------ PERFIL USUARIO ------------------
+
+
+
 @login_required
 def perfil_view(request):
     user = request.user
