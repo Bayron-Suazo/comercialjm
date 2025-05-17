@@ -1,0 +1,324 @@
+.sidebar_empleado,
+.sidebar_administrador {
+    width: 330px;
+    background-color: #E0D8B0; /* Cambiar el color según sea necesario */
+    box-shadow: 2px 0 5px rgba(116, 116, 116, 0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    position: fixed;
+    top: 0; /* Asegura que la sidebar esté en la parte superior */
+    bottom: 0; /* Asegura que la sidebar se extienda hasta el fondo */
+    z-index: 1;
+    border-top-right-radius: 25px;
+}
+
+.logos {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 90%;
+    margin-bottom: 20px;
+}
+
+.logo_comercialjm {
+    width: 100px;
+    height: 100px;
+}
+
+.nombre_empresa {
+    font-size: 24px;
+    margin-right: auto;
+    font-weight: normal;
+    color: black;
+}
+
+.divider {
+    border: none;
+    border-top: 1px solid rgb(255, 255, 255);
+    margin: 10px 0;
+    width: 90%;
+}
+
+/* Profile Section */
+.profile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    width: 90%;
+}
+
+
+/* Menu Styles */
+.menu {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    padding: 1rem;
+    width: 100%;
+    height: 100%;
+    margin-bottom: auto;
+}
+
+.menu li {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.menu li a {
+    text-decoration: none;
+    color: black;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    font-size: 24px;
+    border-radius: 12px;
+    transition: background-color 0.3s ease, color 0.3s ease, filter 0.3s ease;
+}
+
+.menu li a:hover {
+    background-color: #FFFFFF;
+    opacity: 50%;
+    color: black;
+    filter: brightness(1.1);
+}
+
+.menu li a img {
+    width: 40px;
+    height: 40px;
+    margin-right: 14px;
+}
+
+.elegir-rol{
+    margin-top: auto;
+}
+
+.sidebar-user {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.sidebar-user .initials {
+    background-color: #f5f2d8;
+    border-radius: 50%;
+    width: 70px;
+    height: 70px;
+    font-size: 24px;
+    text-align: center;
+    line-height: 70px;
+    font-weight: bold;  
+    margin-right: 20px;
+}
+
+.sidebar-user .info {
+    flex-grow: 1;
+}
+
+.sidebar-user .info div:first-child {
+    font-weight: normal;
+    font-size: 24px;
+}
+
+.sidebar-user .info div:last-child {
+    font-size: 24px;
+    color: gray;
+}
+
+.logout {
+    width: 100%;
+}
+
+.logout button {
+    background-color: #d9534f;
+    text-decoration: none;
+    color: #ffffff;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    font-size: 24px;
+    border-radius: 5px;
+    margin: 1rem;
+    transition: background-color 0.3s ease;
+    border: none;
+    width: 90%;
+    cursor: pointer;
+}
+
+.logout a img {
+    width: 40px;
+    height: 40px;
+    margin-right: 14px;
+}
+
+.espacio-placeholder a {
+    visibility: hidden;
+    pointer-events: none; 
+}
+
+a.sidebar-user {
+    color: inherit;      
+    text-decoration: none; 
+}
+
+a.sidebar-user:visited {
+    color: inherit;
+}
+
+@media screen and (max-width: 1200px){
+    .sidebar_empleado,
+    .sidebar_administrador {
+        width: 230px;
+    }
+    
+    .logo_comercialjm {
+        width: 63px;
+        height: 63px;
+    }
+    
+    .logo_u{
+        width: 119px;
+        height: 77px;
+    }
+    
+    .profile .nombre_usuario p {
+        font-size: 16px;
+    }
+
+    .menu li a {
+        font-size: 20px;
+    }
+
+    .menu li a img {
+        width: 34px;
+        height: 34px;
+        margin-right: 10px;
+    }
+
+    .nombre_empresa {
+        font-size: 20px;
+    }
+    
+    .sidebar-user .initials {
+        width: 60px;
+        height: 60px;
+        font-size: 20px;
+        line-height: 60px;
+        margin-right: 15px;
+    }
+    
+    .sidebar-user .info div:first-child {
+        font-size: 20px;
+    }
+    
+    .sidebar-user .info div:last-child {
+        font-size: 18px;
+    }
+}
+
+
+/* Responsive Sidebar para pantallas menores a 768px */
+@media screen and (max-width: 768px) {
+    .sidebar_empleado,
+    .sidebar_administrador {
+        width: 250px; 
+        transform: translateX(-250px);
+        transition: transform 0.4s ease-in-out;
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 1000;
+    }
+
+    .nombre_empresa {
+        font-size: 18px;
+    }
+    
+    .sidebar-user .initials {
+        width: 50px;
+        height: 50px;
+        font-size: 18px;
+        line-height: 50px;
+        margin-right: 10px;
+    }
+    
+    .sidebar-user .info div:first-child {
+        font-size: 18px;
+    }
+    
+    .sidebar-user .info div:last-child {
+        font-size: 16px;
+    }
+
+    /* Mostrar la sidebar cuando tenga la clase 'sidebar-activa' */
+    .sidebar-activa {
+        transform: translateX(0);
+    }
+
+    .menu-toggle-admin, 
+    .menu-toggle-empleado {
+        width: 10%;
+        display: block;
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        color: #ffffff;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        z-index: 1001;
+        cursor: pointer;
+    }
+    .menu-toggle-admin{
+        background-color: #E0D8B0;
+    }
+    .menu-toggle-empleado{
+        background-color: #E0D8B0;
+    }
+
+    .sidebar_empleado .logos,
+    .sidebar_administrador .logos,
+    .sidebar_empleado .profile,
+    .sidebar_administrador .profile {
+        margin-top: 40px;
+    }
+
+    /* Ajustar los ítems del menú */
+    .menu {
+        padding: 0;
+    }
+
+    .menu li a {
+        font-size: 20px;
+        padding: 15px;
+    }
+
+    .menu li a img {
+        width: 30px;
+        height: 30px;
+        margin-right: 10px;
+    }
+
+    /* Ajustar el botón de logout */
+    .logout {
+        margin-top: auto;
+    }
+
+    .logout a {
+        font-size: 20px;
+        padding: 15px;
+    }
+
+    /* Ajustar el contenido principal */
+    .main-content {
+        margin-left: 0;
+        position: relative;
+        z-index: 0;
+    }
+}
+

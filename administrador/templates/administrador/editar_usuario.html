@@ -1,0 +1,182 @@
+{% extends 'core/base_admin.html' %}
+
+{% load static %}
+
+{% block title %}Editar Usuario{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'administrador/css/editar_usuario.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+{% endblock %}
+
+{% block content %}
+<h2 class="titulo">Editar Usuario</h2>
+<form method="POST" action="{% url 'editar_usuario' user.id %}" id="editar-form">
+    {% csrf_token %}
+    
+    {% comment %} DATOS DEL usuarrio COLUMNA IZQUIERDA {% endcomment %}
+    <div class="form-container">
+        <div class="form-column">
+            <!-- Campo RUT -->
+            <div class="form-group">
+                <label for="{{ user_form.rut.id_for_label }}">Rut</label>
+                {{ user_form.rut }}
+                <div class="error">{{ user_form.rut.errors }}</div>
+            </div>
+            
+            <!-- Campo Nombre -->
+            <div class="form-group">
+                <label for="{{ user_form.first_name.id_for_label }}">Nombres</label>
+                {{ user_form.first_name }}
+                <div class="error">{{ user_form.first_name.errors }}</div>
+            </div>
+            
+            <!-- Campo Apellido -->
+            <div class="form-group">
+                <label for="{{ user_form.last_name.id_for_label }}">Apellidos</label>
+                {{ user_form.last_name }}
+                <div class="error">{{ user_form.last_name.errors }}</div>
+            </div>
+
+
+            <!-- Fecha de Nacimiento -->
+            <div class="form-group">
+                <label for="{{ user_form.fecha_nacimiento.id_for_label }}">Fecha de Nacimiento</label>
+                {{ user_form.fecha_nacimiento }}
+                <div class="error">{{ user_form.fecha_nacimiento.errors }}</div>
+            </div>
+
+
+            <!-- Sexo -->
+            <div class="form-group">
+                <label>{{ user_form.sexo.label }}</label>
+                <div class="checkbox-group">
+                    {{ user_form.sexo }}
+                </div>
+                <div class="error">{{ user_form.sexo.errors }}</div>
+            </div>
+
+
+        </div>
+
+        {% comment %} DATOS DEL usuario COLUMNA DERECHA {% endcomment %}
+        
+        <div class="form-column">
+
+
+            <!-- Correo Electrónico -->
+            <div class="form-group">
+                <label for="{{ user_form.email.id_for_label }}">Correo</label>
+                {{ user_form.email }}
+                <div class="error">{{ user_form.email.errors }}</div>
+            </div>
+
+
+            <!-- Teléfono -->
+            <div class="form-group">
+                <label for="{{ user_form.telefono.id_for_label }}">Teléfono</label>
+                {{ user_form.telefono }}
+                <div class="error">{{ user_form.telefono.errors }}</div>
+            </div>
+
+
+            <!-- Dirección -->
+            <div class="form-group">
+                <label for="{{ user_form.direccion.id_for_label }}">Dirección</label>
+                {{ user_form.direccion }}
+                <div class="error">{{ user_form.direccion.errors }}</div>
+            </div>
+
+
+            <!-- Cargo -->
+            <div class="form-group">
+                <label>{{ user_form.group.label }}</label>
+                <div class="checkbox-group">
+                    {{ user_form.group }}
+                </div>
+                <div class="error">{{ user_form.group.errors }}</div>
+            </div>
+
+            <div class="form-group invisible-group">
+                <label>&nbsp;</label>
+                <div class="dummy-field"></div>
+            </div>
+
+
+        </div>
+    </div>
+    
+
+    <div class="button-group">
+        <button type="button" class="cancelar" onclick="window.location.href='{% url 'mostrar_usuario' user.id %}'">Volver</button>
+        <button type="submit" class="añadir">Guardar</button>
+    </div>
+
+    <!-- Modal de éxito -->
+    <div id="modalExito" class="modal" style="display: none;">
+        <div class="contenido-modal">
+            <img src="{% static 'administrador/svg/Exito.svg' %}" alt="Éxito">
+            <p>¡Datos actualizados con éxito!</p>
+        </div>
+    </div>
+
+</form>
+
+<script>
+    document.getElementById("editar-form").addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        // Limpiar errores previos
+        document.querySelectorAll(".error").forEach(el => el.innerHTML = "");
+
+        const form = event.target;
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Mostrar el modal de éxito
+                document.getElementById("modalExito").style.display = "block";
+                setTimeout(function () {
+                    document.getElementById("modalExito").style.display = "none";
+                }, 3000);
+            } else {
+                // Mostrar errores por campo
+                for (const [fieldName, errorList] of Object.entries(data.errors)) {
+                    const field = document.querySelector(`[name="${fieldName}"]`);
+                    if (field) {
+                        const formGroup = field.closest(".form-group");
+                        const errorDiv = formGroup ? formGroup.querySelector(".error") : null;
+                        if (errorDiv) {
+                            errorDiv.innerHTML = errorList.join("<br>");
+                        }
+                    }
+                }
+
+                // Mostrar errores generales (no-field errors)
+                if (data.errors.__all__) {
+                    alert(data.errors.__all__.join("\n"));
+                }
+            }
+        })
+    });
+
+</script>
+
+
+{% block extra_js %}
+<script src="{% static 'administrador/js/formatear_rut.js' %}"></script>
+<script src="{% static 'administrador/js/formatear_telefono.js' %}"></script>
+<script src="{% static 'administrador/js/formatear_nombre.js' %}"></script>
+<script src="{% static 'administrador/js/formatear_apellido.js' %}"></script>
+{% endblock %}
+
+{% endblock %}

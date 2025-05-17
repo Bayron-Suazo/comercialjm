@@ -1,0 +1,81 @@
+@import "sidebar.css";
+@import "header.css";
+@import "footer.css";
+
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    font-family: Jost, sans-serif;
+    min-height: 100%;
+    margin: 0;
+}
+
+.contenedor-grid{
+    display: grid;
+    grid-template-areas: 
+    "sidebar header"
+    "sidebar main"
+    "sidebar footer";
+    grid-template-columns: 330px 1fr;
+    grid-template-rows: 1.5fr auto 0.125fr;
+}
+
+.header{
+    grid-area: header;
+}
+
+.sidebar_empleado{
+    grid-area: sidebar;
+}
+
+.main-content{
+    grid-area: main;
+}
+
+.footer{
+    grid-area: footer;
+}
+
+
+@media screen and (max-width: 1200px){
+    .contenedor-grid{
+        grid-template-areas: 
+        "sidebar header"
+        "sidebar main"
+        "sidebar footer";
+        grid-template-columns: 230px 1fr;
+        grid-template-rows: 1.5fr auto 0.125fr;
+    }
+}
+
+@media screen and (max-width: 768px){
+    .contenedor-grid{
+        grid-template-areas: 
+        "sidebar"
+        "header"
+        "main"
+        "footer";
+        grid-template-columns: 1fr;
+        grid-template-rows: 150px 0.5fr auto 0.125fr;
+    }
+}
+
+@media screen and (max-width: 600px){
+    .contenedor-grid{
+        grid-template-areas: 
+        "sidebar"
+        "header"
+        "main"
+        "footer";
+        grid-template-columns: 1fr;
+        grid-template-rows: 150px 0.5fr auto 0.125fr;
+    }
+}

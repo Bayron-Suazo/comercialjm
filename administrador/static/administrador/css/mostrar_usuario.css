@@ -1,0 +1,464 @@
+.header {
+    display: flex;
+    width: 50%;
+    flex-flow: column nowrap;
+    align-items: flex-start; 
+}
+
+.main-content{
+    margin: 30px;
+}
+
+.back-arrow{
+    margin: -20px;
+}
+
+h1{
+    font-weight: normal;
+    font-size: 3rem;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+
+.container-usuario {
+    width: 100%;
+    padding: 0.8rem;
+    background-color: #E0D8B0;
+    border-radius: 0.4rem;
+    box-sizing: border-box;
+    position: relative; /* Asegura que el contenedor tenga un contexto de posición */
+
+}
+
+
+.card-usuario {
+    display: flex;
+    flex-flow: row nowrap;
+    flex-wrap: wrap;
+    justify-content: center;
+    color: black;
+    width: 100%;
+    position: relative; /* Esto permite que el ícono se posicione dentro de este contenedor */
+}
+
+.columna {
+    width: 50%;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.columna p {
+    margin-bottom: 30px;
+    font-size: 24px;
+    font-family: 'Jost', sans-serif;
+}
+
+p strong{
+    font-weight:550;
+}
+
+p span{
+    font-size: 21px;
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+}
+
+.campo-formulario {
+    background-color: white;
+    color: black;
+    border-radius: 5px;
+    padding: 15px;
+    font-size: 18px;
+    width: 90%;
+    height: 150px;
+    text-align: left; /* Alinea el texto a la izquierda */
+    display: block; /* Asegúrate de que sea un bloque */
+    box-sizing: border-box; /* Incluye el padding en el ancho y alto */
+    overflow: auto; /* Asegúrate de que el texto se ajuste correctamente */
+    resize: none; /* Evita que el usuario cambie el tamaño del textarea, si lo deseas */
+}
+
+
+.img-activo{
+    width: 15px;
+    height: 15px;
+    padding-top: 3px;
+    margin-left: 10px;
+}
+
+.img-terapeuta{
+    width: 35px;
+    height: 35px;
+    padding-top: 3px;
+    fill: #001058;
+}
+
+strong {
+    display: inline-block;
+    margin-bottom: 10px; /* Agrega un espacio entre el nombre del elemento y el resultado */
+}
+
+.izquierda {
+    text-align: left; /* Alineación a la izquierda, si es necesario */
+    padding-right: 30px ;
+}
+
+.derecha {
+    text-align: left; /* Alineación a la derecha */
+}
+
+
+.icon-container {
+    position: absolute; /* Permite colocar el ícono en una posición específica */
+    top: 10px; /* Ajusta la distancia desde la parte superior */
+    right: 10px; /* Ajusta la distancia desde la parte derecha */
+    cursor: pointer;
+}
+
+.icon {
+    width: 24px;
+    height: 24px;
+}
+
+.footer-container {
+    padding: 1rem; /* Espaciado interno */
+    background-color: #E0D8B0; /* Color de fondo del footer */
+    color: white; /* Color del texto */
+    text-align: left; /* Alineación del texto al centro */
+}
+
+.btn-actualizar-credenciales {
+    background-color: #FF6161; /* Color azul */
+    color: white;
+    font-size: 16px;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-actualizar-credenciales:hover {
+    background-color: #f67272; /* Azul más oscuro al pasar el mouse */
+}
+
+.contenido-modal {
+    display: flex;
+    padding: 20px;
+    background-color: #fefefe;
+    flex-direction: column;
+    gap: 1.25rem;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border-radius: 0.625rem;
+    width: 34.375rem;
+    height: 15.625rem;
+    margin: auto; /* Centrar horizontalmente */
+    position: absolute; /* Centrar verticalmente */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.botones-modal {
+    display: flex;
+    gap: 1.25rem;
+    margin-top: 1.25rem;
+}
+
+.boton-cancelar {
+    background-color: #FF6161;
+    color: white;
+    padding: 0.625rem 1.875rem;
+    border: none;
+    border-radius: 3.125rem;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.boton-confirmar {
+    background-color: #4CAF50;
+    color: white;
+    padding: 0.625rem 1.875rem;
+    border: none;
+    border-radius: 3.125rem;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.boton-cancelar:hover {
+    background-color: #FF7D7D;
+}
+
+.boton-confirmar:hover {
+    background-color: #4CAF50;
+}
+
+.email-container {
+    display: flex;
+    align-items: center; 
+    gap: 9px;
+    font-size: 20px;
+    margin-top: -25px;
+    margin-bottom: -10px;
+}
+
+.icon-container {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.edit-icon-svg {
+    width: 20px;
+    height: 20px;
+}
+
+.edit-button:hover .edit-icon-svg {
+    filter: brightness(0.8);
+}
+
+
+
+/* Estilos para el campo de entrada de correo electrónico */
+#email-input {
+    width: 100%;
+    max-width: 300px;
+    padding: 6px 8px;
+    margin-top: 5px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.modal-men {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* Cambiado de 'auto' a 'hidden' para evitar scrollbars */
+    background-color: rgba(0,0,0,0.4);
+    justify-content: center;
+    align-items: center;
+}
+
+
+.contenido-modal-mensaje {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    max-width: 300px;
+    width: 100%;
+}
+
+.spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border-left-color: #09f;
+    animation: spin 1s ease infinite;
+    margin: 0 auto 15px;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.contenido-modal img {
+    width: 75px;
+    height: 75px;
+    margin-bottom: 15px;
+}
+
+
+@media screen and (max-width: 1200px) {
+    .columna p {
+        font-size: 20px;
+    }
+
+    .email-container {
+        align-items: flex-start;
+        font-size: 18px;
+        margin-top: -15px;
+        margin-bottom: -5px;
+    }
+
+    .edit-icon-svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .save-button, .cancel-button {
+        width: 30%;
+        font-size: 14px;
+        padding: 10px;
+        margin-top: 10px;
+    }
+
+    #email-input {
+        max-width: 100%;
+        font-size: 16px;
+        padding: 8px;
+    }
+
+    .btn-actualizar-credenciales {
+        font-size: 15px;
+        padding: 10px;
+        margin-top: 15px;
+    }
+}
+
+/* Desde 900px hacia abajo */
+@media screen and (max-width: 900px) {
+    .columna p {
+        font-size: 20px;
+    }
+
+    .email-container {
+        flex-direction: column;
+        align-items: flex-start;
+        font-size: 18px;
+        margin-top: -15px;
+        margin-bottom: -5px;
+    }
+
+    .edit-icon-svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+/* Desde 768px hacia abajo */
+@media screen and (max-width: 768px) {
+    .columna {
+        width: 100%;
+        padding: 10px 0;
+    }
+
+    .campo-formulario {
+        width: 100%;
+        height: auto;
+        min-height: 120px;
+        font-size: 16px;
+    }
+
+    .email-container {
+        flex-direction: column;
+        align-items: flex-start;
+        font-size: 17px;
+        gap: 5px;
+    }
+
+    .btn-actualizar-credenciales {
+        font-size: 18px;
+        padding: 20px;
+    }
+
+    .edit-icon-svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .save-button, .cancel-button {
+        width: 100%;
+        font-size: 14px;
+        padding: 10px;
+        margin-top: 10px;
+    }
+
+    #email-input {
+        max-width: 100%;
+        font-size: 16px;
+        padding: 8px;
+    }
+}
+
+/* Desde 600px hacia abajo */
+@media screen and (max-width: 600px) {
+    .columna p {
+        font-size: 18px;
+    }
+
+    p span {
+        font-size: 16px;
+    }
+
+    .email-container {
+        font-size: 16px;
+    }
+
+    .btn-actualizar-credenciales {
+        font-size: 16px;
+        padding: 18px;
+    }
+
+    .campo-formulario {
+        font-size: 15px;
+    }
+}
+
+/* Desde 576px hacia abajo */
+@media screen and (max-width: 576px) {
+    .email-container {
+        font-size: 16px;
+        margin-top: -10px;
+        margin-bottom: 0;
+    }
+
+    .edit-icon-svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .save-button, .cancel-button {
+        font-size: 14px;
+        padding: 8px;
+        width: 100%;
+    }
+
+    #email-input {
+        font-size: 14px;
+        padding: 6px;
+    }
+
+    .btn-actualizar-credenciales {
+        font-size: 16px;
+        padding: 16px;
+    }
+}
+
+/* Desde 400px hacia abajo */
+@media screen and (max-width: 400px) {
+    .email-container {
+        font-size: 14px;
+    }
+
+    .edit-icon-svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .save-button, .cancel-button {
+        font-size: 12px;
+        padding: 6px;
+    }
+
+    #email-input {
+        font-size: 12px;
+        padding: 5px;
+    }
+
+    .btn-actualizar-credenciales {
+        font-size: 16px;
+        padding: 14px;
+    }
+}

@@ -1,0 +1,100 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Comercial JM{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'core/css/grid.css' %}">
+    <link rel="stylesheet" href="{% static 'core/css/normalize.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+
+<button class="menu-toggle-admin" onclick="toggleSidebar()">☰</button>
+    <div class="contenedor-grid">
+        <!-- Sidebar -->
+        <aside class="sidebar_administrador">
+            <div class="logos">
+                <img class="logo_comercialjm" src="{% static 'core/img/logo.png' %}" alt="Logo logo_comercialjm">
+                <span class="nombre_empresa">Comercial JM</span>
+            </div>
+
+
+
+            <hr class="divider">
+            <ul class="menu">
+                <li>
+                    <a href="#">Productos</a>
+                </li>
+                <li>
+                    <a href="#">Proveedores</a>
+                </li>
+                <li>
+                    <a href="#">Compras</a>
+                </li>
+                <li>
+                    <a href="#">Clientes</a>
+                </li>
+                <li>
+                    <a href="#">Ventas</a>
+                </li>
+                <li>
+                    <a href="#">Reportería</a>
+                </li>
+                <li>
+                    <a href="{% url 'dashboard_usuarios' %}">Usuarios</a>
+                </li>
+                <hr class="divider divider_logout">
+                <a href="{% url 'perfil_admin' %}" class="sidebar-user">
+                    <div class="initials">
+                        {{ request.user.first_name|default:request.user.username|slice:":1" }}{{ request.user.last_name|slice:":1" }}
+                    </div>
+                    <div class="info">
+                        <div>{{ request.user.get_full_name|default:request.user.username }}</div>
+                        <div>Administrador</div>
+                    </div>
+                </a>
+            </ul>
+            <hr class="divider divider_logout">
+            <div class="logout">
+                <form method="POST" action="{% url 'logout' %}" style="margin: 0;">
+                    {% csrf_token %}
+                    <button type="submit">
+                        <img src="{% static 'core/svg/log-out.svg' %}" alt="Cerrar sesión">
+                        Salir
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Header -->
+        <header class="header">
+            {% block header %}
+            <!-- Aquí se cargará el contenido específico del header de cada página -->
+            {% endblock %}
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            {% block content %}
+            <!-- Aquí se cargará el contenido específico de cada página -->
+            {% endblock %}
+        </main>
+
+    </div>
+
+    <!-- JavaScript general -->
+    <script src="{% static 'js/activeMenu.js' %}"></script>
+    <script>function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar_administrador, .sidebar_empleado');
+        sidebar.classList.toggle('sidebar-activa');
+    }
+    </script>
+    <!-- Bloque adicional para cargar scripts JS específicos -->
+    {% block extra_js %}{% endblock %}
+
+</body>
+
+</html>

@@ -1,0 +1,114 @@
+{% extends 'core/base_admin.html' %}
+{% block title %}Dashboard{% endblock %}
+{% load static %}
+{% block extra_head %}
+
+<link rel="stylesheet" href="{% static 'administrador/css/dashboard_usuarios.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-container">
+    <div class="top-bar">
+        <a href="{% url 'lista_usuarios_activos' %}" class="btn btn-primary">Listado de Usuarios</a>
+    </div>
+
+    <h1 class="dashboard-title">Gestión de Usuarios</h1>
+
+    <!-- Tarjetas resumen -->
+    <div class="cards-summary">
+        <div class="card">
+            <div class="card-icon">👥</div>
+            <div class="card-label">Total Usuarios</div>
+            <div class="card-value">{{ total_users }}</div>
+        </div>
+        <div class="card">
+            <div class="card-icon">🟢</div>
+            <div class="card-label">Usuarios Activos</div>
+            <div class="card-value">{{ percent_active }}%</div>
+        </div>
+        <div class="card">
+            <div class="card-icon">🔴</div>
+            <div class="card-label">Usuarios Bloqueados</div>
+            <div class="card-value">{{ percent_inactive }}%</div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="charts-section">
+        <div class="chart-card">
+            <h2 class="chart-title">Distribución por Cargo</h2>
+            <canvas id="barChart"></canvas>
+        </div>
+        
+        <div class="chart-card">
+            <h2 class="chart-title">Estado de Usuarios</h2>
+            <div class="pie-chart-container">
+                <canvas id="pieChart" width="250" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Último usuario -->
+    <div class="last-user">
+        <div class="initials-circle">
+            {{ ultimo_usuario.first_name|default:ultimo_usuario.username|slice:":1" }}{{ ultimo_usuario.last_name|slice:":1" }}
+        </div>
+        Último usuario registrado: 
+        <span>{{ ultimo_usuario.get_full_name|default:ultimo_usuario.username }}</span>
+        <br>
+        <small>({{ ultimo_usuario.date_joined|date:"d/m/Y H:i" }})</small>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Gráfico de Barras
+    const barCtx = document.getElementById('barChart').getContext('2d');
+    new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Empleados', 'Administradores', 'Ambos'],
+            datasets: [{
+                label: 'Cantidad',
+                data: [{{ empleados }}, {{ administradores }}, {{ ambos }}],
+                backgroundColor: ['#4CAF50', '#4CAF50', '#4CAF50']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    // Gráfico de Pastel
+    const pieCtx = document.getElementById('pieChart').getContext('2d');
+    new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Activos', 'Bloqueados'],
+            datasets: [{
+                data: [{{ percent_active|floatformat:"0" }}, {{ percent_inactive|floatformat:"0" }}],
+                backgroundColor: ['#4CAF50', '#f44336'],
+                borderColor: '#fff',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+</script>
+{% endblock %}
+
+

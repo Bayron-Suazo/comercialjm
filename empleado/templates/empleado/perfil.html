@@ -1,0 +1,95 @@
+{% extends 'core/base_empleado.html' %}
+{% load static %}
+
+{% block title %}Mi Perfil{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'empleado/css/perfil.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+
+<header class="header-perfil">
+    <h1>Mi Perfil</h1>
+</header>
+
+<div class="container">
+    <div class="container-perfil">
+        <form method="post" class="form-perfil">
+            {% csrf_token %}
+
+            <div class="card-perfil">
+                
+                <h2 class="titulo-seccion">Datos Personales</h2>
+
+                <div class="contenido-perfil">
+                    <!-- Columna Izquierda -->
+                    <div class="columna izquierda">
+                        <label>Nombre</label>
+                        <input type="text" name="first_name" id="id_first_name" class="editable" value="{{ user.first_name }}">
+
+                        <label>Apellido</label>
+                        <input type="text" name="last_name" id="id_last_name" class="editable" value="{{ user.last_name }}">
+
+                        <label>Teléfono</label>
+                        <input type="text" name="telefono" id="id_telefono" class="editable" value="{{ user.profile.telefono }}">
+
+                        <label>Dirección</label>
+                        <input type="text" name="direccion" value="{{ user.profile.direccion }}" class="editable">
+
+                        <div class="contenedor-guardar">
+                            <button type="submit" id="btn-guardar" class="btn-guardar" style="display: none; background-color: #28a745;">Guardar</button>
+                        </div>
+
+                    </div>
+
+                    <!-- Columna Derecha -->
+                    <div class="columna derecha">
+                        <div class="icono-perfil">
+                            <img src="{% static 'administrador/svg/circle-user-solid.svg' %}" alt="">
+                        </div>
+
+                        <label>Correo</label>
+                        <input type="email" name="email" value="{{ user.email }}" required class="editable">
+
+                        <div class="contenedor-actualizar">
+                            <a href="{% url 'password_change' %}" class="btn-actualizar">Actualizar Credenciales</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const editableInputs = document.querySelectorAll('.editable');
+    const btnGuardar = document.getElementById('btn-guardar');
+
+    // Guardar los valores iniciales
+    const initialValues = {};
+    editableInputs.forEach(input => {
+        initialValues[input.name] = input.value;
+    });
+
+    // Mostrar botón si algo cambia
+    editableInputs.forEach(input => {
+        input.addEventListener('input', () => {
+            let changed = false;
+            editableInputs.forEach(i => {
+                if (i.value !== initialValues[i.name]) {
+                    changed = true;
+                }
+            });
+            btnGuardar.style.display = changed ? 'block' : 'none';
+        });
+    });
+</script>
+<script src="{% static 'empleado/js/formatear_nombre.js' %}"></script>
+<script src="{% static 'empleado/js/formatear_apellido.js' %}"></script>
+<script src="{% static 'empleado/js/formatear_telefono.js' %}"></script>
+{% endblock %}

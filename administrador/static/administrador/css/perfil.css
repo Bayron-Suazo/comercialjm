@@ -1,0 +1,210 @@
+body {
+    background-color: #f7f6e7;
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.container{
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+.header-perfil h1{
+    font-weight: normal;
+}
+
+.header-perfil {
+    text-align: center;
+    padding: 0 0 10px;
+    font-size: 48px;
+}
+
+
+.icono-perfil {
+    width: 500px;
+    margin: 0 0 20px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+
+.icono-perfil img {
+    margin-top: auto;
+    width: 255px;
+    height: 255px;
+    object-fit: fill;
+}
+
+.card-perfil {
+    background-color: #e3d8af;
+    border-radius: 15px;
+    padding: 30px;
+    width: 100%;
+    max-width: 1200px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-sizing: border-box;
+    min-height: 600px;
+    margin: 0 auto;
+}
+
+.container-perfil {
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    width: 100%; 
+}
+
+.form-perfil {
+    width: 100%;
+}
+
+.contenido-perfil {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 30px;
+}
+
+.titulo-seccion {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 32px;
+    margin-bottom: 25px;
+}
+
+.columna {
+    flex: 1;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background-color: white;
+    font-size: 20px;
+    width: 500px;
+}
+
+label {
+    font-size: 20px;
+}
+
+input[disabled] {
+    background-color: #ddd;
+}
+
+.icono-perfil {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+
+.input-password {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.contenedor-actualizar {
+    display: flex;
+    justify-content: flex-end;
+    width: 500px;
+    margin-top: 30px;
+}
+
+.btn-actualizar {
+    background-color: #b7291f;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.contenedor-guardar {
+    display: flex;
+    justify-content: flex-start;
+    width: 500px;
+    margin-top: 30px;
+}
+
+.btn-guardar{
+    background-color: #b7291f;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 20px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+@media (max-width: 1024px) and (min-width: 769px) {
+    
+    .card-perfil {
+        max-width: 90%;
+        min-height: auto;
+        padding: 20px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+        width: 100%; 
+        max-width: none; 
+        font-size: 18px;
+        padding: 8px;
+    }
+
+    .contenedor-actualizar,
+    .contenedor-guardar {
+        width: 100%;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .btn-actualizar,
+    .btn-guardar {
+        width: 100%;
+        font-size: 18px;
+        padding: 10px 0;
+    }
+
+    .icono-perfil {
+        width: 100%;
+        margin-bottom: 15px;
+        align-items: center;
+    }
+
+    .icono-perfil img {
+        width: 180px;
+        height: 180px;
+        object-fit: cover;
+    }
+
+    .contenido-perfil {
+        gap: 20px;
+    }
+
+    .columna {
+        min-width: 100%;
+    }
+
+    .titulo-seccion {
+        font-size: 28px;
+        margin-bottom: 20px;
+    }
+}

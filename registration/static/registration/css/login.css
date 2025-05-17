@@ -89,9 +89,9 @@ body {
   }
 
   .submit-button-wrapper {
-    width: 75%; /* Igual al ancho de los inputs */
+    width: 75%;
     display: flex;
-    justify-content: center; /* Centra el botón horizontalmente */
+    justify-content: center;
     margin-top: 1.5rem;
   }
   

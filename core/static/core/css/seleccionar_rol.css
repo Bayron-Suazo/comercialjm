@@ -1,0 +1,66 @@
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #F5F5DC;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    background-color: white;
+    padding: 60px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 600px;
+    width: 100%;
+}
+
+h2 {
+    margin-bottom: 60px;
+    color: #4CAF50;
+    font-size: 48px;
+}
+
+form {
+    margin: 16px 0;
+}
+
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 20px 24px;
+    border-radius: 25px;
+    border: none;
+    cursor: pointer;
+    font-size: 32px;
+    transition: background-color 0.3s ease;
+    width: 100%;
+}
+
+
+.volver-login {
+    display: flex;
+    justify-content: left;
+}
+
+.btn-volver {
+    text-decoration: none;
+    background-color: #A91B0D;
+    color: white;
+    padding: 20px 100px;
+    border-radius: 8px;
+    font-weight: normal;
+    font-size: 20px;
+    transition: background-color 0.3s ease;
+    display: inline-block;
+
+}
+
+form{
+    margin: 30px 0;
+
+}

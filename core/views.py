@@ -13,9 +13,20 @@ from django.views.decorators.csrf import csrf_exempt #decorador que nos permitir
 
 from registration.models import Profile #importa el modelo profile, el que usaremos para los perfiles de usuarios
 
-# Create your views here.
+
+
+# ------------------ HOME ------------------
+
+
+
 def home(request):
     return redirect('login')
+
+
+
+# ------------------ SELECCIONAR ROL ------------------
+
+
 
 @login_required
 def check_profile(request):
@@ -36,14 +47,8 @@ def check_profile(request):
     else:
         messages.error(request, 'No tiene roles asignados')
         return redirect('logout')
+    
 
-def redirect_to_dashboard(group_name):
-    if group_name == 'Administrador':
-        return redirect('listado_de_usuarios')  # ruta de admin
-    elif group_name == 'Empleado':
-        return redirect('panel_empleado')  # ruta de empleado
-    else:
-        return redirect('logout')
 
 @csrf_exempt
 @login_required
@@ -53,3 +58,13 @@ def seleccionar_rol(request):
         return redirect_to_dashboard(group_name)
     else:
         return redirect('check_profile')
+    
+
+
+def redirect_to_dashboard(group_name):
+    if group_name == 'Administrador':
+        return redirect('dashboard_usuarios')
+    elif group_name == 'Empleado':
+        return redirect('perfil_empleado')
+    else:
+        return redirect('logout')

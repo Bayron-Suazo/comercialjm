@@ -16,6 +16,12 @@
                 <button type="submit">{{ group.name }}</button>
             </form>
         {% endfor %}
+        <div class="volver-login">
+            <form method="POST" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-volver">Salir</button>
+            </form>
+        </div>
     </div>
 </body>
 </html>

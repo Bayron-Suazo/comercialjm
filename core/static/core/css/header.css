@@ -1,0 +1,5 @@
+.header {
+    display: flex;
+    align-items: center; /*alinear verticalmente los elementos*/
+    padding: 10px 20px;
+}

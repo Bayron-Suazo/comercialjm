@@ -1,0 +1,252 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+
+{% block title %}Listado de Usuarios Bloqueados{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+
+<div class="acciones-derecha ancho-contenido">
+    <a href="#" class="boton-header" id="carga-masiva-btn">
+        Carga masiva
+        <img src="{% static 'administrador/svg/carga-masiva.svg' %}">
+    </a>
+
+    <a href="{% url 'dashboard_usuarios' %}" class="boton-header">
+        Dashboard
+        <img src="{% static 'administrador/svg/reporteria.svg' %}">
+    </a>
+
+    <a href="{% url 'agregar_usuario' %}" class="boton-header">
+        Agregar Usuario
+        <img src="{% static 'administrador/svg/plus.svg' %}">
+    </a>
+
+
+</div>
+
+<h2 class="titulo">Listado de Usuarios Bloqueados</h2>
+
+<div class="busqueda-agregar">
+    <input type="text" placeholder="Buscar Usuario .........." class="input-busqueda">
+
+    <div class="dropdown">
+        <a href="#" class="boton-header" id="dropdownMenuButton">
+            Filtrar
+            <img src="{% static 'administrador/svg/filter-solid.svg' %}">
+        </a>
+        <ul id="filterOptions" class="dropdown-content" style="display:none;">
+            <li><a href="#" onclick="applyFilter('first_name')" data-filter="first_name" class="{% if order_by == 'first_name' %}filtro-activo{% endif %}">Nombre</a></li>
+            <li><a href="#" onclick="applyFilter('last_name')" data-filter="last_name" class="{% if order_by == 'last_name' %}filtro-activo{% endif %}">Apellido</a></li>
+            <li><a href="#" onclick="applyFilter('rut')" data-filter="rut" class="{% if order_by == 'rut' %}filtro-activo{% endif %}">Rut</a></li>
+            <li><a href="#" onclick="clearOrderFilter()">Limpiar filtro</a></li>
+        </ul>
+    </div>
+</div>
+
+<form id="form-carga-masiva" action="{% url 'cargar_usuarios' %}" method="POST" enctype="multipart/form-data" style="display: none;">
+    {% csrf_token %}
+    <input type="file" name="archivo" accept=".csv" id="archivo-csv" required>
+    <button type="submit" style="display: none;">Cargar archivo</button>
+</form>
+
+<div class="barra-acciones-usuarios ancho-contenido">
+    <div class="boton-activar-seleccionados">
+        <button id="activarBtn" disabled>Activar</button>
+    </div>
+
+    <div class="toggle-estado-usuarios">
+        <a href="{% url 'lista_usuarios_activos' %}" class="estado-btn">Activos</a>
+        <a href="{% url 'lista_usuarios_bloqueados' %}" class="estado-btn activo">Bloqueados</a>
+    </div>
+</div>
+
+<!-- Modal de confirmación -->
+<div id="confirmModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>¿Activar Usuario?</h3>
+    <p>Los usuarios activados pasarán al listado de usuarios activos y podrán acceder a su cuenta con sus credenciales de acceso.</p>
+    <div class="modal-actions">
+      <button type = "button"   id="confirmNo">Cancelar</button>
+      <button type = "button"   id="confirmYes">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+{% if usuarios %}
+    <table class="tabla-usuarios">
+        <thead>
+            <tr>
+                <th><input type="checkbox" id="select-all"></th>
+                <th>Nombre</th>
+                <th>Rut</th>
+                <th>Cargo</th>
+                <th>Correo</th>
+                <th>Teléfono</th>            
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in usuarios %}
+            <tr>
+                <td><input type="checkbox" class="select-user" data-user-id="{{ user.id }}"></td>
+                <td>{{ user.get_full_name }}</td>
+                <td>{{ user.profile.rut }}</td>
+                <td>
+                    {% if user.groups.count > 1 %}
+                        Ambos
+                    {% elif user.groups.count == 1 %}
+                        {{ user.groups.first.name }}
+                    {% else %}
+                        Sin rol
+                    {% endif %}
+                </td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.profile.telefono }}</td>
+                <td>
+                    <button title="Activar" class="btn-activar" data-user-id="{{ user.id }}">
+                        <img src="{% static 'core/svg/lock-solid.svg' %}" alt="Activar">
+                    </button>
+                    <a href="{% url 'mostrar_usuario' user.id %}" title="Mostrar">
+                        <img src="{% static 'core/svg/user-regular.svg' %}" alt="Mostrar">
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="custom-pagination">
+        {% if usuarios.has_previous %}
+        <a href="?page=1{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&laquo;</a>
+        <a href="?page={{ usuarios.previous_page_number }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&lsaquo;</a>
+        {% else %}
+        <span class="page-btn disabled">&laquo;</span>
+        <span class="page-btn disabled">&lsaquo;</span>
+        {% endif %}
+
+        <span class="page-btn current">{{ usuarios.number }}</span>
+
+        {% if usuarios.has_next %}
+        <a href="?page={{ usuarios.next_page_number }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&rsaquo;</a>
+        <a href="?page={{ usuarios.paginator.num_pages }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&raquo;</a>
+        {% else %}
+        <span class="page-btn disabled">&rsaquo;</span>
+        <span class="page-btn disabled">&raquo;</span>
+        {% endif %}
+    </div>
+{% else %}
+    <p style="text-align: center; font-size: 24px; margin-top: 40px;">No hay usuarios registrados.</p>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const cargaMasivaBtn = document.getElementById('carga-masiva-btn');
+        const archivoInput = document.getElementById('archivo-csv');
+        const formCargaMasiva = document.getElementById('form-carga-masiva');
+
+        // Al hacer clic en "Carga masiva", abrir el selector de archivo
+        cargaMasivaBtn.addEventListener('click', () => {
+            archivoInput.click();
+        });
+
+        // Cuando el archivo es seleccionado, enviar el formulario
+        archivoInput.addEventListener('change', () => {
+            if (archivoInput.files.length > 0) {
+                formCargaMasiva.submit();
+            }
+        });
+    });
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        const activarBtn = document.querySelector('#activarBtn');
+        const checkboxes = document.querySelectorAll('.select-user');
+        const selectAll = document.getElementById('select-all');
+        const modal = document.getElementById('confirmModal');
+        const confirmYes = document.getElementById('confirmYes');
+        const confirmNo = document.getElementById('confirmNo');
+        let confirmCallback = null;
+
+        function showConfirmModal(onConfirm) {
+            modal.classList.remove('hidden');
+            confirmCallback = onConfirm;
+        }
+
+        confirmYes.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            if (confirmCallback) confirmCallback();
+        });
+
+        confirmNo.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            confirmCallback = null;
+        });
+
+        function updateActivarButton() {
+            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+            activarBtn.disabled = !anyChecked;
+            activarBtn.classList.toggle('activo', anyChecked);
+        }
+
+        checkboxes.forEach(cb => cb.addEventListener('change', updateActivarButton));
+        selectAll.addEventListener('change', () => {
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+            updateActivarButton();
+        });
+
+        activarBtn.addEventListener('click', () => {
+            const userIds = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.dataset.userId);
+
+            if (userIds.length === 0) return;
+
+            showConfirmModal(() => {
+                fetch("{% url 'activar_usuario' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: new URLSearchParams({ 'user_ids': JSON.stringify(userIds) })
+                }).then(res => res.json()).then(data => {
+                    if (data.success) location.reload();
+                });
+            });
+        });
+
+        document.querySelectorAll('.btn-activar').forEach(button => {
+            button.addEventListener('click', () => {
+                const userId = button.dataset.userId;
+
+                showConfirmModal(() => {
+                    fetch("{% url 'activar_usuario' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: new URLSearchParams({ 'user_id': userId })
+                    }).then(res => res.json()).then(data => {
+                        if (data.success) location.reload();
+                    });
+                });
+            });
+        });
+
+        updateActivarButton();
+    });
+</script>
+
+<script src="{% static 'administrador/js/filtro_orden_usuario.js' %}"></script>
+<script src="{% static 'administrador/js/busca_usuarios.js' %}"></script>
+
+{% endblock %}

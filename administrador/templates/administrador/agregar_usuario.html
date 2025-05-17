@@ -1,0 +1,94 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'administrador/css/agregar_usuario.css' %}">
+{% endblock %}
+
+{% block content %}
+<h2 class="titulo">Crear Usuario</h2>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+
+    {# Mostrar errores generales del formulario #}
+    {% if form.non_field_errors %}
+        <div class="form-errors">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <div class="form-container">
+        <div class="form-column">
+            <div class="form-group">
+                <label for="id_rut">Rut</label>
+                {{ form.rut }}
+                {{ form.rut.errors }}
+            </div>
+            <div class="form-group">
+                <label for="id_nombre">Nombre</label>
+                {{ form.first_name }}
+                {{ form.first_name.errors }}
+            </div>
+            <div class="form-group">
+                <label for="id_apellido">Apellido</label>
+                {{ form.last_name }}
+                {{ form.last_name.errors }}
+            </div>
+            <div class="form-group">
+                <label for="id_fecha_nacimiento">Fecha de Nacimiento</label>
+                {{ form.fecha_nacimiento }}
+                {{ form.fecha_nacimiento.errors }}
+            </div>     
+            <div class="form-group">
+                <label for="id_sexo">Sexo</label>
+                <div class="checkbox-wrapper">
+                    {{ form.sexo }}
+                </div>
+                {{ form.sexo.errors }}
+            </div>
+        </div>
+
+        <div class="form-column">
+            <div class="form-group">
+                <label for="id_email">Correo</label>
+                {{ form.email }}
+                {{ form.email.errors }}
+            </div>
+            <div class="form-group">
+                <label for="id_telefono">Teléfono</label>
+                {{ form.telefono }}
+                {{ form.telefono.errors }}
+            </div>        
+            <div class="form-group">
+                <label for="id_direccion">Dirección</label>
+                {{ form.direccion }}
+                {{ form.direccion.errors }}
+            </div>
+            <div class="form-group">
+                <label for="id_groups">Cargo</label>
+                <div class="checkbox-wrapper">
+                    {{ form.groups }}
+                </div>
+                {{ form.groups.errors }}
+            </div>
+            <div class="form-group invisible-group">
+                <label>&nbsp;</label>
+                <div class="dummy-field"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="button-group">
+        <button type="button" class="cancelar" onclick="history.back()">Cancelar</button>
+        <button type="submit" class="añadir">Añadir</button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'administrador/js/formatear_rut.js' %}"></script>
+<script src="{% static 'administrador/js/formatear_telefono.js' %}"></script>
+<script src="{% static 'administrador/js/formatear_nombre.js' %}"></script>
+<script src="{% static 'administrador/js/formatear_apellido.js' %}"></script>
+{% endblock %}
