@@ -27,13 +27,13 @@
                     <!-- Columna Izquierda -->
                     <div class="columna izquierda">
                         <label>Nombre</label>
-                        <input type="text" name="first_name" value="{{ user.first_name }}" class="editable">
+                        <input type="text" name="first_name" id="id_first_name" class="editable" value="{{ user.first_name }}">
 
                         <label>Apellido</label>
-                        <input type="text" name="last_name" value="{{ user.last_name }}" class="editable">
+                        <input type="text" name="last_name" id="id_last_name" class="editable" value="{{ user.last_name }}">
 
                         <label>Teléfono</label>
-                        <input type="text" name="telefono" value="{{ user.profile.telefono }}" class="editable">
+                        <input type="text" name="telefono" id="id_telefono" class="editable" value="{{ user.profile.telefono }}">
 
                         <label>Dirección</label>
                         <input type="text" name="direccion" value="{{ user.profile.direccion }}" class="editable">
@@ -89,4 +89,7 @@
         });
     });
 </script>
+<script src="{% static 'administrador/js/formatear_nombre.js' %}"></script>
+<script src="{% static 'administrador/js/formatear_apellido.js' %}"></script>
+<script src="{% static 'administrador/js/formatear_telefono.js' %}"></script>
 {% endblock %}

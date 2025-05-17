@@ -152,3 +152,59 @@ input[disabled] {
     cursor: pointer;
 }
 
+@media (max-width: 1024px) and (min-width: 769px) {
+    
+    .card-perfil {
+        max-width: 90%;
+        min-height: auto;
+        padding: 20px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+        width: 100%; 
+        max-width: none; 
+        font-size: 18px;
+        padding: 8px;
+    }
+
+    .contenedor-actualizar,
+    .contenedor-guardar {
+        width: 100%;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .btn-actualizar,
+    .btn-guardar {
+        width: 100%;
+        font-size: 18px;
+        padding: 10px 0;
+    }
+
+    .icono-perfil {
+        width: 100%;
+        margin-bottom: 15px;
+        align-items: center;
+    }
+
+    .icono-perfil img {
+        width: 180px;
+        height: 180px;
+        object-fit: cover;
+    }
+
+    .contenido-perfil {
+        gap: 20px;
+    }
+
+    .columna {
+        min-width: 100%;
+    }
+
+    .titulo-seccion {
+        font-size: 28px;
+        margin-bottom: 20px;
+    }
+}

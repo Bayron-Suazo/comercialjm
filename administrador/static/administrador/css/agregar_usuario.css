@@ -158,3 +158,79 @@ button.añadir {
     padding: 15px;
     border-radius: 20px;
 }
+
+/* Estilos para pantallas pequeñas */
+@media (max-width: 768px) {
+  h2.titulo {
+    font-size: 32px;
+    margin-bottom: 30px;
+  }
+
+  .form-container {
+    flex-direction: column;
+    gap: 30px;
+    max-width: 90%;
+    margin: 0 auto;
+  }
+
+  .form-column {
+    min-width: 100%;
+  }
+
+  .form-group {
+    flex: 0 1 100%;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="date"],
+  select {
+    font-size: 18px;
+    padding: 12px 15px;
+  }
+
+  label {
+    font-size: 18px;
+    padding: 8px 15px;
+  }
+
+  .button-group {
+    flex-direction: column;
+    gap: 15px;
+    max-width: 100%;
+    margin: 30px auto 0;
+  }
+
+  button.cancelar,
+  button.añadir {
+    flex: none;
+    width: 100%;
+    font-size: 18px;
+    padding: 12px 0;
+  }
+}
+
+/* Ajustes extra para pantallas muy pequeñas */
+@media (max-width: 400px) {
+  h2.titulo {
+    font-size: 24px;
+  }
+
+  label,
+  input[type="text"],
+  input[type="email"],
+  input[type="date"],
+  select {
+    font-size: 16px;
+  }
+
+  .button-group {
+    gap: 10px;
+  }
+
+  button.cancelar,
+  button.añadir {
+    font-size: 16px;
+    padding: 10px 0;
+  }
+}

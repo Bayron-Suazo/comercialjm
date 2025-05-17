@@ -35,6 +35,7 @@ h1{
 .card-usuario {
     display: flex;
     flex-flow: row nowrap;
+    flex-wrap: wrap;
     justify-content: center;
     color: black;
     width: 100%;
@@ -279,8 +280,8 @@ strong {
 }
 
 
-@media screen and (max-width:1200px){ 
-    .columna p{
+@media screen and (max-width: 1200px) {
+    .columna p {
         font-size: 20px;
     }
 
@@ -291,22 +292,18 @@ strong {
         margin-bottom: -5px;
     }
 
-    /* Ajustar el tamaño del ícono de edición */
     .edit-icon-svg {
         width: 18px;
         height: 18px;
-
     }
 
-    /* Ajustar los botones */
     .save-button, .cancel-button {
-        width: 30%; 
+        width: 30%;
         font-size: 14px;
         padding: 10px;
         margin-top: 10px;
     }
 
-    /* Ajustar el campo de entrada de email */
     #email-input {
         max-width: 100%;
         font-size: 16px;
@@ -314,19 +311,15 @@ strong {
     }
 
     .btn-actualizar-credenciales {
-        background-color: #FF6161; /* Color azul */
-        color: white;
         font-size: 15px;
-        width: 240px;
-        border: none;
-        padding: 10px 5px;
-        border-radius: 5px;
-        cursor: pointer;
+        padding: 10px;
+        margin-top: 15px;
     }
 }
 
-@media screen and (max-width:900px){ 
-    .columna p{
+/* Desde 900px hacia abajo */
+@media screen and (max-width: 900px) {
+    .columna p {
         font-size: 20px;
     }
 
@@ -338,30 +331,50 @@ strong {
         margin-bottom: -5px;
     }
 
-    /* Ajustar el tamaño del ícono de edición */
     .edit-icon-svg {
         width: 18px;
         height: 18px;
     }
-
 }
 
+/* Desde 768px hacia abajo */
 @media screen and (max-width: 768px) {
-    /* Ajustar el tamaño del ícono de edición */
+    .columna {
+        width: 100%;
+        padding: 10px 0;
+    }
+
+    .campo-formulario {
+        width: 100%;
+        height: auto;
+        min-height: 120px;
+        font-size: 16px;
+    }
+
+    .email-container {
+        flex-direction: column;
+        align-items: flex-start;
+        font-size: 17px;
+        gap: 5px;
+    }
+
+    .btn-actualizar-credenciales {
+        font-size: 18px;
+        padding: 20px;
+    }
+
     .edit-icon-svg {
         width: 18px;
         height: 18px;
     }
 
-    /* Ajustar los botones */
     .save-button, .cancel-button {
-        width: 30%; 
+        width: 100%;
         font-size: 14px;
         padding: 10px;
         margin-top: 10px;
     }
 
-    /* Ajustar el campo de entrada de email */
     #email-input {
         max-width: 100%;
         font-size: 16px;
@@ -369,9 +382,32 @@ strong {
     }
 }
 
-/* Media Query para pantallas menores a 576px */
+/* Desde 600px hacia abajo */
+@media screen and (max-width: 600px) {
+    .columna p {
+        font-size: 18px;
+    }
+
+    p span {
+        font-size: 16px;
+    }
+
+    .email-container {
+        font-size: 16px;
+    }
+
+    .btn-actualizar-credenciales {
+        font-size: 16px;
+        padding: 18px;
+    }
+
+    .campo-formulario {
+        font-size: 15px;
+    }
+}
+
+/* Desde 576px hacia abajo */
 @media screen and (max-width: 576px) {
-    /* Ajustes adicionales para pantallas más pequeñas */
     .email-container {
         font-size: 16px;
         margin-top: -10px;
@@ -386,15 +422,21 @@ strong {
     .save-button, .cancel-button {
         font-size: 14px;
         padding: 8px;
+        width: 100%;
     }
 
     #email-input {
         font-size: 14px;
         padding: 6px;
     }
+
+    .btn-actualizar-credenciales {
+        font-size: 16px;
+        padding: 16px;
+    }
 }
 
-/* Media Query para pantallas menores a 400px */
+/* Desde 400px hacia abajo */
 @media screen and (max-width: 400px) {
     .email-container {
         font-size: 14px;
@@ -414,20 +456,9 @@ strong {
         font-size: 12px;
         padding: 5px;
     }
-}
 
-
-@media screen and (max-width:600px){
-    
-    .columna p{
-        font-size: 18px;
-    }
-
-    p span{
+    .btn-actualizar-credenciales {
         font-size: 16px;
-        font-weight: 400;
-        display: flex;
-        align-items: center;
+        padding: 14px;
     }
-
 }

@@ -176,3 +176,104 @@ button.añadir {
     vertical-align: middle;
     transform: translateY(2px);
 }
+
+@media (max-width: 900px) {
+    h2.titulo {
+        font-size: 36px;
+        margin-bottom: 40px;
+    }
+
+    .form-container {
+        gap: 40px;
+        max-width: 700px;
+    }
+
+    .form-group {
+        flex: 0 1 100%;
+    }
+
+    .button-group {
+        max-width: 100%;
+        gap: 3rem;
+        padding: 0 20px;
+    }
+
+    button.cancelar,
+    button.añadir {
+        font-size: 18px;
+    }
+
+    label, 
+    input[type="text"],
+    input[type="email"],
+    input[type="date"],
+    select {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    h2.titulo {
+        font-size: 28px;
+        margin-bottom: 30px;
+    }
+
+    .form-container {
+        flex-direction: column;
+        gap: 30px;
+        max-width: 90%;
+        margin: 0 auto;
+    }
+
+    .form-column {
+        min-width: 100%;
+    }
+
+    .form-group {
+        flex: 0 1 100%;
+    }
+
+    label {
+        font-size: 16px;
+        padding: 8px 15px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="date"],
+    select {
+        font-size: 16px;
+        padding: 12px 15px;
+    }
+
+    .button-group {
+        flex-direction: column;
+        gap: 20px;
+        max-width: 100%;
+        padding: 0 10px;
+    }
+
+    button.cancelar,
+    button.añadir {
+        font-size: 18px;
+        padding: 12px 0;
+    }
+
+    .contenido-modal {
+        width: 90vw;
+        height: auto;
+        padding: 15px;
+        gap: 1rem;
+    }
+
+    .contenido-modal h1, 
+    .contenido-modal h2, 
+    .contenido-modal p {
+        font-size: 1.2rem;
+    }
+
+    .contenido-modal img {
+        width: 80px;
+        margin-bottom: 0.5rem;
+    }
+}

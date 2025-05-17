@@ -100,10 +100,10 @@
         <tbody>
             {% for user in usuarios %}
             <tr>
-                <td><input type="checkbox" class="select-user" data-user-id="{{ user.id }}"></td>
-                <td>{{ user.get_full_name }}</td>
-                <td>{{ user.profile.rut }}</td>
-                <td>
+                <td data-label="Seleccionar"><input type="checkbox" class="select-user" data-user-id="{{ user.id }}"></td>
+                <td data-label="Nombre">{{ user.get_full_name }}</td>
+                <td data-label="Rut">{{ user.profile.rut }}</td>
+                <td data-label="Cargo">
                     {% if user.groups.count > 1 %}
                         Ambos
                     {% elif user.groups.count == 1 %}
@@ -112,9 +112,9 @@
                         Sin rol
                     {% endif %}
                 </td>
-                <td>{{ user.email }}</td>
-                <td>{{ user.profile.telefono }}</td>
-                <td>
+                <td data-label="Correo">{{ user.email }}</td>
+                <td data-label="Teléfono">{{ user.profile.telefono }}</td>
+                <td data-label="Acciones">
                     <button title="Bloquear" class="btn-bloquear" data-user-id="{{ user.id }}">
                         <img src="{% static 'core/svg/lock-open-solid.svg' %}" alt="Bloquear">
                     </button>
