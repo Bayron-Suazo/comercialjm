@@ -20,3 +20,18 @@ class Profile(models.Model):
         ordering = ['user__username']
     def __str__(self):
         return f'{self.user.username} ({self.rut})'
+
+
+
+class Proveedor(models.Model):
+    nombre = models.CharField(max_length=100)
+    rut = models.CharField(max_length=12, unique=True)
+    telefono = models.CharField(max_length=12, blank=True, null=True)
+    correo = models.EmailField()
+    direccion = models.CharField(max_length=255, blank=True, null=True)
+    estado = models.BooleanField(default=True)
+
+    # productos = models.ManyToManyField('Producto', related_name='proveedores', blank=True)
+
+    def __str__(self):
+        return self.nombre

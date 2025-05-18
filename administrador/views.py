@@ -11,11 +11,11 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .forms import CargaMasivaUsuariosForm
-from registration.models import Profile
+from registration.models import Profile, Proveedor
 from datetime import datetime
 from django.core.exceptions import ValidationError
 from django.contrib import messages
-from administrador.forms import EditUserProfileForm
+from administrador.forms import EditUserProfileForm, CrearProveedorForm, EditarProveedorForm
 from django.views.decorators.http import require_POST
 from .forms import PerfilForm
 from django.db.models import Count
@@ -372,3 +372,150 @@ def dashboard_usuarios(request):
 
 
 # ------------------------------------ FIN GESTIÓN DE USUARIOS ------------------------------------
+
+
+
+# ------------------------------------ GESTIÓN DE PROVEEDORES ------------------------------------
+
+
+
+# ------------------ LISTADO DE PROVEEDORES ACTIVOS Y BLOQUEADOS ------------------
+
+
+
+@login_required
+def lista_proveedores_activos(request):
+    order_by = request.GET.get('order_by', '')
+
+    proveedores_activos = Proveedor.objects.filter(estado=True)
+
+    if order_by:
+        if order_by == 'nombre':
+            proveedores = proveedores_activos.order_by('nombre')
+        elif order_by == 'rut':
+            proveedores = proveedores_activos.order_by('rut')
+        else:
+            proveedores = proveedores_activos
+    else:
+        proveedores = proveedores_activos
+    
+    paginator = Paginator(proveedores, 10)
+    page_number = request.GET.get('page')
+    proveedores = paginator.get_page(page_number)
+
+    return render(request, 'administrador/lista_proveedores.html', {'proveedores': proveedores, 'order_by': order_by})
+
+
+
+@login_required
+def lista_proveedores_bloqueados(request):
+    order_by = request.GET.get('order_by', '')
+
+    proveedores_bloqueados = Proveedor.objects.filter(estado=False)
+
+    if order_by:
+        if order_by == 'nombre':
+            proveedores = proveedores_bloqueados.order_by('nombre')
+        elif order_by == 'rut':
+            proveedores = proveedores_bloqueados.order_by('rut')
+        else:
+            proveedores = proveedores_bloqueados 
+    else:
+        proveedores = proveedores_bloqueados  
+
+    paginator = Paginator(proveedores, 10)
+    page_number = request.GET.get('page')
+    proveedores = paginator.get_page(page_number)
+
+    return render(request, 'administrador/lista_proveedores_bloqueados.html', {'proveedores': proveedores, 'order_by': order_by})
+
+
+
+# ------------------ AGREGAR - MOSTRAR - EDITAR - ACTIVAR - BLOQUEAR ------------------
+
+
+
+def agregar_proveedor(request):
+    if request.method == 'POST':
+        form = CrearProveedorForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('lista_proveedores_activos')
+    else:
+        form = CrearProveedorForm()
+    
+    return render(request, 'administrador/agregar_proveedor.html', {'form': form})
+
+
+
+@user_passes_test(lambda u: u.is_superuser)
+@require_POST
+@login_required
+def activar_proveedor(request):
+    try:
+        proveedor_id = request.POST.get('proveedor_id')
+        proveedor_ids = json.loads(request.POST.get('proveedor_ids', '[]')) if request.POST.get('proveedor_ids') else []
+
+        if proveedor_id:
+            proveedor_ids = [int(proveedor_id)]
+
+        proveedor_ids = [int(uid) for uid in proveedor_ids]
+        proveedores = Proveedor.objects.filter(id__in=proveedor_ids, estado=False)
+
+        updated_count = 0
+        for proveedor in proveedores:
+            proveedor.estado = True
+            proveedor.save()
+            updated_count += 1
+
+        return JsonResponse({'success': True, 'updated': updated_count})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+    
+
+
+@user_passes_test(lambda u: u.is_superuser)
+@require_POST
+@login_required
+def bloquear_proveedor(request):
+    try:
+        proveedor_id = request.POST.get('proveedor_id')
+        proveedor_ids = json.loads(request.POST.get('proveedor_ids', '[]')) if request.POST.get('proveedor_ids') else []
+
+        if proveedor_id:
+            proveedor_ids = [proveedor_id]
+
+        proveedor_ids = [int(uid) for uid in proveedor_ids]
+        proveedores = Proveedor.objects.filter(id__in=proveedor_ids, estado=True)
+        updated_count = proveedores.update(estado=False)
+
+        return JsonResponse({'success': True, 'updated': updated_count})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+    
+
+
+@login_required
+def mostrar_proveedor(request, proveedor_id):
+    proveedor = get_object_or_404(Proveedor, id=proveedor_id)
+    return render(request, 'administrador/mostrar_proveedor.html', {'proveedor': proveedor})    
+
+
+
+@login_required
+def editar_proveedor(request, proveedor_id):
+    proveedor = get_object_or_404(Proveedor, pk=proveedor_id)
+
+    if request.method == 'POST':
+        form = EditarProveedorForm(request.POST, instance=proveedor)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+    else:
+        form = EditarProveedorForm(instance=proveedor)
+        return render(request, 'administrador/editar_proveedor.html', {
+            'proveedor_form': form,
+            'proveedor': proveedor
+        })

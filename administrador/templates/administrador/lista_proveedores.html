@@ -1,0 +1,268 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+
+{% block title %}Listado de Proveedores Activos{% endblock %}
+<head>
+{% block extra_head%}
+    <link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% endblock %}
+</head>
+
+{% block content %}
+
+<div class="acciones-derecha ancho-contenido">
+    <a href="#" class="boton-header" id="carga-masiva-btn">
+        Carga masiva
+        <img src="{% static 'administrador/svg/carga-masiva.svg' %}">
+    </a>
+
+    <a href="#" class="boton-header">
+        Dashboard
+        <img src="{% static 'administrador/svg/reporteria.svg' %}">
+    </a>
+
+    <a href="{% url 'agregar_proveedor' %}" class="boton-header">
+        Agregar Proveedor
+        <img src="{% static 'administrador/svg/plus.svg' %}">
+    </a>
+</div>
+
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<h2 class="titulo">Listado de Proveedores Activos</h2>
+
+<div class="busqueda-agregar">
+    <input type="text" placeholder="Buscar Proveedores .........." class="input-busqueda">
+
+
+    <div class="dropdown">
+        <a href="#" class="boton-header" id="dropdownMenuButton">
+            Filtrar
+            <img src="{% static 'administrador/svg/filter-solid.svg' %}">
+        </a>
+        <ul id="filterOptions" class="dropdown-content" style="display:none;">
+            <li><a href="#" onclick="applyFilter('nombre')" data-filter="nombre" class="{% if order_by == 'nombre' %}filtro-activo{% endif %}">Nombre</a></li>
+            <li><a href="#" onclick="applyFilter('rut')" data-filter="rut" class="{% if order_by == 'rut' %}filtro-activo{% endif %}">Rut</a></li>
+            <li><a href="#" onclick="clearOrderFilter()">Limpiar filtro</a></li>
+        </ul>
+    </div>
+</div>
+
+<div class="barra-acciones-usuarios ancho-contenido">
+    <div class="boton-bloquear-seleccionados">
+        <button id="bloquearBtn" disabled>Bloquear</button>
+    </div>
+
+    <div class="toggle-estado-usuarios">
+        <a href="{% url 'lista_proveedores_activos' %}" class="estado-btn activo">Activos</a>
+        <a href="{% url 'lista_proveedores_bloqueados' %}" class="estado-btn">Bloqueados</a>
+    </div>
+</div>
+
+<div id="confirmModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>¿Bloquear Proveedor?</h3>
+    <p>Los proveedores bloqueados pasarán al listado de usuarios bloqueados y no estarán disponibles para realizar ordenes de compra.</p>
+    <div class="modal-actions">
+      <button type="button" id="confirmNo">Cancelar</button>
+      <button type="button" id="confirmYes">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+{% if proveedores %}
+    <table class="tabla-usuarios">
+        <thead>
+            <tr>
+                <th><input type="checkbox" id="select-all"></th>
+                <th>Nombre</th>
+                <th>Rut</th>
+                <th>Teléfono</th>
+                <th>Correo</th>
+                <th>Dirección</th>            
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for proveedor in proveedores %}
+            <tr>
+                <td data-label="Seleccionar"><input type="checkbox" class="select-user" data-proveedor-id="{{ proveedor.id }}"></td>
+                <td data-label="Nombre">{{ proveedor.nombre }}</td>
+                <td data-label="Rut">{{ proveedor.rut }}</td>
+                <td data-label="Teléfono">{{ proveedor.telefono }}</td>
+                <td data-label="Correo">{{ proveedor.correo }}</td>
+                <td data-label="Dirección">{{ proveedor.direccion}}</td>
+                <td data-label="Acciones">
+                    <button title="Bloquear" class="btn-bloquear" data-proveedor-id="{{ proveedor.id }}">
+                        <img src="{% static 'core/svg/lock-open-solid.svg' %}" alt="Bloquear">
+                    </button>
+                    <a href="{% url 'mostrar_proveedor' proveedor.id %}" title="Mostrar">
+                        <img src="{% static 'core/svg/user-regular.svg' %}" alt="Mostrar">
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="custom-pagination">
+        {% if proveedores.has_previous %}
+        <a href="?page=1{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&laquo;</a>
+        <a href="?page={{ proveedores.previous_page_number }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&lsaquo;</a>
+        {% else %}
+        <span class="page-btn disabled">&laquo;</span>
+        <span class="page-btn disabled">&lsaquo;</span>
+        {% endif %}
+
+        <span class="page-btn current">{{ proveedores.number }}</span>
+
+        {% if proveedores.has_next %}
+        <a href="?page={{ proveedores.next_page_number }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&rsaquo;</a>
+        <a href="?page={{ proveedores.paginator.num_pages }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&raquo;</a>
+        {% else %}
+        <span class="page-btn disabled">&rsaquo;</span>
+        <span class="page-btn disabled">&raquo;</span>
+        {% endif %}
+    </div>
+{% else %}
+    <p style="text-align: center; font-size: 24px; margin-top: 40px;">No hay proveedores registrados.</p>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const bloquearBtn = document.querySelector('#bloquearBtn');
+        const checkboxes = document.querySelectorAll('.select-user');
+        const selectAll = document.getElementById('select-all');
+
+        function updateBloquearButton() {
+            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+            bloquearBtn.disabled = !anyChecked;
+            bloquearBtn.classList.toggle('activo', anyChecked);
+        }
+
+        checkboxes.forEach(cb => cb.addEventListener('change', updateBloquearButton));
+        selectAll.addEventListener('change', () => {
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+            updateBloquearButton();
+        });
+
+        bloquearBtn.addEventListener('click', () => {
+            const proveedorIds = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.getAttribute('data-proveedor-id'));
+
+            if (proveedorIds.length === 0) return;
+        });
+
+        updateBloquearButton();
+    });
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const modal = document.getElementById('confirmModal');
+        const modalText = document.getElementById('modalText');
+        const confirmYes = document.getElementById('confirmYes');
+        const confirmNo = document.getElementById('confirmNo');
+
+        let onConfirmAction = null;
+
+        function showModal(message, onConfirm) {
+            modalText.textContent = message;
+            modal.classList.remove('hidden');
+            onConfirmAction = onConfirm;
+        }
+
+        confirmYes.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            if (onConfirmAction) onConfirmAction();
+        });
+
+        confirmNo.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            onConfirmAction = null;
+        });
+        
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const modal = document.getElementById('confirmModal');
+        const confirmYes = document.getElementById('confirmYes');
+        const confirmNo = document.getElementById('confirmNo');
+
+        let confirmCallback = null;
+
+        function showConfirmModal(onConfirm) {
+            modal.classList.remove('hidden');
+            confirmCallback = onConfirm;
+        }
+
+        confirmYes.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            if (confirmCallback) confirmCallback();
+        });
+
+        confirmNo.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            confirmCallback = null;
+        });
+
+        const bloquearBtn = document.querySelector('#bloquearBtn');
+        const checkboxes = document.querySelectorAll('.select-user');
+
+        bloquearBtn.addEventListener('click', () => {
+            const proveedorIds = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.dataset.proveedorId);
+
+            if (proveedorIds.length === 0) return;
+
+            showConfirmModal(() => {
+                fetch("{% url 'bloquear_proveedor' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: new URLSearchParams({ 'proveedor_ids': JSON.stringify(proveedorIds) })
+                }).then(res => res.json()).then(data => {
+                    if (data.success) location.reload();
+                });
+            });
+        });
+
+        document.querySelectorAll('.btn-bloquear').forEach(button => {
+            button.addEventListener('click', () => {
+                const proveedorId = button.dataset.proveedorId;
+                showConfirmModal(() => {
+                    fetch("{% url 'bloquear_proveedor' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: new URLSearchParams({ 'proveedor_id': proveedorId })
+                    }).then(res => res.json()).then(data => {
+                        if (data.success) location.reload();
+                    });
+                });
+            });
+        });
+    });
+
+</script>
+
+<script src="{% static 'administrador/js/filtro_orden_usuario.js' %}"></script>
+<script src="{% static 'administrador/js/busca_usuarios.js' %}"></script>
+
+
+{% endblock %}

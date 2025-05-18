@@ -1,0 +1,54 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+
+{% block title %}Mostrar Proveedor{% endblock %}
+
+{% block content %}
+
+
+{% block extra_head%}
+    <link rel="stylesheet" href="{% static 'administrador/css/mostrar_usuario.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% endblock %}
+
+<head>
+    {% if proveedor.estado %}
+        <a class="back-arrow" href="{% url 'lista_proveedores_activos' %}">
+            <img src="{% static 'administrador/svg/Volver-atras.svg' %}" alt="">
+        </a>
+    {% else %}
+        <a class="back-arrow" href="{% url 'lista_proveedores_bloqueados' %}">
+            <img src="{% static 'administrador/svg/Volver-atras.svg' %}" alt="">
+        </a>
+    {% endif %}
+<h1>Proveedor {{proveedor.nombre}} </h1>
+</header>  
+
+<div class="container-usuario">
+    <div class="card-usuario">
+        <div class="icon-container" onclick="window.location.href='{% url 'editar_proveedor' proveedor.id %}'">
+            <img src="{% static 'administrador/svg/lapiz.svg' %}" class="icon">
+        </div>
+
+        <div class="columna izquierda">
+            <p><strong>Rut:</strong><br> <span>{{ proveedor.rut }}</span></p>
+            <p><strong>Nombre:</strong><br><span>{{proveedor.nombre}}</span></p>
+            <p><strong>Dirección:</strong><br> <span>{{ proveedor.direccion }}</span></p>
+
+        </div>
+        <div class="columna derecha">
+            <p><strong>Correo:</strong><br> <span>{{ proveedor.correo }}</span></p>
+            <p><strong>Teléfono:</strong><br> <span>{{ proveedor.telefono }}</span></p>
+            </p>
+            <p>
+            </p> 
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block extra_js %}
+
+{% endblock %}
