@@ -1,0 +1,88 @@
+{% extends 'core/base_admin.html' %}
+{% block title %}Dashboard Proveedores{% endblock %}
+{% load static %}
+{% block extra_head %}
+
+<link rel="stylesheet" href="{% static 'administrador/css/dashboard_proveedores.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-container">
+    <div class="top-bar">
+        <a href="{% url 'lista_proveedores_activos' %}" class="btn btn-primary">Listado de Proveedores</a>
+    </div>
+
+    <h1 class="dashboard-title">Gestión de Proveedores</h1>
+
+    <!-- Tarjetas resumen -->
+    <div class="cards-summary">
+        <div class="card">
+            <div class="card-icon">🏢</div>
+            <div class="card-label">Total Proveedores</div>
+            <div class="card-value">{{ total_proveedores }}</div>
+        </div>
+        <div class="card">
+            <div class="card-icon">🟢</div>
+            <div class="card-label">Proveedores Activos</div>
+            <div class="card-value">{{ percent_activos }}%</div>
+        </div>
+        <div class="card">
+            <div class="card-icon">🔴</div>
+            <div class="card-label">Proveedores Bloqueados</div>
+            <div class="card-value">{{ percent_bloqueados }}%</div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="charts-section">
+        <div class="chart-card">
+            <h2 class="chart-title">Distribución de Proveedores por Estado</h2>
+            <div class="pie-chart-container">
+                <canvas id="pieChartProveedores"></canvas>
+            </div>
+        </div>
+    </div>
+    
+
+    <!-- Último proveedor -->
+    <div class="last-user">
+        <div class="initials-circle">
+            {{ ultimo_proveedor.nombre|slice:":1" }}
+        </div>
+        Último proveedor agregado: 
+        <span>{{ ultimo_proveedor.nombre }}</span>
+        <br>
+        <small>({{ ultimo_proveedor.fecha_creacion|date:"d/m/Y H:i" }})</small>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Gráfico de Pastel
+    const pieCtx = document.getElementById('pieChartProveedores').getContext('2d');
+    new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Activos', 'Bloqueados'],
+            datasets: [{
+                data: [{{ percent_activos|floatformat:"0" }}, {{ percent_bloqueados|floatformat:"0" }}],
+                backgroundColor: ['#4CAF50', '#f44336'],
+                borderColor: '#fff',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+    
+</script>
+{% endblock %}

@@ -18,7 +18,7 @@ from django.contrib import messages
 from administrador.forms import EditUserProfileForm, CrearProveedorForm, EditarProveedorForm
 from django.views.decorators.http import require_POST
 from .forms import PerfilForm
-from django.db.models import Count
+from django.db.models import Count, Avg, Max, Min
 
 
 
@@ -519,3 +519,33 @@ def editar_proveedor(request, proveedor_id):
             'proveedor_form': form,
             'proveedor': proveedor
         })
+
+
+
+# ------------------ DASHBOARD DE PROVEEDORES ------------------
+
+
+
+@login_required
+def dashboard_proveedores(request):
+    total_proveedores = Proveedor.objects.count()
+    proveedores_activos = Proveedor.objects.filter(estado=True).count()
+    proveedores_bloqueados = total_proveedores - proveedores_activos
+
+    percent_activos = (proveedores_activos / total_proveedores * 100) if total_proveedores else 0
+    percent_bloqueados = 100 - percent_activos
+
+    ultimo_proveedor = Proveedor.objects.latest('fecha_creacion')
+
+    context = {
+        'total_proveedores': total_proveedores,
+        'percent_activos': round(percent_activos, 2),
+        'percent_bloqueados': round(percent_bloqueados, 2),
+        'ultimo_proveedor': ultimo_proveedor,
+    }
+
+    return render(request, 'administrador/dashboard_proveedores.html', context)
+
+
+
+# ------------------------------------ FIN GESTIÓN DE PROVEEDORES ------------------------------------

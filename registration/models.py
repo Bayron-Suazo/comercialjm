@@ -3,6 +3,7 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.shortcuts import get_object_or_404, redirect
+from datetime import datetime, timezone
 
 
 class Profile(models.Model):
@@ -30,6 +31,7 @@ class Proveedor(models.Model):
     correo = models.EmailField()
     direccion = models.CharField(max_length=255, blank=True, null=True)
     estado = models.BooleanField(default=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     # productos = models.ManyToManyField('Producto', related_name='proveedores', blank=True)
 
