@@ -1,0 +1,184 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Añadir merma</title>
+  <link rel="stylesheet" href="{% static 'administrador/css/productos.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fdfbe7;
+      margin: 0;
+      display: flex;
+      color: #333;
+    }
+
+    .sidebar {
+      width: 250px;
+      background-color: #e8e2c2;
+      padding: 20px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .sidebar img {
+      max-width: 130px;
+      margin-bottom: 20px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .sidebar ul li {
+      margin: 15px 0;
+      font-size: 16px;
+    }
+
+    .sidebar ul li.active {
+      font-weight: bold;
+      background-color: #fff;
+      padding: 8px;
+      border-radius: 8px;
+    }
+
+    .usuario {
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .usuario i {
+      margin-left: 10px;
+    }
+
+    main {
+      flex-grow: 1;
+      padding: 40px;
+    }
+
+    .titulo {
+      text-align: center;
+      font-size: 32px;
+      margin-bottom: 40px;
+    }
+
+    form {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .campo-formulario {
+      margin-bottom: 30px;
+    }
+
+    label {
+      background-color: #6fbf4b;
+      color: white;
+      padding: 10px 14px;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+      display: inline-block;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background-color: white;
+      font-size: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .botones {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 50px;
+    }
+
+    .btn-cancelar {
+      background-color: #b84236;
+      color: white;
+      padding: 12px 24px;
+      font-size: 16px;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+    }
+
+    .btn-confirmar {
+      background-color: #6fbf4b;
+      color: white;
+      padding: 12px 24px;
+      font-size: 16px;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div>
+      <img src="{% static 'administrador/img/logo.png' %}" alt="Logo">
+      <ul>
+        <li class="active">Gestión de productos</li>
+        <li>Proveedores</li>
+        <li>Compras</li>
+        <li>Cliente</li>
+        <li>Ventas</li>
+        <li>Reportería</li>
+        <li>Gestión de usuarios</li>
+      </ul>
+    </div>
+    <div class="usuario">
+      <span>José Sandoval</span>
+      <i class="fas fa-sign-out-alt"></i>
+    </div>
+  </div>
+
+  <main>
+    <h1 class="titulo">Añadir merma</h1>
+
+    <form method="post">
+      {% csrf_token %}
+      {% if form.errors %}
+        <div style="color: red;">
+          {% for error in form.non_field_errors %}
+            <p>{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="campo-formulario">
+        <label for="{{ form.producto.id_for_label }}">Nombre de Producto</label>
+        {{ form.producto }}
+      </div>
+
+      <div class="campo-formulario">
+        <label for="{{ form.cantidad.id_for_label }}">Cantidad</label>
+        {{ form.cantidad }}
+      </div>
+
+      <div class="botones">
+        <a href="{% url 'listar_mermas' %}">
+          <button type="button" class="btn-cancelar">Cancelar</button>
+        </a>
+        <button type="submit" class="btn-confirmar">Confirmar</button>
+      </div>
+    </form>
+  </main>
+</body>
+</html>

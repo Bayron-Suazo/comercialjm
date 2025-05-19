@@ -1,0 +1,161 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Listado de merma</title>
+    <link rel="stylesheet" href="{% static 'administrador/css/productos.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .encabezado-verde {
+            background-color: #7ac143;
+            color: white;
+            padding: 14px;
+            border-radius: 16px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .barra-busqueda {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .barra-busqueda input {
+            flex-grow: 1;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+
+        .btn-filtro,
+        .btn-agregar {
+            background-color: #95c67c;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            color: white;
+        }
+
+        .tabla-custom {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .fila {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            background-color: white;
+            padding: 10px;
+            border-radius: 12px;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .fila.encabezado {
+            background-color: #78b75b;
+            color: white;
+            font-weight: bold;
+        }
+
+        .acciones-inferiores {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            margin-top: 30px;
+        }
+
+        .btn-inferior {
+            background-color: #6fbf4b;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            min-width: 140px;
+            white-space: nowrap;
+        }
+
+        .btn-inferior:hover {
+            background-color: #5ca73f;
+        }
+
+        main {
+            width: 100%;
+            padding: 30px 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <img src="{% static 'administrador/img/logo.png' %}" alt="Logo">
+            <ul>
+                <li class="active">Gestión de productos</li>
+                <li>Proveedores</li>
+                <li>Compras</li>
+                <li>Cliente</li>
+                <li>Ventas</li>
+                <li>Reportería</li>
+                <li>Gestión de usuarios</li>
+            </ul>
+            <div class="usuario">
+                <span>José Sandoval</span>
+                <i class="fas fa-sign-out-alt"></i>
+            </div>
+        </div>
+
+        <main>
+            <div class="encabezado-verde">Listado de merma</div>
+
+            <div class="barra-busqueda">
+                <input type="text" placeholder="Buscar Producto ........">
+                <button class="btn-filtro"><i class="fa fa-filter"></i></button>
+                <a href="{% url 'agregar_merma' %}" class="btn-agregar"><i class="fa fa-plus"></i></a>
+            </div>
+
+            <div class="tabla-custom">
+                <div class="fila encabezado">
+                    <div>Nombre del Producto</div>
+                    <div>Cantidad</div>
+                    <div>Lote</div>
+                    <div>Fecha</div>
+                    <div>Precio</div>
+                    <div>Acciones</div>
+                </div>
+                {% for producto in productos %}
+                <div class="fila">
+                    <div>{{ producto.nombre }}</div>
+                    <div>{{ producto.cantidad }}</div>
+                    <div>{{ producto.lote }}</div>
+                    <div>{{ producto.fecha }}</div>
+                    <div>{{ producto.precio }}</div>
+                    <div>
+                        <i class="fa fa-bars"></i>
+                        <a href="{% url 'eliminar_merma' producto.id %}" onclick="return confirm('¿Estás seguro de que deseas eliminar esta merma?')"><i class="fa fa-trash"></i></a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="acciones-inferiores">
+                <a href="#" class="btn-inferior">Lotes</a>
+                <a href="#" class="btn-inferior">Listado de Productos</a>
+                <a href="#" class="btn-inferior">Mermas</a>
+                <a href="#" class="btn-inferior">Carga Masiva</a>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

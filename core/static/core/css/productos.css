@@ -1,0 +1,307 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #fdfbe7;
+    display: flex;
+    color: #333;
+}
+
+.sidebar {
+    background: #eae2c6;
+    padding: 20px;
+    width: 240px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.logo {
+    text-align: center;
+    margin-bottom: 20px;
+}
+.logo-img {
+    width: 120px;
+    height: auto;
+}
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+.sidebar li {
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+.sidebar li.active, .sidebar li:hover {
+    background-color: #f5f2dd;
+    font-weight: bold;
+}
+.user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+}
+.circle {
+    background: #d9d9d9;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: grid;
+    place-content: center;
+    font-weight: bold;
+}
+.logout {
+    margin-left: auto;
+    font-size: 18px;
+}
+main {
+    background: #f8f6e2;
+    flex-grow: 1;
+    padding: 20px 40px;
+}
+
+/* CONTENEDOR GENERAL */
+.dashboard-container {
+    display: flex;
+    width: 100%;
+}
+
+/* CONTENIDO PRINCIPAL */
+main {
+    flex: 1;
+    padding: 40px;
+    background-color: #fdfbe7;
+}
+
+.dashboard-title {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 25px;
+    background-color: #78b94e;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+/* BUSCADOR */
+.buscador {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.buscador input {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+.buscador button,
+.buscador a {
+    background: white;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.buscador a {
+    background-color: #7db46c;
+    color: white;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+/* TABLA ESTILO */
+.styled-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.styled-table thead tr {
+    background-color: #78b94e;
+    color: white;
+    text-align: left;
+    border-radius: 10px;
+}
+
+.styled-table thead th {
+    padding: 12px 16px;
+    font-size: 14px;
+}
+
+.styled-table tbody tr {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.styled-table tbody td {
+    padding: 12px 16px;
+    font-size: 14px;
+    border-bottom: 1px solid #eee;
+}
+
+.styled-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ACCIONES */
+.acciones {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+}
+
+.acciones a {
+    color: #4c2882;
+    font-size: 16px;
+    text-decoration: none;
+}
+
+.acciones a:hover {
+    color: #78b94e;
+}
+
+/* BOTONES INFERIORES */
+.buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.buttons button {
+    background-color: #7db46c;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.buttons button:hover {
+    background-color: #659a56;
+}
+
+/* PAGINACIÓN */
+.paginacion {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.paginacion button {
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+/* MENSAJE MODAL */
+.mensaje-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.mensaje-modal {
+    background-color: white;
+    padding: 20px 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    max-width: 400px;
+    text-align: center;
+}
+.mensaje-texto {
+    all: unset;
+    display: block;
+    text-align: center;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: #000;
+    margin-bottom: 15px;
+}
+
+
+.mensaje-texto.success,
+.mensaje-texto.warning {
+    all: unset;
+}
+
+
+.mensaje-modal .btn-no {
+    background-color: #5bc0de;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+
+.btn-aceptar {
+    background-color: white;
+    color: black;
+    padding: 8px 16px;
+    border: 1px solid #666;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+
+  .mensaje-texto.success,
+  .mensaje-texto.warning,
+  .mensaje-texto.error {
+    all: unset !important;
+    display: block;
+    text-align: center;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: #000;
+    margin-bottom: 15px;
+  }
+
+button.btn-aceptar {
+    all: unset;
+    display: inline-block;
+    background-color: white;
+    color: black;
+    padding: 8px 16px;
+    border: 1px solid #999;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    cursor: pointer;
+}
+
+
+
+
+
+
+
+

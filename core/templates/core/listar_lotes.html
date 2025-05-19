@@ -1,0 +1,585 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Listado de Lote</title>
+    <link rel="stylesheet" href="{% static 'administrador/css/dashboard.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+.tabla-lotes {
+    margin-top: 20px;
+}
+
+.fila {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.fila.encabezado {
+    background-color: #6bbf5f;
+    color: white;
+    font-weight: bold;
+}
+
+.columna {
+    flex: 1;
+    text-align: center;
+}
+
+.iconos i {
+    margin: 0 6px;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.barra-busqueda {
+    margin-top: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.barra-busqueda input {
+    flex-grow: 1;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+.boton {
+    background-color: #6bbf5f;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 10px;
+    text-decoration: none;
+    margin: 10px 5px;
+    display: inline-block;
+}
+</style>
+
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <img src="{% static 'administrador/img/logo.png' %}" alt="Logo">
+            <ul>
+                <li class="active">Gestión de productos</li>
+                <li>Proveedores</li>
+                <li>Compras</li>
+                <li>Cliente</li>
+                <li>Ventas</li>
+                <li>Reportería</li>
+                <li>Gestión de usuarios</li>
+            </ul>
+            <div class="usuario">
+                <span>JS</span>
+                <div>
+                    <strong>José Sandoval</strong><br>
+                    <small>Empleado</small>
+                </div>
+                <i class="fa fa-sign-out"></i>
+            </div>
+        </aside>
+        <main class="contenido">
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Listado de Lote</title>
+    <link rel="stylesheet" href="{% static 'administrador/css/dashboard.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+.tabla-lotes {
+    margin-top: 20px;
+}
+
+.fila {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.fila.encabezado {
+    background-color: #6bbf5f;
+    color: white;
+    font-weight: bold;
+}
+
+.columna {
+    flex: 1;
+    text-align: center;
+}
+
+.iconos i {
+    margin: 0 6px;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.barra-busqueda {
+    margin-top: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.barra-busqueda input {
+    flex-grow: 1;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+.boton {
+    background-color: #6bbf5f;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 10px;
+    text-decoration: none;
+    margin: 10px 5px;
+    display: inline-block;
+}
+</style>
+
+</head>
+<body>
+    <div class="contenedor">
+        
+
+        
+
+        
+<h1 class="titulo">Listado de Lote</h1>
+
+<div class="barra-busqueda">
+    <input type="text" placeholder="Buscar Lote ........">
+    <button><i class="fa fa-filter"></i></button>
+    <a href="#"><i class="fa fa-plus"></i></a>
+</div>
+
+<div class="tabla-lotes">
+    <div class="fila encabezado">
+        <div class="columna">Nombre</div>
+        <div class="columna">Total de Productos</div>
+        <div class="columna">Fecha de Ingreso</div>
+        <div class="columna">Acciones</div>
+    </div>
+
+    <div class="fila">
+        <div class="columna">L-004</div>
+        <div class="columna">12</div>
+        <div class="columna">05/04/25</div>
+        <div class="columna iconos">
+            <a href="#"><i class="fa fa-lock"></i></a>
+            <a href="#"><i class="fa fa-pen"></i></a>
+            <i class="fa fa-bars" onclick="mostrarModal()"></i>
+        </div>
+    </div>
+    <div class="fila">
+        <div class="columna">L-003</div>
+        <div class="columna">8</div>
+        <div class="columna">04/04/25</div>
+        <div class="columna iconos">
+            <a href="#"><i class="fa fa-lock"></i></a>
+            <a href="#"><i class="fa fa-pen"></i></a>
+            <i class="fa fa-bars" onclick="mostrarModal()"></i>
+        </div>
+    </div>
+    <div class="fila">
+        <div class="columna">L-002</div>
+        <div class="columna">10</div>
+        <div class="columna">03/04/25</div>
+        <div class="columna iconos">
+            <a href="#"><i class="fa fa-lock"></i></a>
+            <a href="#"><i class="fa fa-pen"></i></a>
+            <i class="fa fa-bars" onclick="mostrarModal()"></i>
+        </div>
+    </div>
+    <div class="fila">
+        <div class="columna">L-001</div>
+        <div class="columna">4</div>
+        <div class="columna">02/04/25</div>
+        <div class="columna iconos">
+            <a href="#"><i class="fa fa-lock"></i></a>
+            <a href="#"><i class="fa fa-pen"></i></a>
+            <i class="fa fa-bars" onclick="mostrarModal()"></i>
+        </div>
+    </div>
+</div>
+
+
+
+
+        <div class="paginacion">
+            <button>&lt;</button>
+            <span>1</span>
+            <button>&gt;</button>
+        </div>
+
+        <div class="botones-inferiores">
+            <a class="boton" href="#">Listado de Productos</a>
+            <a class="boton" href="#">Inactivos</a>
+            <a class="boton" href="#">Mermas</a>
+            <a class="boton" href="#">Carga Masiva</a>
+        </div>
+    </div>
+
+
+<div class="modal" id="modalProductosLote">
+    <div class="modal-overlay"></div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <h2 class="modal-title">Listado de Productos Lote 3</h2>
+            <table class="modal-table">
+                <thead>
+                    <tr><th>Producto</th><th>Cantidad</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Tomate</td><td>10</td></tr>
+                    <tr><td>Lechuga</td><td>7</td></tr>
+                    <tr><td>Manzana</td><td>2</td></tr>
+                    <tr><td>Naranja</td><td>4</td></tr>
+                    <tr><td>Palta</td><td>6</td></tr>
+                </tbody>
+            </table>
+            <div class="modal-buttons">
+                <button onclick="cerrarModal()" class="btn-cancelar">Cancelar</button>
+                <button class="btn-confirmar">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.modal-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.modal-dialog {
+    position: relative;
+    z-index: 10000;
+    background-color: #f3f0d9;
+    border-radius: 16px;
+    padding: 30px 40px;
+    width: 400px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.modal-title {
+    text-align: center;
+    font-size: 22px;
+    margin-bottom: 20px;
+}
+
+.modal-table {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.modal-table th, .modal-table td {
+    text-align: left;
+    padding: 8px 10px;
+    font-size: 16px;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-between;
+}
+
+.btn-cancelar {
+    background-color: #a94442;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.btn-confirmar {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<script>
+function mostrarModal() {
+    document.getElementById('modalProductosLote').style.display = 'flex';
+}
+function cerrarModal() {
+    document.getElementById('modalProductosLote').style.display = 'none';
+}
+</script>
+
+</body>
+</html>
+
+
+<div class="modal" id="modalProductosLote" style="display: none;">
+    <div class="modal-content">
+        <h2>Listado de Productos Lote 3</h2>
+        
+<h1 class="titulo">Listado de Lote</h1>
+
+<div class="barra-busqueda">
+    <input type="text" placeholder="Buscar Lote ........">
+    <button><i class="fa fa-filter"></i></button>
+    <a href="#"><i class="fa fa-plus"></i></a>
+</div>
+
+<div class="tabla-lotes">
+    <div class="fila encabezado">
+        <div class="columna">Nombre</div>
+        <div class="columna">Total de Productos</div>
+        <div class="columna">Fecha de Ingreso</div>
+        <div class="columna">Acciones</div>
+    </div>
+
+    <div class="fila">
+        <div class="columna">L-004</div>
+        <div class="columna">12</div>
+        <div class="columna">05/04/25</div>
+        <div class="columna iconos">
+            <a href="#"><i class="fa fa-lock"></i></a>
+            <a href="#"><i class="fa fa-pen"></i></a>
+            <i class="fa fa-bars" onclick="mostrarModal()"></i>
+        </div>
+    </div>
+    <div class="fila">
+        <div class="columna">L-003</div>
+        <div class="columna">8</div>
+        <div class="columna">04/04/25</div>
+        <div class="columna iconos">
+            <a href="#"><i class="fa fa-lock"></i></a>
+            <a href="#"><i class="fa fa-pen"></i></a>
+            <i class="fa fa-bars" onclick="mostrarModal()"></i>
+        </div>
+    </div>
+    <div class="fila">
+        <div class="columna">L-002</div>
+        <div class="columna">10</div>
+        <div class="columna">03/04/25</div>
+        <div class="columna iconos">
+            <a href="#"><i class="fa fa-lock"></i></a>
+            <a href="#"><i class="fa fa-pen"></i></a>
+            <i class="fa fa-bars" onclick="mostrarModal()"></i>
+        </div>
+    </div>
+    <div class="fila">
+        <div class="columna">L-001</div>
+        <div class="columna">4</div>
+        <div class="columna">02/04/25</div>
+        <div class="columna iconos">
+            <a href="#"><i class="fa fa-lock"></i></a>
+            <a href="#"><i class="fa fa-pen"></i></a>
+            <i class="fa fa-bars" onclick="mostrarModal()"></i>
+        </div>
+    </div>
+</div>
+
+<div class="botones-inferiores">
+    <a class="boton" href="#">Listado de Productos</a>
+    <a class="boton" href="#">Inactivos</a>
+    <a class="boton" href="#">Mermas</a>
+    <a class="boton" href="#">Carga Masiva</a>
+</div>
+
+        <div style="margin-top: 20px;">
+            <button onclick="cerrarModal()" style="background-color: #a94442; color: white; padding: 10px;">Cancelar</button>
+            <button style="background-color: #4CAF50; color: white; padding: 10px;">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function mostrarModal() {
+    document.getElementById('modalProductosLote').style.display = 'block';
+}
+function cerrarModal() {
+    document.getElementById('modalProductosLote').style.display = 'none';
+}
+</script>
+
+<style>
+.modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.modal-content {
+    background-color: #eee6c9;
+    border-radius: 12px;
+    padding: 30px;
+    min-width: 300px;
+}
+.modal-content table {
+    width: 100%;
+    margin-top: 10px;
+}
+.modal-content th, .modal-content td {
+    text-align: left;
+    padding: 4px;
+}
+</style>
+
+        </main>
+    </div>
+
+
+<div class="modal" id="modalProductosLote">
+    <div class="modal-overlay"></div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <h2 class="modal-title">Listado de Productos Lote 3</h2>
+            <table class="modal-table">
+                <thead>
+                    <tr><th>Producto</th><th>Cantidad</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Tomate</td><td>10</td></tr>
+                    <tr><td>Lechuga</td><td>7</td></tr>
+                    <tr><td>Manzana</td><td>2</td></tr>
+                    <tr><td>Naranja</td><td>4</td></tr>
+                    <tr><td>Palta</td><td>6</td></tr>
+                </tbody>
+            </table>
+            <div class="modal-buttons">
+                <button onclick="cerrarModal()" class="btn-cancelar">Cancelar</button>
+                <button class="btn-confirmar">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.modal-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.modal-dialog {
+    position: relative;
+    z-index: 10000;
+    background-color: #f3f0d9;
+    border-radius: 16px;
+    padding: 30px 40px;
+    width: 400px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.modal-title {
+    text-align: center;
+    font-size: 22px;
+    margin-bottom: 20px;
+}
+
+.modal-table {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.modal-table th, .modal-table td {
+    text-align: left;
+    padding: 8px 10px;
+    font-size: 16px;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-between;
+}
+
+.btn-cancelar {
+    background-color: #a94442;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.btn-confirmar {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<script>
+function mostrarModal() {
+    document.getElementById('modalProductosLote').style.display = 'flex';
+}
+function cerrarModal() {
+    document.getElementById('modalProductosLote').style.display = 'none';
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,174 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Crear producto</title>
+    <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #fdfbe7;
+            display: flex;
+            color: #333;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #e8e2c2;
+            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .sidebar img {
+            max-width: 130px;
+            margin-bottom: 20px;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar ul li {
+            margin: 15px 0;
+            font-size: 16px;
+        }
+
+        .sidebar ul li.active {
+            font-weight: bold;
+            background-color: #fff;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .usuario {
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .contenedor-principal {
+            flex: 1;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 32px;
+            margin-bottom: 40px;
+        }
+
+        form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .campo-formulario {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .campo-formulario label {
+            background-color: #65b748;
+            color: white;
+            padding: 8px;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            font-weight: bold;
+        }
+
+        .campo-formulario input, .campo-formulario select {
+            padding: 12px;
+            border: none;
+            border-radius: 0 0 12px 12px;
+            background-color: white;
+            font-size: 14px;
+        }
+
+        .botones {
+            grid-column: span 2;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        .btn-cancelar {
+            background-color: #b73423;
+            color: white;
+            padding: 14px 32px;
+            font-size: 16px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-confirmar {
+            background-color: #4caf50;
+            color: white;
+            padding: 14px 32px;
+            font-size: 16px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div>
+            <img src="{% static 'administrador/img/logo.png' %}" alt="Logo">
+            <ul>
+                <li class="active">Gestión de productos</li>
+                <li>Proveedores</li>
+                <li>Compras</li>
+                <li>Cliente</li>
+                <li>Ventas</li>
+                <li>Reportería</li>
+                <li>Gestión de usuarios</li>
+            </ul>
+        </div>
+        <div class="usuario">
+            <span>José Sandoval</span>
+            <i class="fas fa-sign-out-alt"></i>
+        </div>
+    </div>
+
+    <div class="contenedor-principal">
+        <h1>Crear producto</h1>
+        <form method="post">
+            {% csrf_token %}
+            <div class="campo-formulario">
+                <label for="{{ form.nombre.id_for_label }}">Nombre de Producto</label>
+                {{ form.nombre }}
+            </div>
+            <div class="campo-formulario">
+                <label for="{{ form.tipo.id_for_label }}">Tipo de Producto</label>
+                {{ form.tipo }}
+            </div>
+            <div class="campo-formulario">
+                <label for="{{ form.precio.id_for_label }}">Precio</label>
+                {{ form.precio }}
+            </div>
+            <div class="campo-formulario">
+                <label for="{{ form.cantidad.id_for_label }}">Cantidad</label>
+                {{ form.cantidad }}
+            </div>
+            <div class="botones">
+                <a href="{% url 'listar_productos' %}" class="btn-cancelar">Cancelar</a>
+                <button type="submit" class="btn-confirmar">Confirmar</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
+

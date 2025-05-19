@@ -1,0 +1,43 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard de Productos</title>
+    <link rel="stylesheet" href="{% static 'administrador/css/dashboard.css' %}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <main>
+            <h1 class="dashboard-title">DashBoard</h1>
+            <div class="cards">
+                <div class="card green">
+                    <div class="circle-chart">70%</div>
+                    <p>Espacio Disponible</p>
+                    <div class="data">40 <small>Unidades</small></div>
+                    <div class="trend up">↑ 12%</div>
+                </div>
+                <div class="card red">
+                    <div class="circle-chart">15%</div>
+                    <p>Mermas</p>
+                    <div class="data loss">$27.000</div>
+                    <div class="trend down">↓ 5%</div>
+                </div>
+                <div class="card brown">
+                    <div class="circle-chart">30%</div>
+                    <p>Stock Actual</p>
+                    <div class="data">$256.000</div>
+                    <div class="trend up">↑ 7%</div>
+                </div>
+            </div>
+            <div class="buttons">
+                <a href="{% url 'listar_lotes' %}"><button>Lotes</button></a>
+                <a href="{% url 'listar_productos' %}"><button>Listado de Productos</button></a>
+                <a href="{% url 'listar_mermas' %}"><button>Mermas</button></a>
+                <button>Carga Masiva</button>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

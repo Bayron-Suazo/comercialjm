@@ -68,3 +68,92 @@ def redirect_to_dashboard(group_name):
         return redirect('perfil_empleado')
     else:
         return redirect('logout')
+from .models import Lote
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Producto
+from .forms import ProductoForm
+from django.urls import reverse
+from django.http import HttpResponse
+from django.contrib import messages 
+
+
+def listar_productos(request):
+    from django.template.loader import get_template
+    print("🔍 Template usado:", get_template('core/listar_productos.html').origin)
+
+    productos = Producto.objects.filter(activo=True)
+    return render(request, 'core/listar_productos.html', {'productos': productos})
+
+
+from django.contrib import messages
+
+from django.contrib import messages  # Añade esto al inicio si no está
+
+def toggle_estado_producto(request, id):
+    producto = get_object_or_404(Producto, id=id)
+    producto.activo = not producto.activo
+    producto.save()
+
+    if producto.activo:
+        messages.success(request, "Producto activado con éxito.")
+    else:
+        messages.warning(request, "Producto desactivado con éxito.")
+
+    origen = request.GET.get('origen', 'activos')
+    if origen == 'inactivos':
+        return redirect('productos_inactivos')
+    return redirect('listar_productos')
+
+
+
+
+def agregar_producto(request):
+    if request.method == 'POST':
+        form = ProductoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('listar_productos')
+    else:
+        form = ProductoForm()
+    return render(request, 'core/form_producto.html', {'form': form, 'titulo': 'Agregar Producto'})
+
+def editar_producto(request, id):
+    producto = get_object_or_404(Producto, id=id)
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, instance=producto)
+        if form.is_valid():
+            form.save()
+            return redirect('listar_productos')
+    else:
+        form = ProductoForm(instance=producto)
+    return render(request, 'core/form_producto.html', {'form': form, 'titulo': 'Editar Producto'})
+
+def eliminar_producto(request, id):
+    producto = get_object_or_404(Producto, id=id)
+    producto.delete()
+    return redirect('listar_productos')
+
+def debug_url_test(request):
+    try:
+        url = reverse('eliminar_producto', kwargs={'id': 1})
+        return HttpResponse(f"✅ URL encontrada: {url}")
+    except Exception as e:
+        return HttpResponse(f"❌ Error: {e}")
+
+def productos_inactivos(request):
+    productos = Producto.objects.filter(activo=False)
+    return render(request, 'core/productos_inactivos.html', {'productos': productos})
+
+from django.shortcuts import render
+
+def listar_lotes(request):
+    lotes = Lote.objects.filter(activo=True)
+    return render(request, 'core/listar_lotes.html', {'lotes': lotes})
+
+from django.shortcuts import redirect, get_object_or_404
+
+def bloquear_lote(request, id):
+    lote = get_object_or_404(Lote, id=id)
+    lote.activo = False
+    lote.save()
+    return redirect('listar_lotes')
