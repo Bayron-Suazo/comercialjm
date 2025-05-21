@@ -37,3 +37,37 @@ class Proveedor(models.Model):
 
     def __str__(self):
         return self.nombre
+    
+
+
+class Compra(models.Model):
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.CASCADE, related_name='compras')
+    activo = models.BooleanField(default=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+    usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='compras')
+    estado = models.CharField(max_length=20, choices=[
+        ('pendiente', 'Pendiente'),
+        ('lista', 'Lista'),
+        ('cancelada', 'Cancelada'),
+    ], default='registrada')
+
+    def __str__(self):
+        return f"Compra #{self.id} - {self.proveedor.nombre}"
+
+    def total(self):
+        return sum(item.subtotal() for item in self.detalles.all())
+
+
+
+# Este modelo depende de Producto, así que queda comentado por ahora
+# class DetalleCompra(models.Model):
+#     compra = models.ForeignKey(Compra, on_delete=models.CASCADE, related_name='detalles')
+#     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+#     cantidad = models.PositiveIntegerField()
+#     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+
+#     def subtotal(self):
+#         return self.cantidad * self.precio_unitario
+
+#     def __str__(self):
+#         return f"{self.cantidad} x {self.producto.nombre} (Compra #{self.compra.id})"

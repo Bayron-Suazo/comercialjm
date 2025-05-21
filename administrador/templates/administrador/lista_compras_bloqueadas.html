@@ -1,7 +1,7 @@
 {% extends 'core/base_admin.html' %}
 {% load static %}
 
-{% block title %}Listado de Proveedores Bloqueados{% endblock %}
+{% block title %}Listado de Compras Bloqueadas{% endblock %}
 
 {% block extra_head %}
     <link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
@@ -16,23 +16,23 @@
         <img src="{% static 'administrador/svg/carga-masiva.svg' %}">
     </a>
 
-    <a href="{% url 'dashboard_proveedores' %}" class="boton-header">
+    <a href="#" class="boton-header">
         Dashboard
         <img src="{% static 'administrador/svg/reporteria.svg' %}">
     </a>
 
-    <a href="{% url 'agregar_proveedor' %}" class="boton-header">
-        Agregar Proveedor
+    <a href="#" class="boton-header">
+        Registrar Compra
         <img src="{% static 'administrador/svg/plus.svg' %}">
     </a>
 
 
 </div>
 
-<h2 class="titulo">Listado de Proveedores Bloqueados</h2>
+<h2 class="titulo">Listado de Compras Bloqueadas</h2>
 
 <div class="busqueda-agregar">
-    <input type="text" placeholder="Buscar Proveedores .........." class="input-busqueda">
+    <input type="text" placeholder="Buscar Compra .........." class="input-busqueda">
 
     <div class="dropdown">
         <a href="#" class="boton-header" id="dropdownMenuButton">
@@ -53,16 +53,16 @@
     </div>
 
     <div class="toggle-estado-usuarios">
-        <a href="{% url 'lista_proveedores_activos' %}" class="estado-btn">Activos</a>
-        <a href="{% url 'lista_proveedores_bloqueados' %}" class="estado-btn activo">Bloqueados</a>
+        <a href="{% url 'lista_compras_activas' %}" class="estado-btn">Activas</a>
+        <a href="{% url 'lista_compras_bloqueadas' %}" class="estado-btn activo">Bloqueadas</a>
     </div>
 </div>
 
 <!-- Modal de confirmación -->
 <div id="confirmModal" class="modal hidden">
   <div class="modal-content">
-    <h3>¿Activar Proveedor?</h3>
-    <p>Los proveedores activados pasarán al listado de usuarios activos y se le podrán hacer ordenes de compra.</p>
+    <h3>¿Activar Compra?</h3>
+    <p>Las compras activadas pasarán al listado de activas, tendrán el estado "Pendiente" y deberá informar al proveedor.</p>
     <div class="modal-actions">
       <button type = "button"   id="confirmNo">Cancelar</button>
       <button type = "button"   id="confirmYes">Confirmar</button>
@@ -70,34 +70,34 @@
   </div>
 </div>
 
-{% if proveedores %}
+{% if compras %}
     <table class="tabla-usuarios">
         <thead>
             <tr>
                 <th><input type="checkbox" id="select-all"></th>
-                <th>Nombre</th>
-                <th>Rut</th>
-                <th>Teléfono</th>
-                <th>Correo</th>
-                <th>Dirección</th>            
+                <th>ID Compra</th>
+                <th>Proveedor</th>
+                <th>Encargado</th>
+                <th>Fecha Compra</th>
+                <th>Estado</th>            
                 <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
-            {% for proveedor in proveedores %}
+            {% for compra in compras %}
             <tr>
-                <td><input type="checkbox" class="select-user" data-proveedor-id="{{ proveedor.id }}"></td>
-                <td>{{ proveedor.nombre }}</td>
-                <td>{{ proveedor.rut }}</td>
-                <td>{{ proveedor.telefono }}</td>
-                <td>{{ proveedor.correo }}</td>
-                <td>{{ proveedor.direccion }}</td>
+                <td><input type="checkbox" class="select-user" data-compra-id="{{ compra.id }}"></td>
+                <td>{{ compra.id }}</td>
+                <td>{{ compra.proveedor.nombre }}</td>
+                <td>{{ compra.usuario }}</td>
+                <td>{{ compra.fecha }}</td>
+                <td>{{ compra.estado }}</td>
                 
                 <td>
-                    <button title="Activar" class="btn-activar" data-proveedor-id="{{ proveedor.id }}">
+                    <button title="Activar" class="btn-activar" data-compra-id="{{ compra.id }}">
                         <img src="{% static 'core/svg/lock-solid.svg' %}" alt="Activar">
                     </button>
-                    <a href="{% url 'mostrar_proveedor' user.id %}" title="Mostrar">
+                    <a href="#" title="Mostrar">
                         <img src="{% static 'core/svg/user-regular.svg' %}" alt="Mostrar">
                     </a>
                 </td>
@@ -107,26 +107,26 @@
     </table>
 
     <div class="custom-pagination">
-        {% if proveedores.has_previous %}
+        {% if compras.has_previous %}
         <a href="?page=1{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&laquo;</a>
-        <a href="?page={{ proveedores.previous_page_number }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&lsaquo;</a>
+        <a href="?page={{ compras.previous_page_number }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&lsaquo;</a>
         {% else %}
         <span class="page-btn disabled">&laquo;</span>
         <span class="page-btn disabled">&lsaquo;</span>
         {% endif %}
 
-        <span class="page-btn current">{{ proveedores.number }}</span>
+        <span class="page-btn current">{{ compras.number }}</span>
 
-        {% if proveedores.has_next %}
-        <a href="?page={{ proveedores.next_page_number }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&rsaquo;</a>
-        <a href="?page={{ proveedores.paginator.num_pages }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&raquo;</a>
+        {% if compras.has_next %}
+        <a href="?page={{ compras.next_page_number }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&rsaquo;</a>
+        <a href="?page={{ compras.paginator.num_pages }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&raquo;</a>
         {% else %}
         <span class="page-btn disabled">&rsaquo;</span>
         <span class="page-btn disabled">&raquo;</span>
         {% endif %}
     </div>
 {% else %}
-    <p style="text-align: center; font-size: 24px; margin-top: 40px;">No hay proveedores registrados.</p>
+    <p style="text-align: center; font-size: 24px; margin-top: 40px;">No hay compras registradas.</p>
 {% endif %}
 
 {% endblock %}
@@ -171,20 +171,20 @@
         });
 
         activarBtn.addEventListener('click', () => {
-            const proveedorIds = Array.from(checkboxes)
+            const compraIds = Array.from(checkboxes)
                 .filter(cb => cb.checked)
-                .map(cb => cb.dataset.proveedorId);
+                .map(cb => cb.dataset.compraId);
 
-            if (proveedorIds.length === 0) return;
+            if (compraIds.length === 0) return;
 
             showConfirmModal(() => {
-                fetch("{% url 'activar_proveedor' %}", {
+                fetch("#", {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                         'X-CSRFToken': '{{ csrf_token }}'
                     },
-                    body: new URLSearchParams({ 'proveedor_ids': JSON.stringify(proveedorIds) })
+                    body: new URLSearchParams({ 'compra_ids': JSON.stringify(compraIds) })
                 }).then(res => res.json()).then(data => {
                     if (data.success) location.reload();
                 });
@@ -193,16 +193,16 @@
 
         document.querySelectorAll('.btn-activar').forEach(button => {
             button.addEventListener('click', () => {
-                const proveedorId = button.dataset.proveedorId;
+                const compraId = button.dataset.compraId;
 
                 showConfirmModal(() => {
-                    fetch("{% url 'activar_proveedor' %}", {
+                    fetch("#", {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded',
                             'X-CSRFToken': '{{ csrf_token }}'
                         },
-                        body: new URLSearchParams({ 'proveedor_id': proveedorId })
+                        body: new URLSearchParams({ 'compra_id': compraId })
                     }).then(res => res.json()).then(data => {
                         if (data.success) location.reload();
                     });

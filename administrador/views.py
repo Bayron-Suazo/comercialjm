@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .forms import CargaMasivaUsuariosForm
-from registration.models import Profile, Proveedor
+from registration.models import Profile, Proveedor, Compra
 from datetime import datetime
 from django.core.exceptions import ValidationError
 from django.contrib import messages
@@ -549,3 +549,66 @@ def dashboard_proveedores(request):
 
 
 # ------------------------------------ FIN GESTIÓN DE PROVEEDORES ------------------------------------
+
+
+
+# ------------------------------------  GESTIÓN DE COMPRAS ------------------------------------
+
+
+
+# ------------------ LISTADO DE COMPRAS ACTIVAS Y BLOQUEADAS ------------------
+
+
+
+@login_required
+def lista_compras_activas(request):
+    order_by = request.GET.get('order_by', '')
+
+    compras_activas = Compra.objects.filter(activo=True)
+
+    if order_by:
+        if order_by == '':
+            compras = compras_activas.order_by('')
+        elif order_by == '':
+            compras = compras_activas.order_by('')
+        else:
+            compras = compras_activas
+    else:
+        compras = compras_activas
+    
+    paginator = Paginator(compras, 10)
+    page_number = request.GET.get('page')
+    compras = paginator.get_page(page_number)
+
+    return render(request, 'administrador/lista_compras.html', {'compras': compras, 'order_by': order_by})
+
+
+
+@login_required
+def lista_compras_bloqueadas(request):
+    order_by = request.GET.get('order_by', '')
+
+    compras_bloqueadas = Compra.objects.filter(activo=False)
+
+    if order_by:
+        if order_by == '':
+            compras = compras_bloqueadas.order_by('')
+        elif order_by == '':
+            compras = compras_bloqueadas.order_by('')
+        else:
+            compras = compras_bloqueadas 
+    else:
+        compras = compras_bloqueadas  
+
+    paginator = Paginator(compras, 10)
+    page_number = request.GET.get('page')
+    compras = paginator.get_page(page_number)
+
+    return render(request, 'administrador/lista_compras_bloqueadas.html', {'compras': compras, 'order_by': order_by})
+
+
+
+# ------------------ AGREGAR - MOSTRAR - EDITAR - ACTIVAR - BLOQUEAR ------------------
+
+
+
