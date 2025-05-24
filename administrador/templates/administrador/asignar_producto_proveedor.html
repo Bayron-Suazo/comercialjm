@@ -1,0 +1,106 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
+{% endblock %}
+
+{% block content %}
+<head>
+    <a class="back-arrow" href="{% url 'mostrar_proveedor' proveedor.id %}">
+        <img src="{% static 'administrador/svg/Volver-atras.svg' %}" alt="">
+    </a>
+</header> 
+<h2 class="titulo">Asignar Productos al Proveedor</h2>
+
+<div class="busqueda-agregar">
+    <input type="text" placeholder="Buscar Productos .........." class="input-busqueda">
+
+    <div class="dropdown">
+        <a href="#" class="boton-header" id="dropdownMenuButton">
+            Filtrar
+            <img src="{% static 'administrador/svg/filter-solid.svg' %}">
+        </a>
+        <ul id="filterOptions" class="dropdown-content" style="display:none;">
+            <li><a href="?order_by=nombre" class="{% if order_by == 'nombre' %}filtro-activo{% endif %}">Nombre</a></li>
+            <li><a href="?order_by=lote_numero" class="{% if order_by == 'lote_numero' %}filtro-activo{% endif %}">Lote</a></li>
+            <li><a href="?order_by=tipo" class="{% if order_by == 'tipo' %}filtro-activo{% endif %}">Tipo</a></li>
+            <li><a href="?">Limpiar filtro</a></li>
+        </ul>
+    </div>
+</div>
+
+<form method="post">
+    <div class="barra-acciones-usuarios ancho-contenido">
+        <div class="boton-bloquear-seleccionados">
+            <button id="registrarBtn" disabled>Registrar</button>
+        </div>
+    </div>
+    {% csrf_token %}
+    <table class="tabla-usuarios">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Nombre</th>
+                <th>Número de Lote</th>
+                <th>Tipo</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for producto in productos %}
+            <tr>
+                <td><input type="checkbox" name="productos[]" value="{{ producto.id }}" class="checkbox-producto" {% if producto.id in productos_asignados_ids %}checked{% endif %}></td>
+                <td>{{ producto.nombre }}</td>
+                <td>{{ producto.lote_numero }}</td>
+                <td>{{ producto.tipo }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const registrarBtn = document.querySelector('#registrarBtn');
+        const checkboxes = document.querySelectorAll('.checkbox-producto');
+        const selectAll = document.getElementById('select-all');
+
+        function updateRegistrarButton() {
+            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+            registrarBtn.disabled = !anyChecked;
+            registrarBtn.classList.toggle('activo', anyChecked);
+        }
+
+        checkboxes.forEach(cb => cb.addEventListener('change', updateRegistrarButton));
+
+        selectAll?.addEventListener('change', () => {
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+            updateRegistrarButton();
+        });
+
+        updateRegistrarButton();
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const dropdownBtn = document.getElementById('dropdownMenuButton');
+        const dropdownContent = document.getElementById('filterOptions');
+
+        dropdownBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            dropdownContent.style.display = dropdownContent.style.display === 'none' ? 'block' : 'none';
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!dropdownBtn.contains(event.target) && !dropdownContent.contains(event.target)) {
+                dropdownContent.style.display = 'none';
+            }
+        });
+    });
+</script>
+
+<script src="{% static 'administrador/js/busca_usuarios.js' %}"></script>
+{% endblock %}

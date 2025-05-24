@@ -12,15 +12,15 @@
 {% endblock %}
 
 <head>
-{% if user.is_active%}
-    <a class="back-arrow" href="{% url 'lista_usuarios_activos' %}">
-        <img src="{% static 'administrador/svg/Volver-atras.svg' %}" alt="">
-    </a>
-{% else %}
-    <a class="back-arrow" href="{% url 'lista_usuarios_bloqueados' %}">
-        <img src="{% static 'administrador/svg/Volver-atras.svg' %}" alt="">
-    </a>
-{% endif %}
+    {% if user.is_active%}
+        <a class="back-arrow" href="{% url 'lista_usuarios_activos' %}">
+            <img src="{% static 'administrador/svg/Volver-atras.svg' %}" alt="">
+        </a>
+    {% else %}
+        <a class="back-arrow" href="{% url 'lista_usuarios_bloqueados' %}">
+            <img src="{% static 'administrador/svg/Volver-atras.svg' %}" alt="">
+        </a>
+    {% endif %}
 <h1>Usuario {{user.first_name}} {{user.last_name}}</h1>
 </header>  
 

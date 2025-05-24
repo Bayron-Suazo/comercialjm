@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User, Group
-from registration.models import Profile
+from registration.models import Profile, Proveedor
 import random
 import string
 import re
@@ -318,3 +318,127 @@ class PerfilForm(forms.ModelForm):
             'email': 'Correo',
             'password': 'Contraseña'
         }
+
+
+
+# ------------------ CREAR PROVEEDOR ------------------
+
+
+
+class CrearProveedorForm(forms.ModelForm):
+    nombre = forms.CharField(
+        label="Nombre del proveedor",
+        max_length=100,
+        required=True
+    )
+    rut = forms.CharField(
+        label="RUT",
+        max_length=12,
+        required=True
+    )
+    telefono = forms.CharField(
+        label="Teléfono",
+        max_length=12,
+        required=False
+    )
+    correo = forms.EmailField(
+        label="Correo electrónico",
+        required=True
+    )
+    direccion = forms.CharField(
+        label="Dirección",
+        max_length=255,
+        required=False
+    )
+
+    class Meta:
+        model = Proveedor
+        fields = ['nombre', 'rut', 'telefono', 'correo', 'direccion']
+
+    def clean_nombre(self):
+        nombre = self.cleaned_data.get('nombre', '').strip()
+        partes = nombre.split()
+        if len(partes) > 2:
+            raise forms.ValidationError("Solo se permiten hasta 2 nombres.")
+        if not all(p.isalpha() for p in partes):
+            raise forms.ValidationError("El nombre no permite números ni caracteres especiales.")
+        return nombre
+
+    def clean_rut(self):
+        rut = self.cleaned_data.get('rut', '').strip()
+
+        # Validación del formato XX.XXX.XXX-X
+        if not re.match(r'^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$', rut):
+            raise forms.ValidationError('El RUT debe estar en el formato XX.XXX.XXX-X.')
+
+        # Remover puntos y guión
+        clean_rut = rut.replace(".", "").replace("-", "")
+
+        num_part = clean_rut[:-1]
+        dv = clean_rut[-1].upper()
+
+        if not num_part.isdigit():
+            raise forms.ValidationError("El RUT contiene caracteres inválidos.")
+
+        reversed_digits = list(map(int, reversed(num_part)))
+        factors = cycle([2, 3, 4, 5, 6, 7])
+        s = sum(d * next(factors) for d in reversed_digits)
+
+        mod = 11 - (s % 11)
+        verificador = '0' if mod == 11 else 'K' if mod == 10 else str(mod)
+
+        if dv != verificador:
+            raise forms.ValidationError('El RUT no es válido.')
+
+        if Proveedor.objects.filter(rut=rut).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError('Ya existe un proveedor con este RUT.')
+
+        return rut
+
+    def clean_correo(self):
+        correo = self.cleaned_data.get('correo', '').strip()
+        if Proveedor.objects.filter(correo=correo).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("Ya existe un proveedor con este correo.")
+        return correo
+
+
+
+class EditarProveedorForm(CrearProveedorForm):
+
+    def clean_rut(self):
+        rut = self.cleaned_data.get('rut', '').strip()
+
+        # Validación del formato XX.XXX.XXX-X
+        if not re.match(r'^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$', rut):
+            raise forms.ValidationError('El RUT debe estar en el formato XX.XXX.XXX-X.')
+
+        # Remover puntos y guión
+        clean_rut = rut.replace(".", "").replace("-", "")
+
+        num_part = clean_rut[:-1]
+        dv = clean_rut[-1].upper()
+
+        if not num_part.isdigit():
+            raise forms.ValidationError("El RUT contiene caracteres inválidos.")
+
+        reversed_digits = list(map(int, reversed(num_part)))
+        factors = cycle([2, 3, 4, 5, 6, 7])
+        s = sum(d * next(factors) for d in reversed_digits)
+
+        mod = 11 - (s % 11)
+        verificador = '0' if mod == 11 else 'K' if mod == 10 else str(mod)
+
+        if dv != verificador:
+            raise forms.ValidationError('El RUT no es válido.')
+
+        # Validar unicidad excluyendo al proveedor actual
+        if Proveedor.objects.filter(rut=rut).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError('Ya existe un proveedor con este RUT.')
+
+        return rut
+
+    def clean_correo(self):
+        correo = self.cleaned_data.get('correo', '').strip()
+        if Proveedor.objects.filter(correo=correo).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("Ya existe un proveedor con este correo.")
+        return correo
