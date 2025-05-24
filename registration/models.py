@@ -75,14 +75,14 @@ class Compra(models.Model):
 
 
 
-# class DetalleCompra(models.Model):
-#     compra = models.ForeignKey(Compra, on_delete=models.CASCADE, related_name='detalles')
-#     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
-#     cantidad = models.PositiveIntegerField()
-#     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+class DetalleCompra(models.Model):
+    compra = models.ForeignKey(Compra, on_delete=models.CASCADE, related_name='detalles')
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+    cantidad = models.PositiveIntegerField()
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
 
-#     def subtotal(self):
-#         return self.cantidad * self.precio_unitario
+    def subtotal(self):
+        return self.cantidad * self.precio_unitario
 
-#     def __str__(self):
-#         return f"{self.cantidad} x {self.producto.nombre} (Compra #{self.compra.id})"
+    def __str__(self):
+        return f"{self.cantidad} x {self.producto.nombre} (Compra #{self.compra.id})"
