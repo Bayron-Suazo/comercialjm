@@ -39,9 +39,19 @@
         <div class="columna derecha">
             <p><strong>Correo:</strong><br> <span>{{ proveedor.correo }}</span></p>
             <p><strong>Teléfono:</strong><br> <span>{{ proveedor.telefono }}</span></p>
+            <p><strong>Productos Asociados:</strong><br>
+                {% if proveedor.productos.exists %}
+                    <span>
+                        {% for producto in proveedor.productos.all %}
+                            {{ producto.nombre }} (Lote: {{ producto.lote_numero }}){% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </span>
+                {% else %}
+                    <span>0</span>
+                {% endif %}
+                <br>
+                <a href="{% url 'asignar_producto_proveedor' proveedor.id %}" class="btn-actualizar-credenciales">Asignar productos</a>
             </p>
-            <p>
-            </p> 
         </div>
     </div>
 </div>

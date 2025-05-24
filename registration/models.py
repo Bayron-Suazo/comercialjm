@@ -33,12 +33,28 @@ class Proveedor(models.Model):
     estado = models.BooleanField(default=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 
-    # productos = models.ManyToManyField('Producto', related_name='proveedores', blank=True)
+    productos = models.ManyToManyField('Producto', related_name='proveedores', blank=True)
 
     def __str__(self):
         return self.nombre
     
+class Producto(models.Model):
+    nombre = models.CharField(max_length=100)
+    lote_numero = models.IntegerField(null=True, blank=True)
+    cantidad = models.IntegerField()
+    tipo = models.CharField(max_length=50)
+    precio = models.DecimalField(max_digits=10, decimal_places=2)
+    fecha = models.DateField(auto_now_add=True) 
+    activo = models.BooleanField(default=True)
 
+    @property
+    def lote(self):
+        if self.lote_numero:
+            return f"L-{self.lote_numero:03d}"
+        return "Sin lote"
+
+    def _str_(self):
+        return self.nombre
 
 class Compra(models.Model):
     proveedor = models.ForeignKey(Proveedor, on_delete=models.CASCADE, related_name='compras')
@@ -59,7 +75,6 @@ class Compra(models.Model):
 
 
 
-# Este modelo depende de Producto, así que queda comentado por ahora
 # class DetalleCompra(models.Model):
 #     compra = models.ForeignKey(Compra, on_delete=models.CASCADE, related_name='detalles')
 #     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)

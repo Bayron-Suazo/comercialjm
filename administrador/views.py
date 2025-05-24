@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .forms import CargaMasivaUsuariosForm
-from registration.models import Profile, Proveedor, Compra
+from registration.models import Profile, Proveedor, Compra, Producto
 from datetime import datetime
 from django.core.exceptions import ValidationError
 from django.contrib import messages
@@ -439,8 +439,8 @@ def agregar_proveedor(request):
     if request.method == 'POST':
         form = CrearProveedorForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('lista_proveedores_activos')
+            proveedor = form.save()
+            return redirect('mostrar_proveedor', proveedor_id=proveedor.id)
     else:
         form = CrearProveedorForm()
     
@@ -519,6 +519,30 @@ def editar_proveedor(request, proveedor_id):
             'proveedor_form': form,
             'proveedor': proveedor
         })
+
+
+
+def asignar_productos(request, proveedor_id):
+    proveedor = get_object_or_404(Proveedor, id=proveedor_id)
+    order_by = request.GET.get('order_by', 'nombre')
+
+    productos = Producto.objects.filter(activo=True).order_by(order_by)
+
+    if request.method == 'POST':
+        ids_productos_seleccionados = request.POST.getlist('productos[]')
+        ids_productos_seleccionados = list(map(int, ids_productos_seleccionados))
+
+        proveedor.productos.set(ids_productos_seleccionados)
+
+        return redirect('mostrar_proveedor', proveedor_id=proveedor.id)
+
+    context = {
+        'proveedor': proveedor,
+        'productos': productos,
+        'order_by': order_by,
+        'productos_asignados_ids': proveedor.productos.values_list('id', flat=True),
+    }
+    return render(request, 'administrador/asignar_producto_proveedor.html', context)
 
 
 
