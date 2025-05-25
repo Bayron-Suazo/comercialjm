@@ -53,7 +53,7 @@ class Producto(models.Model):
             return f"L-{self.lote_numero:03d}"
         return "Sin lote"
 
-    def _str_(self):
+    def __str__(self):
         return self.nombre
 
 class Compra(models.Model):
@@ -62,10 +62,10 @@ class Compra(models.Model):
     fecha = models.DateTimeField(auto_now_add=True)
     usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='compras')
     estado = models.CharField(max_length=20, choices=[
-        ('pendiente', 'Pendiente'),
-        ('lista', 'Lista'),
-        ('cancelada', 'Cancelada'),
-    ], default='registrada')
+        ('Pendiente', 'Pendiente'),
+        ('Lista', 'Lista'),
+        ('Cancelada', 'Cancelada'),
+    ], default='Pendiente')
 
     def __str__(self):
         return f"Compra #{self.id} - {self.proveedor.nombre}"
@@ -79,10 +79,10 @@ class DetalleCompra(models.Model):
     compra = models.ForeignKey(Compra, on_delete=models.CASCADE, related_name='detalles')
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField()
-    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    observaciones = models.TextField(blank=True, null=True)
 
     def subtotal(self):
-        return self.cantidad * self.precio_unitario
+        return 0
 
     def __str__(self):
         return f"{self.cantidad} x {self.producto.nombre} (Compra #{self.compra.id})"

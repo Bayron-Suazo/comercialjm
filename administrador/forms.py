@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User, Group
-from registration.models import Profile, Proveedor
+from registration.models import Profile, Proveedor, Producto
 import random
 import string
 import re
@@ -442,3 +442,23 @@ class EditarProveedorForm(CrearProveedorForm):
         if Proveedor.objects.filter(correo=correo).exclude(pk=self.instance.pk).exists():
             raise forms.ValidationError("Ya existe un proveedor con este correo.")
         return correo
+    
+
+
+class CompraForm(forms.Form):
+    proveedor = forms.ModelChoiceField(
+        queryset=Proveedor.objects.filter(estado=True),
+        label="Proveedor"
+    )
+
+class DetalleCompraForm(forms.Form):
+    producto = forms.ModelChoiceField(
+        queryset=Producto.objects.none(),
+        label="Producto"
+    )
+    cantidad = forms.IntegerField(min_value=1, label="Cantidad")
+    observaciones = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 2}),
+        required=False,
+        label="Observaciones"
+    )

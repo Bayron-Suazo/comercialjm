@@ -11,15 +11,17 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .forms import CargaMasivaUsuariosForm
-from registration.models import Profile, Proveedor, Compra, Producto
+from registration.models import Profile, Proveedor, Compra, Producto, DetalleCompra
 from datetime import datetime
 from django.core.exceptions import ValidationError
 from django.contrib import messages
-from administrador.forms import EditUserProfileForm, CrearProveedorForm, EditarProveedorForm
+from administrador.forms import EditUserProfileForm, CrearProveedorForm, EditarProveedorForm, CompraForm, DetalleCompraForm
 from django.views.decorators.http import require_POST
 from .forms import PerfilForm
 from django.db.models import Count, Avg, Max, Min
-
+from django.db import transaction
+from collections import defaultdict
+from django.forms import formset_factory
 
 
 # ------------------------------------ GESTIÓN DE USUARIOS ------------------------------------
@@ -636,3 +638,79 @@ def lista_compras_bloqueadas(request):
 
 
 
+@login_required
+def registrar_compra_view(request):
+    DetalleFormSet = formset_factory(DetalleCompraForm, extra=1, can_delete=True)
+    
+    proveedor_id = request.POST.get('proveedor') or request.GET.get('proveedor')
+    proveedor = Proveedor.objects.filter(id=proveedor_id).first() if proveedor_id else None
+
+    if request.method == 'POST' and 'submit' in request.POST:
+        compra_form = CompraForm(request.POST)
+        detalle_formset = DetalleFormSet(request.POST)
+
+        for form in detalle_formset:
+            form.fields['producto'].queryset = proveedor.productos.filter(activo=True) if proveedor else Producto.objects.none()
+
+        if compra_form.is_valid() and detalle_formset.is_valid():
+            compra = Compra.objects.create(
+                proveedor=compra_form.cleaned_data['proveedor'],
+                usuario=request.user,
+                estado='pendiente'
+            )
+
+            productos_solicitados = []
+
+            for i, detalle_form in enumerate(detalle_formset):
+                if detalle_form.cleaned_data and not detalle_form.cleaned_data.get('DELETE', False):
+                    producto = detalle_form.cleaned_data['producto']
+                    cantidad = detalle_form.cleaned_data['cantidad']
+                    observaciones = detalle_form.cleaned_data.get('observaciones', '')
+
+                    DetalleCompra.objects.create(
+                        compra=compra,
+                        producto=producto,
+                        cantidad=cantidad,
+                        observaciones=observaciones
+                    )
+
+                    if observaciones:
+                        texto = f"- {producto.nombre}: {cantidad} unidades Nota: {observaciones}"
+                    else:
+                        texto = f"- {producto.nombre}: {cantidad} unidades"
+
+                    productos_solicitados.append(texto)
+
+            mensaje = f"""
+                Estimado/a {proveedor.nombre},
+
+                Le informamos que se ha registrado una nueva solicitud de compra con los siguientes productos:
+
+                {chr(10).join(productos_solicitados)}
+
+                Atentamente,
+                ComercialJM
+            """
+
+            send_mail(
+                subject="Nueva solicitud de compra",
+                message=mensaje,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[proveedor.correo],
+                fail_silently=False,
+            )
+
+            return redirect('lista_compras_activas')
+
+    else:
+        compra_form = CompraForm(initial={'proveedor': proveedor_id})
+        detalle_formset = DetalleFormSet()
+
+        for form in detalle_formset:
+            form.fields['producto'].queryset = proveedor.productos.filter(activo=True) if proveedor else Producto.objects.none()
+
+    return render(request, 'administrador/registrar_compra.html', {
+        'compra_form': compra_form,
+        'detalle_formset': detalle_formset,
+        'proveedor_seleccionado': proveedor,
+    })
