@@ -1,0 +1,234 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+{% block content %}
+<h1 class="titulo-pagina">Editar cliente</h1>
+
+<form method="POST" class="formulario-merma">
+    {% csrf_token %}
+    {% if form.errors %}
+        <div style="display: none;">
+            {{ form.errors }}
+        </div>
+    {% endif %}
+
+
+    <div class="fila">
+        <div class="campo-formulario">
+            {{ form.nombre.label_tag }}
+            {{ form.nombre }}
+        </div>
+        <div class="campo-formulario">
+            {{ form.rut.label_tag }}
+            {{ form.rut }}
+        </div>
+    </div>
+
+    <div class="fila">
+        <div class="campo-formulario">
+            {{ form.categoria.label_tag }}
+            {{ form.categoria }}
+        </div>
+        <div class="campo-formulario">
+            {{ form.correo.label_tag }}
+            {{ form.correo }}
+        </div>
+    </div>
+
+    <div class="fila">
+        <div class="campo-formulario input-full">
+            {{ form.telefono.label_tag }}
+            {{ form.telefono }}
+        </div>
+    </div>
+
+    <div class="botones-formulario">
+        <button type="submit" class="btn-guardar">Guardar</button>
+        <a href="{% url 'listar_clientes_activos' %}" class="btn-cancelar">Cancelar</a>
+    </div>
+</form>
+
+{% if form.errors %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const errores = {{ form.errors.as_json|safe }};
+        if (errores.rut && errores.rut[0].message === "rut_invalido_swal") {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'El RUT ingresado no es válido.',
+                confirmButtonColor: '#4CAF50'
+            });
+        }
+    });
+</script>
+{% endif %}
+
+
+
+
+<style>
+    body {
+        background-color: #f7f7dc !important;
+    }
+
+    .formulario-merma {
+        width: 90%;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 30px;
+        border-radius: 12px;
+        background-color: transparent;
+    }
+
+    .fila {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .campo-formulario {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .campo-formulario label {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px;
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+        font-weight: bold;
+        font-size: 16px;
+    }
+
+    /* 🔽 ESTE ES EL FALTANTE */
+    .input-estilo {
+        width: 100%;
+        padding: 12px;
+        font-size: 15px;
+        border: none;
+        border-bottom-left-radius: 15px;
+        border-bottom-right-radius: 15px;
+        background-color: white;
+        color: black;
+    }
+
+    .botones-formulario {
+        text-align: center;
+        margin-top: 30px;
+    }
+
+    .btn-guardar,
+    .btn-cancelar {
+        border: none;
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-size: 16px;
+        margin: 0 10px;
+        text-decoration: none;
+        display: inline-block;
+        cursor: pointer;
+        color: white;
+    }
+
+    .btn-guardar {
+        background-color: #4CAF50;
+    }
+
+    .btn-cancelar {
+        background-color: #e74c3c;
+    }
+
+    .btn-guardar:hover {
+        background-color: #45a049;
+    }
+
+    .btn-cancelar:hover {
+        background-color: #c0392b;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    
+        // 🔹 NOMBRE: solo letras y espacios (bloquea números/símbolos incluso al pegar)
+        const nombreInput = document.getElementById("nombre");
+        if (nombreInput) {
+            // Bloquea teclas inválidas
+            nombreInput.addEventListener("keypress", function (e) {
+                const char = e.key;
+                if (!/[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/.test(char)) {
+                    e.preventDefault();
+                }
+            });
+    
+            // Limpia contenido inválido al pegar
+            nombreInput.addEventListener("input", function () {
+                this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
+            });
+    
+            // Bloquea Ctrl+V
+            nombreInput.addEventListener("paste", function (e) {
+                e.preventDefault();
+            });
+        }
+    
+        // 🔹 RUT: solo números + K/k, formatea como 12345678-K
+        const rutInput = document.getElementById("rut");
+        if (rutInput) {
+            rutInput.addEventListener("input", function () {
+                let val = this.value.replace(/[^0-9kK]/g, "").toUpperCase();
+                if (val.length > 1) {
+                    val = val.slice(0, -1) + "-" + val.slice(-1);
+                }
+                this.value = val;
+            });
+    
+            // Bloquea Ctrl+V
+            rutInput.addEventListener("paste", function (e) {
+                e.preventDefault();
+            });
+    
+            // Bloquea letras inválidas
+            rutInput.addEventListener("keypress", function (e) {
+                if (!/[0-9kK]/.test(e.key)) {
+                    e.preventDefault();
+                }
+            });
+        }
+    
+        // 🔹 TELÉFONO: solo dígitos, empieza con 9, exactamente 9 dígitos
+        const telInput = document.getElementById("telefono");
+        if (telInput) {
+            telInput.addEventListener("input", function () {
+                let val = this.value.replace(/\D/g, ""); // Elimina todo lo que no sea número
+                if (!val.startsWith("9")) {
+                    val = "9" + val;
+                }
+                this.value = val.slice(0, 9);
+            });
+    
+            // Bloquea teclas inválidas y límite de 9 dígitos
+            telInput.addEventListener("keypress", function (e) {
+                if (!/[0-9]/.test(e.key) || this.value.length >= 9) {
+                    e.preventDefault();
+                }
+            });
+    
+            // Bloquea Ctrl+V
+            telInput.addEventListener("paste", function (e) {
+                e.preventDefault();
+            });
+        }
+    });
+    </script>
+    
+
+
+
+
+{% endblock %}

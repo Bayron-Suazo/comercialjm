@@ -1,0 +1,92 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+
+{% block title %}Listado de productos activos{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'administrador/css/productos.css' %}">
+    <link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+
+<div class="acciones-derecha ancho-contenido">
+    <a class="boton-header" href="{% url 'dashboard_productos' %}">
+        Dashboard
+        <img src="{% static 'administrador/svg/reporteria.svg' %}">
+    </a>
+
+    <a class="boton-header" href="{% url 'agregar_producto' %}">
+        Agregar producto
+        <img src="{% static 'administrador/svg/plus.svg' %}">
+    </a>
+</div>
+
+<h1 class="titulo-pagina">Listado de productos activos</h1>
+
+<div class="buscador-wrapper">
+    <form method="GET" action="">
+        <div class="contenedor-busqueda">
+            <div class="input-icono">
+                <input type="text" name="q" placeholder="Buscar Producto ........">
+                <i class="fa fa-search icono-input"></i>
+            </div>
+            <button type="submit" class="btn-filtrar">
+                Filtrar <i class="fa fa-filter"></i>
+            </button>
+        </div>
+    </form>
+
+    <div class="selector-estado">
+        <a href="{% url 'listar_productos' %}" class="{% if request.path == '/productos/' %}activo{% endif %}">Activos</a>
+        <a href="{% url 'productos_inactivos' %}" class="{% if request.path == '/productos/inactivos/' %}activo{% endif %}">Inactivos</a>
+    </div>
+</div>
+
+<div class="contenedor-tabla ancho-contenido">
+    <table class="tabla-usuarios tabla-productos">
+        <thead>
+            <tr>
+                <th><input disabled type="checkbox"/></th>
+                <th>Nombre</th>
+                <th>Cantidad</th>
+                <th>Tipo</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for producto in productos %}
+                <tr>
+                    <td><input name="producto_ids" type="checkbox" value="{{ producto.id }}"/></td>
+                    <td>{{ producto.nombre }}</td>
+                    <td>{{ producto.cantidad }}</td>
+                    <td>{{ producto.tipo }}</td>
+                    <td class="acciones">
+                        <a href="{% url 'editar_producto' producto.id %}" title="Editar">
+                            <i class="fa fa-pen"></i>
+                        </a>
+                        
+                        <a href="{% url 'toggle_estado_producto' producto.id %}" title="Bloquear">
+                            <i class="fa fa-lock"></i>
+                        </a>
+                        
+                        <a href="{% url 'ver_lotes_producto' producto.id %}" title="Ver Lotes" target="_blank">
+                            <i class="fa fa-eye"></i>
+                        </a>
+
+                        <a href="{% url 'eliminar_producto' producto.id %}" title="Eliminar" onclick="return confirm('¿Estás seguro de que deseas eliminar este producto?');">
+                            <i class="fa fa-trash"></i>
+                        </a>
+                    </td>                    
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="7">No hay productos activos aún.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

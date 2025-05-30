@@ -1,0 +1,105 @@
+{% extends 'core/base_admin.html' %}
+{% block title %}Dashboard Ventas{% endblock %}
+{% load static %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'administrador/css/dashboard_productos.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="top-bar-buttons">
+        <a href="{% url 'listar_ventas' %}" class="btn btn-primary">Listado de Ventas</a>
+        <a href="#" class="btn btn-primary">Carga Masiva</a>
+    </div>
+
+    <h1 class="dashboard-title">Gestión de Ventas</h1>
+
+    <div class="cards-summary">
+        <div class="card">
+            <div class="card-icon">💰</div>
+            <div class="card-label">Total Ventas</div>
+            <div class="card-value">${{ total_ventas }}</div>
+        </div>
+        <div class="card">
+            <div class="card-icon">🛒</div>
+            <div class="card-label">Ventas del Día</div>
+            <div class="card-value">${{ ventas_dia }}</div>
+        </div>
+        <div class="card">
+            <div class="card-icon">📦</div>
+            <div class="card-label">Productos Vendidos</div>
+            <div class="card-value">{{ productos_vendidos }}</div>
+        </div>
+    </div>
+
+    <div class="charts-section">
+        <div class="chart-card">
+            <h2 class="chart-title">Ventas por Categoría</h2>
+            <canvas id="barChart"></canvas>
+        </div>
+        
+        <div class="chart-card">
+            <h2 class="chart-title">Distribución de Ventas</h2>
+            <div class="pie-chart-container">
+                <canvas id="pieChart" width="250" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="last-user">
+        <div class="initials-circle">
+            {{ ultima_venta.cliente_nombre|slice:":2" }}
+        </div>
+        Última venta registrada: 
+        <span>{{ ultima_venta.cliente_nombre }}</span>
+        <br>
+        <small>({{ ultima_venta.fecha }})</small>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const barCtx = document.getElementById('barChart').getContext('2d');
+    new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ categorias_ventas|safe }},
+            datasets: [{
+                label: 'Total $ por categoría',
+                data: {{ montos_ventas|safe }},
+                backgroundColor: '#2196F3'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    const pieCtx = document.getElementById('pieChart').getContext('2d');
+    new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Efectivo', 'Transferencia', 'Débito', 'Crédito'],
+            datasets: [{
+                data: {{ medios_pago|safe }},
+                backgroundColor: ['#4CAF50', '#2196F3', '#FFC107', '#9C27B0'],
+                borderColor: '#fff',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+</script>
+{% endblock %}

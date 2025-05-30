@@ -1,12 +1,12 @@
 from django import forms
 from django.contrib.auth.models import User, Group
-from registration.models import Profile, Proveedor, Producto
+from registration.models import Profile, Proveedor, Producto, Cliente, Merma
 import random
 import string
 import re
 from datetime import date
 from itertools import cycle
-
+from django.core.exceptions import ValidationError
 
 # ------------------ AGREGAR USUARIO ------------------
 
@@ -462,3 +462,116 @@ class DetalleCompraForm(forms.Form):
         required=False,
         label="Observaciones"
     )
+
+
+# ------------------ CLIENTE ------------------
+
+class ClienteForm(forms.ModelForm):
+    class Meta:
+        model = Cliente
+        fields = ['nombre', 'rut', 'categoria', 'correo', 'telefono']
+
+
+
+class ProductoForm(forms.ModelForm):
+    class Meta:
+        model = Producto
+        fields = ['nombre', 'cantidad', 'tipo', 'precio'] 
+        
+    def clean_nombre(self):
+        nombre = self.cleaned_data.get('nombre')
+        if Producto.objects.filter(nombre__iexact=nombre).exists():
+            raise forms.ValidationError("Ya existe este producto.")
+        return nombre
+ 
+
+class MermaForm(forms.ModelForm):
+    class Meta:
+        model = Merma
+        fields = ['producto', 'cantidad', 'lote', 'precio']
+
+def validar_rut_chileno(rut):
+    try:
+        cuerpo, dv_ingresado = rut.upper().split('-')
+        cuerpo = cuerpo.strip()
+        dv_ingresado = dv_ingresado.strip()
+
+        suma = 0
+        multiplo = 2
+        for digito in reversed(cuerpo):
+            suma += int(digito) * multiplo
+            multiplo = 2 if multiplo == 7 else multiplo + 1  # ← corregido aquí
+
+        dv_calculado = 11 - (suma % 11)
+        if dv_calculado == 11:
+            dv_calculado = '0'
+        elif dv_calculado == 10:
+            dv_calculado = 'K'
+        else:
+            dv_calculado = str(dv_calculado)
+
+        return dv_calculado == dv_ingresado
+    except Exception:
+        return False
+
+
+class ClienteForm(forms.ModelForm):
+    CATEGORIAS = [
+        ('mayorista', 'Mayorista'),
+        ('frecuente', 'Frecuente'),
+        ('ambos', 'Ambos'),
+    ]
+
+    categoria = forms.ChoiceField(choices=CATEGORIAS)
+
+    class Meta:
+        model = Cliente
+        fields = ['nombre', 'rut', 'categoria', 'correo', 'telefono']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'input-estilo', 'id': 'nombre', 'autocomplete': 'off'}),
+            'rut': forms.TextInput(attrs={'class': 'input-estilo', 'id': 'rut', 'autocomplete': 'off'}),
+            'categoria': forms.Select(attrs={'class': 'input-estilo', 'id': 'categoria'}),
+            'correo': forms.EmailInput(attrs={'class': 'input-estilo', 'id': 'correo', 'autocomplete': 'off'}),
+            'telefono': forms.TextInput(attrs={'class': 'input-estilo', 'id': 'telefono', 'autocomplete': 'off'}),
+        }
+
+
+
+    def clean_nombre(self):
+        nombre = self.cleaned_data['nombre']
+        if not re.match(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$', nombre):
+            raise ValidationError("El nombre solo debe contener letras.")
+        return nombre
+
+    def clean_rut(self):
+        rut = self.cleaned_data.get('rut')
+
+        # Si estamos editando y el RUT no cambió, lo aceptamos directamente
+        if self.instance and self.instance.pk and rut == self.instance.rut:
+            return rut
+
+        # Si es un nuevo registro o cambió el RUT, validamos normalmente
+        if not validar_rut_chileno(rut):
+            raise forms.ValidationError("rut_invalido_swal")
+
+        return rut
+
+
+
+    def clean_categoria(self):
+        categoria = self.cleaned_data['categoria'].lower()
+        if categoria not in ['mayorista', 'frecuente', 'ambos']:
+            raise ValidationError("La categoría debe ser 'mayorista', 'frecuente' o 'ambos'.")
+        return categoria
+
+    def clean_correo(self):
+        correo = self.cleaned_data['correo']
+        if "@" not in correo:
+            raise ValidationError("El correo debe contener '@'.")
+        return correo
+
+    def clean_telefono(self):
+        telefono = self.cleaned_data['telefono']
+        if not re.match(r'^9\d{8}$', telefono):
+            raise ValidationError("El teléfono debe comenzar con 9 y tener 9 dígitos en total.")
+        return telefono

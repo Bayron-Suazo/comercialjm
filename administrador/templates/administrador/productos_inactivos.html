@@ -1,0 +1,49 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+
+{% block title %}Listado de productos inactivos<div class="botones">
+    <a href="{% url 'dashboard_productos' %}" class="btn-opcion"><i class="fa fa-chart-bar"></i> Dashboard</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<h1 class="titulo">Listado de productos inactivos</h1>
+
+<table class="tabla-productos">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Cantidad</th>
+            <th>Tipo</th>
+            <th>Precio</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for producto in productos %}
+        <tr>
+            <td>{{ producto.nombre }}</td>
+            <td>{{ producto.cantidad }}</td>
+            <td>{{ producto.tipo }}</td>
+            <td>${{ producto.precio }}</td>
+            <td>
+                <a href="{% url 'toggle_estado_producto' producto.id %}?origen=inactivos" class="btn-accion" title="Activar"><i class="fa fa-lock-open"></i></a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">No hay productos inactivos.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="botones">
+    <a href="{% url 'listar_productos' %}" class="btn-cancelar"><i class="fa fa-arrow-left"></i> Volver</a>
+</div>
+<div class="botones">
+    <a href="{% url 'dashboard_productos' %}" class="btn-opcion"><i class="fa fa-chart-bar"></i> Dashboard</a>
+</div>
+{% endblock %}
+
+<div class="botones">
+    <a href="{% url 'dashboard_productos' %}" class="btn-opcion"><i class="fa fa-chart-bar"></i> Dashboard</a>
+</div>

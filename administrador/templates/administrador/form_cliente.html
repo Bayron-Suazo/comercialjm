@@ -1,0 +1,31 @@
+{% extends 'core/base_admin.html' %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="text-center text-success mb-4">{{ titulo }}</h2>
+  {% if error %}
+    <div class=\"alert alert-danger\">{{ error }}</div>
+  {% endif %}
+  <form method="post">
+    {% csrf_token %}
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        {{ form.nombre.label_tag }} {{ form.nombre }}
+      </div>
+      <div class="col-md-6 mb-3">
+        {{ form.rut.label_tag }} {{ form.rut }}
+      </div>
+      <div class="col-md-6 mb-3">
+        {{ form.categoria.label_tag }} {{ form.categoria }}
+      </div>
+      <div class="col-md-6 mb-3">
+        {{ form.correo.label_tag }} {{ form.correo }}
+      </div>
+      <div class="col-md-6 mb-3">
+        {{ form.telefono.label_tag }} {{ form.telefono }}
+      </div>
+    </div>
+    <button type="submit" class="btn btn-success">Guardar</button>
+  </form>
+</div>
+{% endblock %}
