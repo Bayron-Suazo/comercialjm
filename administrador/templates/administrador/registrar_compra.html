@@ -1,0 +1,85 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+
+{% block title %}Registrar Compra{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'administrador/css/registrar_compra.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<h2 class="titulo">Registrar Compra</h2>
+
+<div class="ancho-contenido">
+  <form method="get" class="formulario-proveedor">
+    <div class="campo-formulario">
+      {{ compra_form.proveedor.label_tag }}
+      {{ compra_form.proveedor }}
+      <button type="submit" class="boton-header">Cargar Productos</button>
+    </div>
+  </form>
+
+  <form method="post" id="form-detalles-compra">
+    {% csrf_token %}
+    {{ detalle_formset.management_form }}
+    <input type="hidden" name="proveedor" value="{{ compra_form.proveedor.value }}">
+
+    <table class="tabla-usuarios">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Cantidad</th>
+          <th>Observaciones</th>
+        </tr>
+      </thead>
+      <tbody id="formset-body">
+        {% for form in detalle_formset %}
+        <tr class="form-detalle">
+          <td>{{ form.producto }}</td>
+          <td>{{ form.cantidad }}</td>
+          <td>{{ form.observaciones }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="acciones-derecha">
+      <button type="submit" name="submit" class="boton-header">Registrar Compra</button>
+      <button type="button" id="add-form" class="boton-agregar" title="Agregar producto">
+        <i class="fas fa-plus-circle"></i>
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const addButton = document.getElementById("add-form");
+    const formsetBody = document.getElementById("formset-body");
+    const totalFormsInput = document.querySelector('input[name$="TOTAL_FORMS"]');
+
+    addButton.addEventListener("click", function () {
+        const currentFormCount = parseInt(totalFormsInput.value);
+        const newForm = document.querySelector(".form-detalle").cloneNode(true);
+
+        newForm.querySelectorAll("input, select, textarea").forEach(function (el) {
+            if (el.name) {
+                el.name = el.name.replace(/-\d+-/, `-${currentFormCount}-`);
+            }
+            if (el.id) {
+                el.id = el.id.replace(/-\d+-/, `-${currentFormCount}-`);
+            }
+            if (el.tagName === "SELECT") {
+                el.selectedIndex = 0;
+            } else {
+                el.value = "";
+            }
+        });
+
+        formsetBody.appendChild(newForm);
+        totalFormsInput.value = currentFormCount + 1;
+    });
+});
+</script>
+{% endblock %}

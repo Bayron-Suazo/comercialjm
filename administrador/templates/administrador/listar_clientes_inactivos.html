@@ -1,0 +1,106 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+
+{% block title %}Listado de Clientes Inactivos{% endblock %}
+
+{% block extra_head %}
+<link href="{% static 'administrador/css/productos.css' %}" rel="stylesheet"/>
+<link href="{% static 'administrador/css/lista_usuarios.css' %}" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+{% endblock %}
+
+{% block content %}
+<div class="acciones-derecha ancho-contenido">
+  <a class="boton-header" href="#" id="carga-masiva-btn">
+          Carga masiva
+          <img src="{% static 'administrador/svg/carga-masiva.svg' %}"/>
+  </a>
+  <a class="boton-header" href="{% url 'dashboard_clientes' %}">
+          Dashboard
+          <img src="{% static 'administrador/svg/reporteria.svg' %}"/>
+  </a>
+  <a class="boton-header" href="{% url 'ranking_clientes' %}">
+          Beneficios y descuentos
+          <i class="fa fa-percent"></i>
+  </a>
+
+  <a class="boton-header" href="{% url 'crear_cliente' %}">
+          Agregar clientes 
+          <img src="{% static 'administrador/svg/plus.svg' %}"/>
+  </a>
+  
+</div>
+
+<div style="margin-top: 40px;"></div>
+
+<h1 class="titulo-pagina">Listado de Clientes Inactivos</h1>
+
+<div class="buscador-wrapper">
+  <form action="" method="GET">
+    <div class="contenedor-busqueda">
+      <div class="input-icono">
+        <input name="q" placeholder="Buscar Cliente..." type="text"/>
+        <i class="fa fa-search icono-input"></i>
+      </div>
+      <button class="btn-filtrar" type="submit">
+        Filtrar <i class="fa fa-filter"></i>
+      </button>
+    </div>
+  </form>
+
+  <div class="selector-estado">
+    <a href="{% url 'listar_clientes_activos' %}" class="{% if request.path == '/administrador/clientes/activos/' %}activo{% endif %}">Clientes Activos</a>
+    <a href="{% url 'listar_clientes_inactivos' %}" class="{% if request.path == '/administrador/clientes/inactivos/' %}activo{% endif %}">Clientes Inactivos</a>
+  </div>
+  
+</div>
+
+<div class="filtro-busqueda ancho-contenido">
+  <form class="formulario-busqueda" method="GET">
+    <!-- Opcional: filtros -->
+  </form>
+</div>
+
+<div class="contenedor-tabla ancho-contenido">
+  <table class="tabla-usuarios tabla-productos">
+    <thead>
+      <tr>
+        <th><input type="checkbox" disabled/></th>
+        <th>Nombre</th>
+        <th>RUT</th>
+        <th>Categoría</th>
+        <th>Correo</th>
+        <th>Teléfono</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for cliente in clientes %}
+      <tr>
+        <td><input type="checkbox" disabled /></td>
+        <td>{{ cliente.nombre }}</td>
+        <td>{{ cliente.rut }}</td>
+        <td>{{ cliente.categoria }}</td>
+        <td>{{ cliente.correo }}</td>
+        <td>{{ cliente.telefono }}</td>
+        <td class="acciones">
+          <a href="{% url 'editar_clientes' cliente.id %}" class="btn-editar">
+            <i class="fas fa-edit"></i>
+          </a>
+          <a href="{% url 'toggle_estado_cliente' pk=cliente.id %}" title="Activar" onclick="return confirm('¿Estás seguro de activar este cliente?');">
+            <i class="fa fa-lock-open" style="color: blue;"></i>
+          </a>
+          <a href="{% url 'eliminar_cliente' pk=cliente.id %}" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar este cliente?');">
+                <i class="fa fa-trash" style="color: blue;"></i>
+          </a>      
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="7">No hay clientes Inactivos.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

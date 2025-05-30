@@ -1,0 +1,108 @@
+<div class="modal" id="modalProductosLote">
+    <div class="modal-overlay"></div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <h2 class="modal-title">Listado de Productos Lote 3</h2>
+            <table class="modal-table">
+                <thead>
+                    <tr><th>Producto</th><th>Cantidad</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Tomate</td><td>10</td></tr>
+                    <tr><td>Lechuga</td><td>7</td></tr>
+                    <tr><td>Manzana</td><td>2</td></tr>
+                    <tr><td>Naranja</td><td>4</td></tr>
+                    <tr><td>Palta</td><td>6</td></tr>
+                </tbody>
+            </table>
+            <div class="modal-buttons">
+                <button onclick="cerrarModal()" class="btn-cancelar">Cancelar</button>
+                <button class="btn-confirmar">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.modal-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.modal-dialog {
+    position: relative;
+    z-index: 10000;
+    background-color: #f3f0d9;
+    border-radius: 16px;
+    padding: 30px 40px;
+    width: 400px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.modal-title {
+    text-align: center;
+    font-size: 22px;
+    margin-bottom: 20px;
+}
+
+.modal-table {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.modal-table th, .modal-table td {
+    text-align: left;
+    padding: 8px 10px;
+    font-size: 16px;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-between;
+}
+
+.btn-cancelar {
+    background-color: #a94442;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.btn-confirmar {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<script>
+function mostrarModal() {
+    document.getElementById('modalProductosLote').style.display = 'flex';
+}
+function cerrarModal() {
+    document.getElementById('modalProductosLote').style.display = 'none';
+}
+</script>

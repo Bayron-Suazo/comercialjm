@@ -1,0 +1,117 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+{% block content %}
+<h1 class="titulo-pagina">Agregar Merma</h1>
+
+<form method="POST" class="formulario-merma">
+    {% csrf_token %}
+    <div class="fila">
+        <div class="campo-formulario">
+            <label class="etiqueta-verde">Nombre de Producto</label>
+            {{ form.producto }}
+        </div>
+
+        <div class="campo-formulario">
+            <label class="etiqueta-verde">Cantidad</label>
+            {{ form.cantidad }}
+        </div>
+    </div>
+
+    <div class="fila">
+        <div class="campo-formulario">
+            <label class="etiqueta-verde">Lote</label>
+            {{ form.lote }}
+        </div>
+
+        <div class="campo-formulario">
+            <label class="etiqueta-verde">Precio</label>
+            {{ form.precio }}
+        </div>
+    </div>
+
+    <div class="botones-formulario">
+        <button type="submit" class="btn-guardar">Guardar</button>
+        <a href="{% url 'listar_mermas' %}" class="btn-cancelar">Cancelar</a>
+    </div>
+</form>
+
+<style>
+    body {
+        background-color: #f7f7dc !important;
+    }
+
+    .formulario-merma {
+        width: 90%;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 30px;
+        border-radius: 12px;
+        background-color: transparent;
+    }
+
+    .fila {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .campo-formulario {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .etiqueta-verde {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px;
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+        font-weight: bold;
+        font-size: 16px;
+    }
+
+    .campo-formulario input {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-bottom-left-radius: 15px;
+        border-bottom-right-radius: 15px;
+        font-size: 15px;
+    }
+
+    .botones-formulario {
+        text-align: center;
+        margin-top: 30px;
+    }
+
+    .btn-guardar,
+    .btn-cancelar {
+        border: none;
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-size: 16px;
+        margin: 0 10px;
+        text-decoration: none;
+        display: inline-block;
+        cursor: pointer;
+        color: white;
+    }
+
+    .btn-guardar {
+        background-color: #4CAF50;
+    }
+
+    .btn-cancelar {
+        background-color: #e74c3c;
+    }
+
+    .btn-guardar:hover {
+        background-color: #45a049;
+    }
+
+    .btn-cancelar:hover {
+        background-color: #c0392b;
+    }
+</style>
+{% endblock %}

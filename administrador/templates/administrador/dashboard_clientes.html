@@ -1,0 +1,105 @@
+{% extends 'core/base_admin.html' %}
+{% block title %}Dashboard Clientes{% endblock %}
+{% load static %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'administrador/css/dashboard_productos.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="top-bar-buttons">
+        <a href="{% url 'listar_clientes_activos' %}" class="btn btn-primary">Listado de Clientes</a>
+        <a href="#" class="btn btn-primary">Carga Masiva</a>
+    </div>
+
+    <h1 class="dashboard-title">Gestión de Clientes</h1>
+
+    <div class="cards-summary">
+        <div class="card">
+            <div class="card-icon">👥</div>
+            <div class="card-label">Total Clientes</div>
+            <div class="card-value">{{ total_clientes }}</div>
+        </div>
+        <div class="card">
+            <div class="card-icon">✅</div>
+            <div class="card-label">Activos</div>
+            <div class="card-value">{{ percent_activos }}%</div>
+        </div>
+        <div class="card">
+            <div class="card-icon">❌</div>
+            <div class="card-label">Inactivos</div>
+            <div class="card-value">{{ percent_inactivos }}%</div>
+        </div>
+    </div>
+
+    <div class="charts-section">
+        <div class="chart-card">
+            <h2 class="chart-title">Clientes por Categoría</h2>
+            <canvas id="barChart"></canvas>
+        </div>
+        
+        <div class="chart-card">
+            <h2 class="chart-title">Estado de Clientes</h2>
+            <div class="pie-chart-container">
+                <canvas id="pieChart" width="250" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="last-user">
+        <div class="initials-circle">
+            {{ ultimo_cliente.nombre|slice:":2" }}
+        </div>
+        Último cliente registrado: 
+        <span>{{ ultimo_cliente.nombre }}</span>
+        <br>
+        <small>({{ ultimo_cliente.correo }})</small>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const barCtx = document.getElementById('barChart').getContext('2d');
+    new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ categorias|safe }},
+            datasets: [{
+                label: 'Cantidad',
+                data: {{ cantidades|safe }},
+                backgroundColor: '#2196F3'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    const pieCtx = document.getElementById('pieChart').getContext('2d');
+    new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Activos', 'Inactivos'],
+            datasets: [{
+                data: [{{ percent_activos }}, {{ percent_inactivos }}],
+                backgroundColor: ['#4CAF50', '#f44336'],
+                borderColor: '#fff',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -38,23 +38,29 @@ class Proveedor(models.Model):
     def __str__(self):
         return self.nombre
     
+
+class Lote(models.Model):
+    numero = models.CharField(max_length=50)
+    fecha = models.DateField(auto_now_add=True)
+    activo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.numero} - {self.fecha}"
+    
+
+    
 class Producto(models.Model):
-    nombre = models.CharField(max_length=100)
-    lote_numero = models.IntegerField(null=True, blank=True)
+    nombre = models.CharField(max_length=100, unique=True)
+    lote = models.ForeignKey(Lote, on_delete=models.SET_NULL, null=True, blank=True)
     cantidad = models.IntegerField()
     tipo = models.CharField(max_length=50)
     precio = models.DecimalField(max_digits=10, decimal_places=2)
     fecha = models.DateField(auto_now_add=True) 
     activo = models.BooleanField(default=True)
 
-    @property
-    def lote(self):
-        if self.lote_numero:
-            return f"L-{self.lote_numero:03d}"
-        return "Sin lote"
-
-    def _str_(self):
+    def __str__(self):
         return self.nombre
+
 
 class Compra(models.Model):
     proveedor = models.ForeignKey(Proveedor, on_delete=models.CASCADE, related_name='compras')
@@ -62,10 +68,10 @@ class Compra(models.Model):
     fecha = models.DateTimeField(auto_now_add=True)
     usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='compras')
     estado = models.CharField(max_length=20, choices=[
-        ('pendiente', 'Pendiente'),
-        ('lista', 'Lista'),
-        ('cancelada', 'Cancelada'),
-    ], default='registrada')
+        ('Pendiente', 'Pendiente'),
+        ('Lista', 'Lista'),
+        ('Cancelada', 'Cancelada'),
+    ], default='Pendiente')
 
     def __str__(self):
         return f"Compra #{self.id} - {self.proveedor.nombre}"
@@ -75,14 +81,70 @@ class Compra(models.Model):
 
 
 
-# class DetalleCompra(models.Model):
-#     compra = models.ForeignKey(Compra, on_delete=models.CASCADE, related_name='detalles')
-#     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
-#     cantidad = models.PositiveIntegerField()
-#     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+class DetalleCompra(models.Model):
+    compra = models.ForeignKey(Compra, on_delete=models.CASCADE, related_name='detalles')
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+    cantidad = models.PositiveIntegerField()
+    observaciones = models.TextField(blank=True, null=True)
 
-#     def subtotal(self):
-#         return self.cantidad * self.precio_unitario
+    def subtotal(self):
+        return 0
 
-#     def __str__(self):
-#         return f"{self.cantidad} x {self.producto.nombre} (Compra #{self.compra.id})"
+    def __str__(self):
+        return f"{self.cantidad} x {self.producto.nombre} (Compra #{self.compra.id})"
+    
+
+class Cliente(models.Model):
+    nombre = models.CharField(max_length=100)
+    rut = models.CharField(max_length=12)
+    categoria = models.CharField(max_length=50)
+    correo = models.EmailField()
+    telefono = models.CharField(max_length=15)
+    activo = models.BooleanField(default=True)
+
+    def str(self):
+        return self.nombre
+    
+
+class DetalleLote(models.Model):
+    lote = models.ForeignKey(Lote, related_name="detalles", on_delete=models.CASCADE)
+    producto = models.CharField(max_length=100)
+    cantidad = models.IntegerField()
+    precio = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.producto} ({self.cantidad})"
+
+
+class Merma(models.Model):
+    producto = models.CharField(max_length=100)
+    cantidad = models.IntegerField()
+    lote = models.CharField(max_length=100)
+    fecha = models.DateField(auto_now_add=True)
+    precio = models.DecimalField(max_digits=10, decimal_places=2)
+    activo = models.BooleanField(default=True)
+
+
+    def __str__(self):
+        return self.producto
+
+
+class Cliente(models.Model):
+    nombre = models.CharField(max_length=100)
+    rut = models.CharField(max_length=12)
+    categoria = models.CharField(max_length=50)
+    correo = models.EmailField()
+    telefono = models.CharField(max_length=20)
+    activo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.nombre
+
+
+class Venta(models.Model):
+    cliente = models.ForeignKey('Cliente', on_delete=models.CASCADE)
+    fecha = models.DateField(auto_now_add=True)
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"Venta #{self.id} - Cliente: {self.cliente.nombre}"

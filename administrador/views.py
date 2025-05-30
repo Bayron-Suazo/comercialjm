@@ -11,15 +11,30 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .forms import CargaMasivaUsuariosForm
-from registration.models import Profile, Proveedor, Compra, Producto
+from registration.models import Profile, Proveedor, Compra, Producto, DetalleCompra, Merma, DetalleLote, Lote, Cliente
 from datetime import datetime
 from django.core.exceptions import ValidationError
 from django.contrib import messages
-from administrador.forms import EditUserProfileForm, CrearProveedorForm, EditarProveedorForm
+from administrador.forms import EditUserProfileForm, CrearProveedorForm, EditarProveedorForm, CompraForm, DetalleCompraForm
 from django.views.decorators.http import require_POST
 from .forms import PerfilForm
 from django.db.models import Count, Avg, Max, Min
-
+from django.db import transaction
+from collections import defaultdict
+from django.forms import formset_factory
+import pandas as pd
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from django.urls import reverse
+from django.http import HttpResponse
+from django.db.models import Count
+from django.contrib import messages
+from .forms import ProductoForm, MermaForm
+from registration.models import Profile, Venta
+from .forms import ClienteForm
 
 
 # ------------------------------------ GESTIÓN DE USUARIOS ------------------------------------
@@ -636,3 +651,458 @@ def lista_compras_bloqueadas(request):
 
 
 
+@login_required
+def registrar_compra_view(request):
+    DetalleFormSet = formset_factory(DetalleCompraForm, extra=1, can_delete=True)
+    
+    proveedor_id = request.POST.get('proveedor') or request.GET.get('proveedor')
+    proveedor = Proveedor.objects.filter(id=proveedor_id).first() if proveedor_id else None
+
+    if request.method == 'POST' and 'submit' in request.POST:
+        compra_form = CompraForm(request.POST)
+        detalle_formset = DetalleFormSet(request.POST)
+
+        # Restringir productos a los del proveedor seleccionado
+        for form in detalle_formset:
+            form.fields['producto'].queryset = proveedor.productos.filter(activo=True) if proveedor else Producto.objects.none()
+
+        if compra_form.is_valid() and detalle_formset.is_valid():
+            productos_vistos = set()
+            error_repetido = False
+
+            formularios_validos = []
+
+            for form in detalle_formset:
+                if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
+                    producto = form.cleaned_data['producto']
+
+                    # Validación de producto repetido
+                    if producto in productos_vistos:
+                        form.add_error('producto', 'Este producto ya fue ingresado.')
+                        error_repetido = True
+                    else:
+                        productos_vistos.add(producto)
+                        formularios_validos.append(form)
+
+            # Validación: no más productos que los disponibles
+            productos_disponibles = proveedor.productos.filter(activo=True).count()
+            if len(formularios_validos) > productos_disponibles:
+                for form in detalle_formset:
+                    form.add_error(None, "Se han ingresado más productos de los disponibles para este proveedor.")
+                return render(request, 'administrador/registrar_compra.html', {
+                    'compra_form': compra_form,
+                    'detalle_formset': detalle_formset,
+                    'proveedor_seleccionado': proveedor,
+                })
+
+            if error_repetido:
+                return render(request, 'administrador/registrar_compra.html', {
+                    'compra_form': compra_form,
+                    'detalle_formset': detalle_formset,
+                    'proveedor_seleccionado': proveedor,
+                })
+
+            # Crear compra
+            compra = Compra.objects.create(
+                proveedor=compra_form.cleaned_data['proveedor'],
+                usuario=request.user,
+                estado='pendiente'
+            )
+
+            productos_solicitados = []
+
+            for form in formularios_validos:
+                producto = form.cleaned_data['producto']
+                cantidad = form.cleaned_data['cantidad']
+                observaciones = form.cleaned_data.get('observaciones', '')
+
+                DetalleCompra.objects.create(
+                    compra=compra,
+                    producto=producto,
+                    cantidad=cantidad,
+                    observaciones=observaciones
+                )
+
+                texto = f"- {producto.nombre}: {cantidad} unidades"
+                if observaciones:
+                    texto += f" Nota: {observaciones}"
+
+                productos_solicitados.append(texto)
+
+            mensaje = f"""
+                Estimado/a {proveedor.nombre},
+
+                Le informamos que se ha registrado una nueva solicitud de compra con los siguientes productos:
+
+                {chr(10).join(productos_solicitados)}
+
+                Atentamente,
+                ComercialJM
+            """
+
+            send_mail(
+                subject="Nueva solicitud de compra",
+                message=mensaje,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[proveedor.correo],
+                fail_silently=False,
+            )
+
+            return redirect('lista_compras_activas')
+
+    else:
+        compra_form = CompraForm(initial={'proveedor': proveedor_id})
+        detalle_formset = DetalleFormSet()
+
+        for form in detalle_formset:
+            form.fields['producto'].queryset = proveedor.productos.filter(activo=True) if proveedor else Producto.objects.none()
+
+    return render(request, 'administrador/registrar_compra.html', {
+        'compra_form': compra_form,
+        'detalle_formset': detalle_formset,
+        'proveedor_seleccionado': proveedor,
+    })
+
+
+
+
+# ------------------------------------ GESTIÓN DE PRODUCTOS ------------------------------------
+
+
+
+def listar_productos(request):
+    productos = Producto.objects.filter(activo=True)
+    return render(request, 'administrador/listar_productos.html', {'productos': productos})
+
+def productos_inactivos(request):
+    productos = Producto.objects.filter(activo=False)
+    return render(request, 'administrador/listar_productos_inactivos.html', {'productos': productos})
+
+def agregar_producto(request):
+    if request.method == 'POST':
+        form = ProductoForm(request.POST)
+        if form.is_valid():
+            producto = form.save(commit=False)
+            producto.activo = True
+            fecha_actual = timezone.now().date()
+            lote_actual, creado = Lote.objects.get_or_create(
+                fecha=fecha_actual,
+                defaults={'numero': fecha_actual.strftime('%Y%m%d'), 'activo': True}
+            )
+            producto.lote = lote_actual
+            producto.save()
+            return redirect('listar_productos')
+    else:
+        form = ProductoForm()
+    return render(request, 'administrador/form_producto.html', {'form': form, 'titulo': 'Agregar Producto'})
+
+def editar_producto(request, id):
+    producto = get_object_or_404(Producto, id=id)
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, instance=producto)
+        if form.is_valid():
+            form.save()
+            return redirect('listar_productos')
+    else:
+        form = ProductoForm(instance=producto)
+    return render(request, 'administrador/form_producto.html', {'form': form, 'titulo': 'Editar Producto'})
+
+def eliminar_producto(request, id):
+    producto = get_object_or_404(Producto, id=id)
+    producto.delete()
+    return redirect('listar_productos')
+
+def toggle_estado_producto(request, id):
+    producto = get_object_or_404(Producto, id=id)
+    producto.activo = not producto.activo
+    producto.save()
+    if producto.activo:
+        messages.success(request, "Producto activado con éxito.")
+    else:
+        messages.warning(request, "Producto desactivado con éxito.")
+    origen = request.GET.get('origen', 'activos')
+    return redirect('productos_inactivos' if origen == 'inactivos' else 'listar_productos')
+
+def ver_lotes_producto(request, id):
+    producto = get_object_or_404(Producto, id=id)
+    lotes = Lote.objects.filter(producto=producto)  # ajusta según tu modelo
+    return render(request, 'administrador/lotes_por_producto.html', {
+        'producto': producto,
+        'lotes': lotes,
+    })
+
+def eliminar_producto(request, id):
+    producto = get_object_or_404(Producto, id=id)
+    producto.delete()
+    return redirect('listar_productos')
+
+
+
+# ------------------------------------ GESTIÓN DE LOTES ------------------------------------
+
+
+
+def listar_lotes(request):
+    lotes = Lote.objects.filter(activo=True).order_by('-fecha')
+    return render(request, 'administrador/listar_lotes.html', {'lotes': lotes})
+
+
+def ver_lote(request, id):
+    lote = get_object_or_404(Lote, id=id)
+    detalles = DetalleLote.objects.filter(lote=lote)
+
+    return render(request, 'administrador/ver_lote.html', {
+        'lote': lote,
+        'detalles': detalles
+    })
+
+
+
+def eliminar_lote(request, lote_id):
+    lote = get_object_or_404(Lote, id=lote_id)
+    lote.delete()
+    messages.success(request, 'Lote eliminado correctamente.')
+    return redirect('listar_lotes')
+
+
+
+def carga_excel_lotes(request):
+    if request.method == 'POST' and request.FILES.get('archivo_excel'):
+        archivo = request.FILES['archivo_excel']
+        df_raw = pd.read_excel(archivo, header=None)
+
+        columnas_esperadas = {'producto', 'cantidad', 'precio'}
+        indice_inicio = None
+
+        for i, fila in df_raw.iterrows():
+            columnas_actuales = set()
+            for celda in fila:
+                if pd.notna(celda):
+                    valor = str(celda).strip().lower()
+                    if valor.endswith('s'):
+                        valor = valor[:-1]
+                    columnas_actuales.add(valor)
+
+            if columnas_esperadas.issubset(columnas_actuales):
+                indice_inicio = i
+                break
+
+        if indice_inicio is None:
+            messages.error(request, 'No se encontraron columnas válidas: producto, cantidad, precio.')
+            return redirect('listar_lotes')
+
+        df = pd.read_excel(archivo, header=indice_inicio)
+        df.columns = [str(c).strip().lower().rstrip('s') for c in df.columns]
+
+        fecha_actual = timezone.now().date()
+        lote_existente = Lote.objects.filter(fecha=fecha_actual).first()
+
+        if lote_existente:
+            lote = lote_existente
+        else:
+            # Contar cuántos días únicos hay registrados
+            dias_registrados = Lote.objects.values_list('fecha', flat=True).distinct().count()
+            numero_lote = f"L-{dias_registrados + 1:03d}"
+            
+            lote = Lote.objects.create(
+                numero=f"L-{numero_lote}",
+                fecha=fecha_actual
+            )
+
+
+        for _, row in df.iterrows():
+            try:
+                producto_nombre = str(row['producto']).strip()
+                cantidad = int(row['cantidad'])
+                precio = float(row['precio'])
+
+                producto = Producto.objects.filter(nombre__iexact=producto_nombre).first()
+                if not producto:
+                    producto = Producto.objects.create(
+                        nombre=producto_nombre,
+                        cantidad=cantidad,
+                        tipo='Automático',
+                        precio=precio
+                    )
+
+                producto, _ = Producto.objects.get_or_create(nombre=producto_nombre)
+
+                DetalleLote.objects.create(
+                    lote=lote,
+                    producto=producto.nombre,  
+                    cantidad=cantidad,
+                    precio=precio
+)
+
+            except Exception:
+                continue  
+
+        messages.success(request, 'Lote cargado exitosamente.')
+        return redirect('listar_lotes')
+
+    return redirect('listar_lotes')
+
+
+
+# ------------------------------------ GESTIÓN DE MERMAS ------------------------------------
+
+
+
+def listar_mermas(request):
+    mermas = Merma.objects.filter(activo=True)
+    return render(request, 'administrador/listar_mermas.html', {'mermas': mermas})
+
+def agregar_merma(request):
+    if request.method == 'POST':
+        form = MermaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('listar_mermas')
+    else:
+        form = MermaForm()
+    return render(request, 'administrador/form_merma.html', {'form': form, 'titulo': 'Agregar Merma'})
+
+
+
+# ------------------------------------ GESTIÓN DE CLIENTES ------------------------------------
+
+
+
+def listar_clientes_activos(request):
+    clientes = Cliente.objects.filter(activo=True)
+    return render(request, 'administrador/listar_clientes_activos.html', {'clientes': clientes})
+
+def listar_clientes_inactivos(request):
+    clientes = Cliente.objects.filter(activo=False)
+    return render(request, 'administrador/listar_clientes_inactivos.html', {'clientes': clientes})
+
+def crear_cliente(request):
+    if request.method == 'POST':
+        form = ClienteForm(request.POST)
+        if form.is_valid():
+            cliente = form.save(commit=False)
+            cliente.activo = True
+            cliente.save()
+
+            return redirect('listar_clientes_activos')  
+    else:
+        form = ClienteForm()
+    
+    return render(request, 'administrador/crear_cliente.html', {'form': form})
+
+def eliminar_cliente(request, pk):
+    cliente = get_object_or_404(Cliente, pk=pk)
+    cliente.delete()
+    return redirect('listar_clientes_activos')
+
+def toggle_estado_cliente(request, pk):
+    cliente = get_object_or_404(Cliente, pk=pk)
+    cliente.activo = not cliente.activo  
+    cliente.save()
+
+    if cliente.activo:
+        return redirect('listar_clientes_inactivos')
+    else:
+        return redirect('listar_clientes_activos')
+    
+def ranking_clientes(request):
+    return render(request, 'administrador/ranking_clientes.html') 
+
+def dashboard_clientes(request):
+    total_clientes = Cliente.objects.count()
+    activos = Cliente.objects.filter(activo=True).count()
+    inactivos = total_clientes - activos
+    percent_activos = round((activos / total_clientes) * 100, 2) if total_clientes else 0
+    percent_inactivos = round((inactivos / total_clientes) * 100, 2) if total_clientes else 0
+
+    categorias = list(Cliente.objects.values_list('categoria', flat=True).distinct())
+    cantidades = [Cliente.objects.filter(categoria=cat).count() for cat in categorias]
+
+    ultimo_cliente = Cliente.objects.order_by('-id').first()
+
+    context = {
+        'total_clientes': total_clientes,
+        'percent_activos': percent_activos,
+        'percent_inactivos': percent_inactivos,
+        'categorias': categorias,
+        'cantidades': cantidades,
+        'ultimo_cliente': ultimo_cliente
+    }
+    return render(request, 'administrador/dashboard_clientes.html', context)
+
+
+def editar_cliente(request, cliente_id):
+    cliente = get_object_or_404(Cliente, pk=cliente_id)
+    if request.method == 'POST':
+        form = ClienteForm(request.POST, instance=cliente)
+        if form.is_valid():
+            form.save()
+            return redirect('listar_clientes_activos')
+    else:
+        form = ClienteForm(instance=cliente)
+    return render(request, 'administrador/editar_clientes.html', {'form': form})
+
+
+
+
+def dashboard_productos(request):
+    total_productos = Producto.objects.count()
+    activos = Producto.objects.filter(activo=True).count()
+    inactivos = total_productos - activos
+    productos_con_merma = Merma.objects.values('producto').distinct().count()
+    porcentaje_mermas = (productos_con_merma / total_productos * 100) if total_productos else 0
+    tipos_data = Producto.objects.values('tipo').annotate(total=Count('id'))
+    ultimo_producto = Producto.objects.latest('fecha')
+
+    context = {
+        'total_productos': total_productos,
+        'percent_activos': round((activos / total_productos) * 100) if total_productos else 0,
+        'percent_inactivos': round((inactivos / total_productos) * 100) if total_productos else 0,
+        'percent_mermas': round(porcentaje_mermas),
+        'tipos': [tipo['tipo'] for tipo in tipos_data],
+        'cantidades': [tipo['total'] for tipo in tipos_data],
+        'ultimo_producto': ultimo_producto,
+    }
+    return render(request, 'administrador/dashboard_productos.html', context)
+
+def debug_url_test(request):
+    try:
+        url = reverse('eliminar_producto', kwargs={'id': 1})
+        return HttpResponse(f"✅ URL encontrada: {url}")
+    except Exception as e:
+        return HttpResponse(f"❌ Error: {e}")
+    
+
+# ------------------------------------ GESTIÓN DE VENTAS ------------------------------------
+
+
+
+def dashboard_ventas(request):
+    total_ventas = Venta.objects.count()
+    ventas_dia = Venta.objects.filter(fecha=timezone.now().date()).count()
+    productos_vendidos = sum(v.cantidad_total for v in Venta.objects.all())
+
+    categorias_ventas = ['Perfumes', 'Cremas', 'Accesorios']  # ejemplo
+    montos_ventas = [100000, 50000, 25000]  # ejemplo
+    medios_pago = ['Efectivo', 'Tarjeta', 'Transferencia']
+    pagos = [60, 25, 15]  # ejemplo
+
+    ultima_venta = Venta.objects.last()
+
+    context = {
+        'total_ventas': total_ventas,
+        'ventas_dia': ventas_dia,
+        'productos_vendidos': productos_vendidos,
+        'categorias_ventas': categorias_ventas,
+        'montos_ventas': montos_ventas,
+        'medios_pago': medios_pago,
+        'pagos': pagos,
+        'ultima_venta': ultima_venta
+    }
+
+    return render(request, 'administrador/dashboard_ventas.html', context)
+
+
+def listar_ventas(request):
+    ventas = Venta.objects.all()
+    return render(request, 'administrador/listar_ventas.html', {'ventas': ventas})
