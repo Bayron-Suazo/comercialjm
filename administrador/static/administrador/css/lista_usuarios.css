@@ -225,6 +225,10 @@ body {
     transition: background-color 0.3s ease, cursor 0.3s ease;
 }
 
+.svg-compra {
+    filter: brightness(0) saturate(100%);
+}
+
 .boton-activar-seleccionados button.activo {
     background-color: #4CAF50;
     cursor: pointer;
@@ -460,6 +464,10 @@ body {
     background-color: #e0f3e0;
     font-weight: bold;
     color: #2d8a4f;
+}
+
+.oculto {
+  visibility: hidden;
 }
 
 @media screen and (max-width: 1024px) {

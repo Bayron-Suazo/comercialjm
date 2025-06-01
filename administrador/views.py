@@ -615,9 +615,9 @@ def lista_compras_activas(request):
         elif order_by == '':
             compras = compras_activas.order_by('')
         else:
-            compras = compras_activas
+            compras = compras_activas.order_by('')
     else:
-        compras = compras_activas
+        compras = compras_activas.order_by('-id')
     
     paginator = Paginator(compras, 10)
     page_number = request.GET.get('page')
@@ -639,9 +639,9 @@ def lista_compras_bloqueadas(request):
         elif order_by == '':
             compras = compras_bloqueadas.order_by('')
         else:
-            compras = compras_bloqueadas 
+            compras = compras_bloqueadas.order_by('')
     else:
-        compras = compras_bloqueadas  
+        compras = compras_bloqueadas.order_by('-id') 
 
     paginator = Paginator(compras, 10)
     page_number = request.GET.get('page')
@@ -786,6 +786,7 @@ def aprobar_compra(request):
             })
 
         compra.estado = 'Lista'
+        compra.activo = False
         compra.save()
 
         numero_lote = str(uuid.uuid4())[:8]
@@ -823,7 +824,8 @@ def bloquear_compra(request):
 
     try:
         compra = Compra.objects.get(id=compra_id)
-        compra.estado = 'Cancelado'
+        compra.estado = 'Cancelada'
+        compra.activo = False
         compra.save()
         return JsonResponse({'success': True})
     except Compra.DoesNotExist:

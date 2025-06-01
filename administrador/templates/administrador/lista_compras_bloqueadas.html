@@ -44,12 +44,12 @@
 
 <div class="barra-acciones-usuarios ancho-contenido">
     <div class="boton-activar-seleccionados">
-        <button id="activarBtn" disabled>Activar</button>
+        <button id="activarBtn" class="oculto" disabled>Activar</button>
     </div>
 
     <div class="toggle-estado-usuarios">
-        <a href="{% url 'lista_compras_activas' %}" class="estado-btn">Activas</a>
-        <a href="{% url 'lista_compras_bloqueadas' %}" class="estado-btn activo">Bloqueadas</a>
+        <a href="{% url 'lista_compras_activas' %}" class="estado-btn">Pendientes</a>
+        <a href="{% url 'lista_compras_bloqueadas' %}" class="estado-btn activo">Listas</a>
     </div>
 </div>
 
@@ -69,7 +69,7 @@
     <table class="tabla-usuarios">
         <thead>
             <tr>
-                <th><input type="checkbox" id="select-all"></th>
+                <th><input type="checkbox" id="select-all" class="oculto"></th>
                 <th>ID Compra</th>
                 <th>Proveedor</th>
                 <th>Encargado</th>
@@ -81,7 +81,7 @@
         <tbody>
             {% for compra in compras %}
             <tr>
-                <td><input type="checkbox" class="select-user" data-compra-id="{{ compra.id }}"></td>
+                <td data-label="Seleccionar"><input type="checkbox" class="select-user oculto" data-compra-id="{{ compra.id }}"></td>
                 <td>{{ compra.id }}</td>
                 <td>{{ compra.proveedor.nombre }}</td>
                 <td>{{ compra.usuario }}</td>
@@ -89,12 +89,17 @@
                 <td>{{ compra.estado }}</td>
                 
                 <td>
-                    <button title="Activar" class="btn-activar" data-compra-id="{{ compra.id }}">
-                        <img src="{% static 'core/svg/lock-solid.svg' %}" alt="Activar">
+                    <button title="Bloquear" class="btn-bloquear oculto" data-compra-id="{{ compra.id }}">
+                        <img src="{% static 'administrador/svg/circle-xmark-solid.svg' %}" alt="Bloquear">
                     </button>
-                    <a href="#" title="Mostrar">
-                        <img src="{% static 'core/svg/user-regular.svg' %}" alt="Mostrar">
+
+                    <a href="{% url 'detalle_compra' compra.id %}" title="Mostrar">
+                        <img src="{% static 'administrador/svg/reporteria.svg' %}" alt="Mostrar" class="svg-compra">
                     </a>
+
+                    <button class="btn-aprobar oculto" data-id="{{ compra.id }}">
+                        <img src="{% static 'administrador/svg/circle-check-solid.svg' %}" alt="Confirmar">
+                    </button>
                 </td>
             </tr>
             {% endfor %}
