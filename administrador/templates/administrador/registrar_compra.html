@@ -13,12 +13,29 @@
 
 <div class="ancho-contenido">
   <form method="get" class="formulario-proveedor">
+    {% if compra_form.non_field_errors %}
+      <ul class="errorlist">
+        {% for error in compra_form.non_field_errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
     <div class="campo-formulario">
       {{ compra_form.proveedor.label_tag }}
       {{ compra_form.proveedor }}
+      {{ compra_form.proveedor.errors }}
       <button type="submit" class="boton-header">Cargar Productos</button>
     </div>
   </form>
+
+  {% if detalle_formset.non_form_errors %}
+    <ul class="errorlist">
+      {% for error in detalle_formset.non_form_errors %}
+        <li>{{ error }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
 
   <form method="post" id="form-detalles-compra">
     {% csrf_token %}
@@ -34,14 +51,34 @@
         </tr>
       </thead>
       <tbody id="formset-body">
-        {% for form in detalle_formset %}
-        <tr class="form-detalle">
-          <td>{{ form.producto }}</td>
-          <td>{{ form.cantidad }}</td>
-          <td>{{ form.observaciones }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
+      {% for form in detalle_formset %}
+      <tr class="form-detalle">
+        <td>
+          {{ form.producto }}
+          {% for error in form.producto.errors %}
+            <div class="errorlist">{{ error }}</div>
+          {% endfor %}
+        </td>
+        <td>
+          {{ form.cantidad }}
+          {% for error in form.cantidad.errors %}
+            <div class="errorlist">{{ error }}</div>
+          {% endfor %}
+        </td>
+        <td>
+          {{ form.observaciones }}
+          {% for error in form.observaciones.errors %}
+            <div class="errorlist">{{ error }}</div>
+          {% endfor %}
+        </td>
+        <td>
+          <button type="button" class="boton-eliminar" title="Eliminar producto">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
     </table>
 
     <div class="acciones-derecha">
@@ -80,6 +117,30 @@ document.addEventListener("DOMContentLoaded", function () {
         formsetBody.appendChild(newForm);
         totalFormsInput.value = currentFormCount + 1;
     });
+
+    formsetBody.addEventListener("click", function (e) {
+        if (e.target.closest(".boton-eliminar")) {
+            const row = e.target.closest("tr");
+            row.remove();
+
+            // Recontar formularios visibles y actualizar el total
+            const rows = formsetBody.querySelectorAll(".form-detalle");
+            rows.forEach((row, index) => {
+                row.querySelectorAll("input, select, textarea").forEach(el => {
+                    if (el.name) {
+                        el.name = el.name.replace(/-\d+-/, `-${index}-`);
+                    }
+                    if (el.id) {
+                        el.id = el.id.replace(/-\d+-/, `-${index}-`);
+                    }
+                });
+            });
+            totalFormsInput.value = rows.length;
+            updateSubmitButtonState();
+        }
+    });
 });
+
+
 </script>
 {% endblock %}

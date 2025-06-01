@@ -27,7 +27,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.urls import reverse
 from django.http import HttpResponse
 from django.db.models import Count
@@ -35,7 +35,8 @@ from django.contrib import messages
 from .forms import ProductoForm, MermaForm
 from registration.models import Profile, Venta
 from .forms import ClienteForm
-
+from django.core.exceptions import ObjectDoesNotExist
+import uuid
 
 # ------------------------------------ GESTIÓN DE USUARIOS ------------------------------------
 
@@ -572,9 +573,12 @@ def dashboard_proveedores(request):
     proveedores_bloqueados = total_proveedores - proveedores_activos
 
     percent_activos = (proveedores_activos / total_proveedores * 100) if total_proveedores else 0
-    percent_bloqueados = 100 - percent_activos
+    percent_bloqueados = 100 - percent_activos if total_proveedores else 0
 
-    ultimo_proveedor = Proveedor.objects.latest('fecha_creacion')
+    try:
+        ultimo_proveedor = Proveedor.objects.latest('fecha_creacion')
+    except ObjectDoesNotExist:
+        ultimo_proveedor = None
 
     context = {
         'total_proveedores': total_proveedores,
@@ -662,7 +666,6 @@ def registrar_compra_view(request):
         compra_form = CompraForm(request.POST)
         detalle_formset = DetalleFormSet(request.POST)
 
-        # Restringir productos a los del proveedor seleccionado
         for form in detalle_formset:
             form.fields['producto'].queryset = proveedor.productos.filter(activo=True) if proveedor else Producto.objects.none()
 
@@ -676,15 +679,20 @@ def registrar_compra_view(request):
                 if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
                     producto = form.cleaned_data['producto']
 
-                    # Validación de producto repetido
                     if producto in productos_vistos:
                         form.add_error('producto', 'Este producto ya fue ingresado.')
                         error_repetido = True
                     else:
                         productos_vistos.add(producto)
                         formularios_validos.append(form)
+            if not formularios_validos:
+                detalle_formset.non_form_errors = lambda: ['Debe agregar al menos un producto para registrar la compra.']
+                return render(request, 'administrador/registrar_compra.html', {
+                    'compra_form': compra_form,
+                    'detalle_formset': detalle_formset,
+                    'proveedor_seleccionado': proveedor,
+                })
 
-            # Validación: no más productos que los disponibles
             productos_disponibles = proveedor.productos.filter(activo=True).count()
             if len(formularios_validos) > productos_disponibles:
                 for form in detalle_formset:
@@ -702,11 +710,10 @@ def registrar_compra_view(request):
                     'proveedor_seleccionado': proveedor,
                 })
 
-            # Crear compra
             compra = Compra.objects.create(
                 proveedor=compra_form.cleaned_data['proveedor'],
                 usuario=request.user,
-                estado='pendiente'
+                estado='Pendiente'
             )
 
             productos_solicitados = []
@@ -764,6 +771,68 @@ def registrar_compra_view(request):
     })
 
 
+
+
+@csrf_exempt
+def aprobar_compra(request):
+    if request.method == 'POST':
+        compra_id = request.POST.get('compra_id')
+        compra = get_object_or_404(Compra, id=compra_id)
+
+        if compra.estado != 'Pendiente':
+            return JsonResponse({
+                'success': False,
+                'message': 'La compra ya fue procesada.'
+            })
+
+        compra.estado = 'Lista'
+        compra.save()
+
+        numero_lote = str(uuid.uuid4())[:8]
+        lote = Lote.objects.create(numero=numero_lote)
+
+        for detalle in compra.detalles.all():
+            producto = detalle.producto
+            cantidad = detalle.cantidad
+
+            DetalleLote.objects.create(
+                lote=lote,
+                producto=producto.nombre,
+                cantidad=cantidad,
+                precio=producto.precio
+            )
+
+            producto.cantidad += cantidad
+            producto.lote = lote
+            producto.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Compra aprobada y lote creado correctamente.'
+        })
+
+    return JsonResponse({
+        'success': False,
+        'message': 'Método no permitido.'
+    })
+
+
+@require_POST
+def bloquear_compra(request):
+    compra_id = request.POST.get('compra_id')
+
+    try:
+        compra = Compra.objects.get(id=compra_id)
+        compra.estado = 'Cancelado'
+        compra.save()
+        return JsonResponse({'success': True})
+    except Compra.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Compra no encontrada'})
+    
+
+def detalle_compra(request, compra_id):
+    compra = get_object_or_404(Compra, id=compra_id)
+    return render(request, 'administrador/detalle_compra.html', {'compra': compra})
 
 
 # ------------------------------------ GESTIÓN DE PRODUCTOS ------------------------------------
@@ -1052,7 +1121,11 @@ def dashboard_productos(request):
     productos_con_merma = Merma.objects.values('producto').distinct().count()
     porcentaje_mermas = (productos_con_merma / total_productos * 100) if total_productos else 0
     tipos_data = Producto.objects.values('tipo').annotate(total=Count('id'))
-    ultimo_producto = Producto.objects.latest('fecha')
+
+    try:
+        ultimo_producto = Producto.objects.latest('fecha')
+    except ObjectDoesNotExist:
+        ultimo_producto = None
 
     context = {
         'total_productos': total_productos,

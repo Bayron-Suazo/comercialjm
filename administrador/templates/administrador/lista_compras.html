@@ -1,7 +1,7 @@
 {% extends 'core/base_admin.html' %}
 {% load static %}
 
-{% block title %}Listado de Compras Activas{% endblock %}
+{% block title %}Listado de Compras Pendientes{% endblock %}
 <head>
 {% block extra_head%}
     <link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
@@ -31,7 +31,7 @@
     </ul>
 {% endif %}
 
-<h2 class="titulo">Listado de Compras Activas</h2>
+<h2 class="titulo">Listado de Compras Pendientes</h2>
 
 <div class="busqueda-agregar">
     <input type="text" placeholder="Buscar Compra .........." class="input-busqueda">
@@ -56,8 +56,8 @@
     </div>
 
     <div class="toggle-estado-usuarios">
-        <a href="{% url 'lista_compras_activas' %}" class="estado-btn activo">Activas</a>
-        <a href="{% url 'lista_compras_bloqueadas' %}" class="estado-btn">Bloqueadas</a>
+        <a href="{% url 'lista_compras_activas' %}" class="estado-btn activo">Pendientes</a>
+        <a href="{% url 'lista_compras_bloqueadas' %}" class="estado-btn">Listas</a>
     </div>
 </div>
 
@@ -68,6 +68,24 @@
     <div class="modal-actions">
       <button type="button" id="confirmNo">Cancelar</button>
       <button type="button" id="confirmYes">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div id="confirmAprobarModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <p>¿Estás seguro de que deseas aprobar esta compra?</p>
+    <div class="modal-buttons">
+      <button id="confirmAprobarBtn" class="btn-confirm">Sí, aprobar</button>
+      <button id="cancelAprobarBtn" class="btn-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div id="detalleCompraModal" class="modal hidden">
+  <div class="modal-content">
+    <span class="close-modal" id="cerrarDetalleCompra">&times;</span>
+    <div id="contenidoDetalleCompra">
     </div>
   </div>
 </div>
@@ -88,7 +106,7 @@
         <tbody>
             {% for compra in compras %}
             <tr>
-                <td data-label="Seleccionar"><input type="checkbox" class="select-user" data-compra-id="{{ proveedor.id }}"></td>
+                <td data-label="Seleccionar"><input type="checkbox" class="select-user" data-compra-id="{{ compra.id }}"></td>
                 <td data-label="ID Compra">{{ compra.id }}</td>
                 <td data-label="Proveedor">{{ compra.proveedor.nombre }}</td>
                 <td data-label="Encargado">{{ compra.usuario }}</td>
@@ -98,9 +116,12 @@
                     <button title="Bloquear" class="btn-bloquear" data-compra-id="{{ compra.id }}">
                         <img src="{% static 'core/svg/lock-open-solid.svg' %}" alt="Bloquear">
                     </button>
-                    <a href="#" title="Mostrar">
+                    <a href="{% url 'detalle_compra' compra.id %}" title="Mostrar">
                         <img src="{% static 'core/svg/user-regular.svg' %}" alt="Mostrar">
                     </a>
+                    <button class="btn-aprobar" data-id="{{ compra.id }}">
+                        ✅
+                    </button>
                 </td>
             </tr>
             {% endfor %}
@@ -133,126 +154,112 @@
 
 {% block extra_js %}
 <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const aprobarButtons = document.querySelectorAll('.btn-aprobar');
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const bloquearBtn = document.querySelector('#bloquearBtn');
-        const checkboxes = document.querySelectorAll('.select-user');
-        const selectAll = document.getElementById('select-all');
-
-        function updateBloquearButton() {
-            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
-            bloquearBtn.disabled = !anyChecked;
-            bloquearBtn.classList.toggle('activo', anyChecked);
-        }
-
-        checkboxes.forEach(cb => cb.addEventListener('change', updateBloquearButton));
-        selectAll.addEventListener('change', () => {
-            checkboxes.forEach(cb => cb.checked = selectAll.checked);
-            updateBloquearButton();
-        });
-
-        bloquearBtn.addEventListener('click', () => {
-            const compraIds = Array.from(checkboxes)
-                .filter(cb => cb.checked)
-                .map(cb => cb.getAttribute('data-compra-id'));
-
-            if (compraIds.length === 0) return;
-        });
-
-        updateBloquearButton();
-    });
-
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const modal = document.getElementById('confirmModal');
-        const modalText = document.getElementById('modalText');
-        const confirmYes = document.getElementById('confirmYes');
-        const confirmNo = document.getElementById('confirmNo');
-
-        let onConfirmAction = null;
-
-        function showModal(message, onConfirm) {
-            modalText.textContent = message;
-            modal.classList.remove('hidden');
-            onConfirmAction = onConfirm;
-        }
-
-        confirmYes.addEventListener('click', () => {
-            modal.classList.add('hidden');
-            if (onConfirmAction) onConfirmAction();
-        });
-
-        confirmNo.addEventListener('click', () => {
-            modal.classList.add('hidden');
-            onConfirmAction = null;
-        });
-        
-    });
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const modal = document.getElementById('confirmModal');
-        const confirmYes = document.getElementById('confirmYes');
-        const confirmNo = document.getElementById('confirmNo');
-
-        let confirmCallback = null;
-
-        function showConfirmModal(onConfirm) {
-            modal.classList.remove('hidden');
-            confirmCallback = onConfirm;
-        }
-
-        confirmYes.addEventListener('click', () => {
-            modal.classList.add('hidden');
-            if (confirmCallback) confirmCallback();
-        });
-
-        confirmNo.addEventListener('click', () => {
-            modal.classList.add('hidden');
-            confirmCallback = null;
-        });
-
-        const bloquearBtn = document.querySelector('#bloquearBtn');
-        const checkboxes = document.querySelectorAll('.select-user');
-
-        bloquearBtn.addEventListener('click', () => {
-            const compraIds = Array.from(checkboxes)
-                .filter(cb => cb.checked)
-                .map(cb => cb.dataset.compraId);
-
-            if (compraIds.length === 0) return;
-
-            showConfirmModal(() => {
-                fetch("#", {
+    aprobarButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            const compraId = this.getAttribute('data-id');
+            showConfirmAprobarModal(() => {
+                fetch("{% url 'aprobar_compra' %}", {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                         'X-CSRFToken': '{{ csrf_token }}'
                     },
-                    body: new URLSearchParams({ 'compra_ids': JSON.stringify(compraIds) })
-                }).then(res => res.json()).then(data => {
-                    if (data.success) location.reload();
-                });
-            });
-        });
+                    body: new URLSearchParams({ 'compra_id': compraId })
+                })
 
-        document.querySelectorAll('.btn-bloquear').forEach(button => {
-            button.addEventListener('click', () => {
-                const compraId = button.dataset.compraId;
-                showConfirmModal(() => {
-                    fetch("#", {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                            'X-CSRFToken': '{{ csrf_token }}'
-                        },
-                        body: new URLSearchParams({ 'compra_id': compraId })
-                    }).then(res => res.json()).then(data => {
-                        if (data.success) location.reload();
-                    });
+                .then(res => res.json())
+                .then(data => {
+                    console.log(data); // Útil para depurar
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Ocurrió un error al aprobar la compra.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error en fetch:', error);
+                    alert('Error inesperado al aprobar la compra.');
                 });
             });
         });
     });
+
+    function showConfirmAprobarModal(callback) {
+        const modal = document.getElementById('confirmAprobarModal');
+        const confirmBtn = document.getElementById('confirmAprobarBtn');
+        const cancelBtn = document.getElementById('cancelAprobarBtn');
+
+        modal.style.display = 'block';
+
+        const closeModal = () => {
+            modal.style.display = 'none';
+            confirmBtn.removeEventListener('click', onConfirm);
+            cancelBtn.removeEventListener('click', closeModal);
+        };
+
+        const onConfirm = () => {
+            callback();
+            closeModal();
+        };
+
+        confirmBtn.addEventListener('click', onConfirm);
+        cancelBtn.addEventListener('click', closeModal);
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const bloquearButtons = document.querySelectorAll('.btn-bloquear');
+
+    bloquearButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            const compraId = this.getAttribute('data-compra-id');
+            const modal = document.getElementById('confirmModal');
+
+            modal.classList.remove('hidden');
+
+            const confirmYes = document.getElementById('confirmYes');
+            const confirmNo = document.getElementById('confirmNo');
+
+            const closeModal = () => {
+                modal.classList.add('hidden');
+                confirmYes.removeEventListener('click', onConfirm);
+                confirmNo.removeEventListener('click', closeModal);
+            };
+
+            const onConfirm = () => {
+                fetch("{% url 'bloquear_compra' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: new URLSearchParams({ 'compra_id': compraId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Error al bloquear la compra.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Ocurrió un error inesperado.');
+                })
+                .finally(() => {
+                    closeModal();
+                });
+            };
+
+            confirmYes.addEventListener('click', onConfirm);
+            confirmNo.addEventListener('click', closeModal);
+        });
+    });
+});
 
 </script>
 

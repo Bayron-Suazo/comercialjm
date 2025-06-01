@@ -99,10 +99,10 @@ class Cliente(models.Model):
     rut = models.CharField(max_length=12)
     categoria = models.CharField(max_length=50)
     correo = models.EmailField()
-    telefono = models.CharField(max_length=15)
+    telefono = models.CharField(max_length=20)
     activo = models.BooleanField(default=True)
 
-    def str(self):
+    def __str__(self):
         return self.nombre
     
 
@@ -129,16 +129,7 @@ class Merma(models.Model):
         return self.producto
 
 
-class Cliente(models.Model):
-    nombre = models.CharField(max_length=100)
-    rut = models.CharField(max_length=12)
-    categoria = models.CharField(max_length=50)
-    correo = models.EmailField()
-    telefono = models.CharField(max_length=20)
-    activo = models.BooleanField(default=True)
 
-    def __str__(self):
-        return self.nombre
 
 
 class Venta(models.Model):

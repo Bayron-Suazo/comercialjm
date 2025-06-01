@@ -1,0 +1,124 @@
+body {
+  background-color: #f9f7dc;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.titulo {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  font-weight: bold;
+  color: #111;
+}
+
+.ancho-contenido {
+  max-width: 900px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.campo-formulario {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.campo-formulario label {
+  background-color: #57b363;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 10px 10px 0 0;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.campo-formulario input,
+.campo-formulario select,
+.campo-formulario textarea {
+  padding: 10px;
+  border: none;
+  border-radius: 0 0 10px 10px;
+  background-color: #f2f2f2;
+  font-size: 14px;
+  outline: none;
+}
+
+.tabla-usuarios {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.tabla-usuarios th {
+  background-color: #57b363;
+  color: white;
+  padding: 10px;
+  text-align: center;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.tabla-usuarios td {
+  text-align: center;
+  padding: 10px;
+}
+
+.boton-header {
+  background-color: #57b363;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  margin-top: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.boton-header:hover {
+  background-color: #469e52;
+}
+
+.boton-agregar {
+  background-color: #57b363;
+  color: white;
+  border: none;
+  padding: 10px;
+  margin-left: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.boton-agregar:hover {
+  background-color: #469e52;
+}
+
+.acciones-derecha {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.errorlist {
+  color: red;
+  margin: 5px 0 0;
+  list-style: none;
+  font-size: 13px;
+}
+
+.boton-eliminar {
+  background-color: transparent;
+  border: none;
+  color: #e74c3c;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.boton-eliminar:hover {
+  color: #c0392b;
+}

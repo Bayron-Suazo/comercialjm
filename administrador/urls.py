@@ -32,6 +32,9 @@ urlpatterns = [
     path('lista_compras_activas/', views.lista_compras_activas, name='lista_compras_activas'),
     path('lista_compras_bloqueadas/', views.lista_compras_bloqueadas, name='lista_compras_bloqueadas'),
     path('registrar_compra/', views.registrar_compra_view, name='registrar_compra'),
+    path('aprobar-compra/', views.aprobar_compra, name='aprobar_compra'),
+    path('bloquear-compra/', views.bloquear_compra, name='bloquear_compra'),
+    path('compra/<int:compra_id>/', views.detalle_compra, name='detalle_compra'),
 
 
     # PRODUCTOS

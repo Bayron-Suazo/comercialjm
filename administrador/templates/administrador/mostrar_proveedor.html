@@ -43,7 +43,7 @@
                 {% if proveedor.productos.exists %}
                     <span>
                         {% for producto in proveedor.productos.all %}
-                            {{ producto.nombre }} (Lote: {{ producto.lote_numero }}){% if not forloop.last %}, {% endif %}
+                            {{ producto.nombre }} {% if not forloop.last %}, {% endif %}
                         {% endfor %}
                     </span>
                 {% else %}
