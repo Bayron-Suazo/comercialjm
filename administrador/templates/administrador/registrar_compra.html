@@ -21,11 +21,13 @@
       </ul>
     {% endif %}
 
-    <div class="campo-formulario">
-      {{ compra_form.proveedor.label_tag }}
-      {{ compra_form.proveedor }}
-      {{ compra_form.proveedor.errors }}
-      <button type="submit" class="boton-header">Cargar Productos</button>
+    <div class="campo-formulario-horizontal">
+      <div class="contenedor-proveedor">
+        {{ compra_form.proveedor.label_tag }}
+        {{ compra_form.proveedor }}
+        {{ compra_form.proveedor.errors }}
+      </div>
+      <button type="submit" class="boton-header boton-cargar">Cargar Productos</button>
     </div>
   </form>
 
@@ -44,10 +46,11 @@
 
     <table class="tabla-usuarios">
       <thead>
-        <tr>
+        <tr class="cabecera-completa">
           <th>Producto</th>
           <th>Cantidad</th>
           <th>Observaciones</th>
+          <th>Acciones</th>
         </tr>
       </thead>
       <tbody id="formset-body">
@@ -81,13 +84,18 @@
     </tbody>
     </table>
 
-    <div class="acciones-derecha">
+    <div class="acciones-fila">
       <button type="submit" name="submit" class="boton-header">Registrar Compra</button>
       <button type="button" id="add-form" class="boton-agregar" title="Agregar producto">
         <i class="fas fa-plus-circle"></i>
       </button>
     </div>
   </form>
+</div>
+<div class="boton-volver-container">
+  <button type="button" class="boton-volver" onclick="history.back()">
+    Volver
+  </button>
 </div>
 
 <script>

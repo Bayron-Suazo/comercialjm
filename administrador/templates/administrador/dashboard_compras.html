@@ -1,0 +1,86 @@
+{% extends 'core/base_admin.html' %}
+{% block title %}Dashboard Compras{% endblock %}
+{% load static %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'administrador/css/dashboard_compras.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="top-bar">
+        <a href="{% url 'lista_compras_activas' %}" class="btn btn-primary">Listado de Compras</a>
+    </div>
+
+    <h1 class="dashboard-title">Gestión de Compras</h1>
+
+    <!-- Tarjetas resumen -->
+    <div class="cards-summary">
+        <div class="card">
+            <div class="card-icon">🛒</div>
+            <div class="card-label">Última Compra</div>
+            <div class="card-value">
+                {% if ultima_compra %}
+                    {{ ultima_compra.fecha|date:"d/m/Y H:i" }}
+                {% else %}
+                    Sin registros
+                {% endif %}
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-icon">🏆</div>
+            <div class="card-label">Proveedor Favorito</div>
+            <div class="card-value">
+                {{ proveedor_mas_compras.proveedor__nombre|default:"Sin datos" }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="charts-section">
+        <div class="chart-card">
+            <h2 class="chart-title">Estado de las Compras</h2>
+            <div class="pie-chart-container">
+                <canvas id="estadoChart" width="250" height="250"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card top-productos-card">
+            <h2 class="chart-title">Top 3 Productos Más Comprados</h2>
+            <ul class="top-productos-list">
+                {% for producto in top_productos %}
+                    <li>{{ forloop.counter }}. {{ producto.producto__nombre }} <span>({{ producto.total_cantidad }})</span></li>
+                {% empty %}
+                    <li>No hay datos disponibles.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Gráfico de Pastel de Estados
+    const estadoCtx = document.getElementById('estadoChart').getContext('2d');
+    new Chart(estadoCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [{% for estado, porcentaje in porcentajes_estados.items %}'{{ estado }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+            datasets: [{
+                data: [{% for estado, porcentaje in porcentajes_estados.items %}{{ porcentaje }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                backgroundColor: ['#4CAF50', '#f44336', '#2196F3', '#FF9800', '#9C27B0'],
+                borderColor: '#fff',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+</script>
+{% endblock %}

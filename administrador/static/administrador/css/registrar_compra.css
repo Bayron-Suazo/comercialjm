@@ -5,14 +5,14 @@ body {
 
 .titulo {
   text-align: center;
-  font-size: 2rem;
+  font-size: 48px;
   margin-bottom: 1.5rem;
-  font-weight: bold;
+  font-weight: normal;
   color: #111;
 }
 
 .ancho-contenido {
-  max-width: 900px;
+  max-width: 1200px;
   margin: 0 auto;
   background-color: #ffffff;
   padding: 30px;
@@ -20,19 +20,19 @@ body {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.campo-formulario {
+.contenedor-proveedor {
   display: flex;
   flex-direction: column;
   margin-bottom: 20px;
 }
 
-.campo-formulario label {
+.contenedor-proveedor label {
   background-color: #57b363;
   color: white;
   padding: 6px 12px;
   border-radius: 10px 10px 0 0;
-  font-weight: 600;
-  font-size: 14px;
+  font-weight: normal;
+  font-size: 20px;
 }
 
 .campo-formulario input,
@@ -42,83 +42,176 @@ body {
   border: none;
   border-radius: 0 0 10px 10px;
   background-color: #f2f2f2;
-  font-size: 14px;
+  font-size: 20px;
   outline: none;
 }
 
 .tabla-usuarios {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   margin-top: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
-.tabla-usuarios th {
+.tabla-usuarios th,
+.tabla-usuarios td {
+  padding: 12px;
+  text-align: center;
+}
+
+.tabla-usuarios .cabecera-completa th {
   background-color: #57b363;
   color: white;
-  padding: 10px;
-  text-align: center;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
+  font-weight: normal;
+  font-size: 20px;
+  border-right: 1px solid white;
+}
+
+.tabla-usuarios .cabecera-completa th:last-child {
+  border-right: none;
 }
 
 .tabla-usuarios td {
-  text-align: center;
-  padding: 10px;
+  background-color: #fbfbfb;
+  border-bottom: 1px solid #e0e0e0;
+  vertical-align: middle;
+}
+
+.tabla-usuarios td input,
+.tabla-usuarios td select,
+.tabla-usuarios td textarea {
+  width: 100%;
+  padding: 8px;
+  font-size: 20px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #fff;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: border 0.3s ease;
+}
+
+.tabla-usuarios td:first-child {
+  width: 25%;
+}
+
+.tabla-usuarios td:last-child {
+  width: 15%;
+}
+
+.tabla-usuarios td input:focus,
+.tabla-usuarios td select:focus,
+.tabla-usuarios td textarea:focus {
+  border-color: #57b363;
+  outline: none;
+}
+
+.boton-header,
+.boton-agregar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  padding: 0 20px;
+  font-size: 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.3s ease;
 }
 
 .boton-header {
   background-color: #57b363;
   color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 10px;
-  margin-top: 10px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.3s ease;
-}
-
-.boton-header:hover {
-  background-color: #469e52;
 }
 
 .boton-agregar {
   background-color: #57b363;
   color: white;
-  border: none;
-  padding: 10px;
-  margin-left: 10px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 18px;
 }
 
-.boton-agregar:hover {
-  background-color: #469e52;
-}
-
-.acciones-derecha {
+.acciones-fila {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
+  gap: 15px;
   margin-top: 20px;
+}
+
+.boton-ancho {
+  width: 100%;
 }
 
 .errorlist {
   color: red;
   margin: 5px 0 0;
   list-style: none;
-  font-size: 13px;
+  font-size: 20px;
 }
 
 .boton-eliminar {
-  background-color: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
   border: none;
-  color: #e74c3c;
-  font-size: 1.2rem;
+  background-color: #ffeaea;
+  color: #b7291f;
+  border-radius: 6px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-size: 20px;
 }
 
-.boton-eliminar:hover {
-  color: #c0392b;
+.boton-volver-container {
+  max-width: 1200px;
+  margin: 20px auto 0;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 30px;
+  box-sizing: border-box;
+}
+
+.boton-volver {
+  background-color: #b7291f;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  font-size: 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.campo-formulario-horizontal {
+  display: flex;
+  align-items: space-between;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.contenedor-proveedor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.boton-cargar {
+  height: 48px;
+  width: 100%;
+  max-width: 250px;
+}
+
+.contenedor-proveedor select {
+  padding: 10px;
+  border: none;
+  border-radius: 0 0 10px 10px;
+  background-color: #f2f2f2;
+  font-size: 20px;
+  background-size: 16px;
 }

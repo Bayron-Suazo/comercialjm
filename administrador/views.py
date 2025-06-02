@@ -610,12 +610,10 @@ def lista_compras_activas(request):
     compras_activas = Compra.objects.filter(activo=True)
 
     if order_by:
-        if order_by == '':
-            compras = compras_activas.order_by('')
-        elif order_by == '':
-            compras = compras_activas.order_by('')
-        else:
-            compras = compras_activas.order_by('')
+        if order_by == 'proveedor':
+            compras = compras_activas.order_by('proveedor')
+        elif order_by == 'usuario':
+            compras = compras_activas.order_by('usuario')
     else:
         compras = compras_activas.order_by('-id')
     
@@ -634,10 +632,10 @@ def lista_compras_bloqueadas(request):
     compras_bloqueadas = Compra.objects.filter(activo=False)
 
     if order_by:
-        if order_by == '':
-            compras = compras_bloqueadas.order_by('')
-        elif order_by == '':
-            compras = compras_bloqueadas.order_by('')
+        if order_by == 'proveedor':
+            compras = compras_bloqueadas.order_by('proveedor')
+        elif order_by == 'usuario':
+            compras = compras_bloqueadas.order_by('usuario')
         else:
             compras = compras_bloqueadas.order_by('')
     else:
@@ -651,7 +649,7 @@ def lista_compras_bloqueadas(request):
 
 
 
-# ------------------ AGREGAR - MOSTRAR - EDITAR - ACTIVAR - BLOQUEAR ------------------
+# ------------------ REGISTRAR - MOSTRAR - APROBAR - CANCELAR ------------------
 
 
 
@@ -835,6 +833,50 @@ def bloquear_compra(request):
 def detalle_compra(request, compra_id):
     compra = get_object_or_404(Compra, id=compra_id)
     return render(request, 'administrador/detalle_compra.html', {'compra': compra})
+
+
+
+# ------------------ DASHBOARD DE COMPRAS ------------------
+
+
+
+@login_required
+def dashboard_compras(request):
+    total_compras = Compra.objects.count()
+
+    ultima_compra = Compra.objects.order_by('-fecha').first()
+
+    proveedor_mas_compras = (
+        Compra.objects.values('proveedor__nombre')
+        .annotate(total=Count('id'))
+        .order_by('-total')
+        .first()
+    )
+
+    estados = Compra.objects.values('estado').annotate(cantidad=Count('estado'))
+    estado_data = {estado['estado']: estado['cantidad'] for estado in estados}
+    total_estados = sum(estado_data.values())
+    porcentajes_estados = {
+        estado: round((cantidad / total_estados) * 100, 2)
+        for estado, cantidad in estado_data.items()
+    }
+
+    top_productos = (
+        DetalleCompra.objects
+        .values('producto__nombre')
+        .annotate(total_cantidad=Count('producto'))
+        .order_by('-total_cantidad')[:3]
+    )
+
+    context = {
+        'ultima_compra': ultima_compra,
+        'proveedor_mas_compras': proveedor_mas_compras,
+        'porcentajes_estados': porcentajes_estados,
+        'top_productos': top_productos,
+    }
+
+    return render(request, 'administrador/dashboard_compras.html', context)
+
 
 
 # ------------------------------------ GESTIÓN DE PRODUCTOS ------------------------------------

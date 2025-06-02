@@ -43,7 +43,11 @@
     </div>
 
     <div class="boton-header">
-        <a href="{% url 'lista_compras_activas' %}">Volver</a>
+        {% if compra.estado == 'Pendiente' %}
+            <a href="{% url 'lista_compras_activas' %}">Volver</a>
+        {% else %}
+            <a href="{% url 'lista_compras_bloqueadas' %}">Volver</a>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

@@ -11,12 +11,12 @@
 {% block content %}
 
 <div class="acciones-derecha ancho-contenido">
-    <a href="#" class="boton-header">
+    <a href="{% url 'dashboard_compras' %}" class="boton-header">
         Dashboard
         <img src="{% static 'administrador/svg/reporteria.svg' %}">
     </a>
 
-    <a href="#" class="boton-header">
+    <a href="{% url 'registrar_compra' %}" class="boton-header">
         Registrar Compra
         <img src="{% static 'administrador/svg/plus.svg' %}">
     </a>
@@ -35,8 +35,8 @@
             <img src="{% static 'administrador/svg/filter-solid.svg' %}">
         </a>
         <ul id="filterOptions" class="dropdown-content" style="display:none;">
-            <li><a href="#" onclick="applyFilter('nombre')" data-filter="nombre" class="{% if order_by == 'nombre' %}filtro-activo{% endif %}">Nombre</a></li>
-            <li><a href="#" onclick="applyFilter('rut')" data-filter="rut" class="{% if order_by == 'rut' %}filtro-activo{% endif %}">Rut</a></li>
+            <li><a href="#" onclick="applyFilter('proveedor')" data-filter="proveedor" class="{% if order_by == 'proveedor' %}filtro-activo{% endif %}">Proveedor</a></li>
+            <li><a href="#" onclick="applyFilter('usuario')" data-filter="usuario" class="{% if order_by == 'usuario' %}filtro-activo{% endif %}">Encargado</a></li>
             <li><a href="#" onclick="clearOrderFilter()">Limpiar filtro</a></li>
         </ul>
     </div>

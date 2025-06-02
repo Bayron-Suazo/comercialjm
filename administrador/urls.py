@@ -35,6 +35,7 @@ urlpatterns = [
     path('aprobar-compra/', views.aprobar_compra, name='aprobar_compra'),
     path('bloquear-compra/', views.bloquear_compra, name='bloquear_compra'),
     path('compra/<int:compra_id>/', views.detalle_compra, name='detalle_compra'),
+    path('dashboard_compras/', views.dashboard_compras, name='dashboard_compras'),
 
 
     # PRODUCTOS
