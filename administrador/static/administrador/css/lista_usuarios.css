@@ -409,6 +409,26 @@ body {
   background-color: #c82333;
 }
 
+/* Botón Confirmar */
+.modal-actions button#confirmAprobarBtn {
+  background-color: #28a745;
+  color: white;
+}
+
+.modal-actions button#confirmAprobarBtn:hover {
+  background-color: #218838;
+}
+
+/* Botón Cancelar */
+.modal-actions button#cancelAprobarBtn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.modal-actions button#cancelAprobarBtn:hover {
+  background-color: #c82333;
+}
+
 .dropdown {
     position: relative;
     display: inline-block;

@@ -61,15 +61,20 @@
 
 {% block extra_js %}
 <script>
-    // Gráfico de Pastel de Estados
-    const estadoCtx = document.getElementById('estadoChart').getContext('2d');
-    new Chart(estadoCtx, {
+    const estadoChartData = {{ estado_chart_data|safe }};
+
+    const labels = estadoChartData.map(item => item.estado);
+    const data = estadoChartData.map(item => item.porcentaje);
+    const colors = estadoChartData.map(item => item.color);
+
+    const ctx = document.getElementById('estadoChart').getContext('2d');
+    new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: [{% for estado, porcentaje in porcentajes_estados.items %}'{{ estado }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+            labels: labels,
             datasets: [{
-                data: [{% for estado, porcentaje in porcentajes_estados.items %}{{ porcentaje }}{% if not forloop.last %}, {% endif %}{% endfor %}],
-                backgroundColor: ['#4CAF50', '#f44336', '#2196F3', '#FF9800', '#9C27B0'],
+                data: data,
+                backgroundColor: colors,
                 borderColor: '#fff',
                 borderWidth: 2
             }]

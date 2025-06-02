@@ -657,12 +657,25 @@ def lista_compras_bloqueadas(request):
 def registrar_compra_view(request):
     DetalleFormSet = formset_factory(DetalleCompraForm, extra=1, can_delete=True)
     
-    proveedor_id = request.POST.get('proveedor') or request.GET.get('proveedor')
-    proveedor = Proveedor.objects.filter(id=proveedor_id).first() if proveedor_id else None
+    try:
+        proveedor_id = int(request.POST.get('proveedor') or request.GET.get('proveedor'))
+        proveedor = Proveedor.objects.filter(id=proveedor_id).first()
+    except (TypeError, ValueError):
+        proveedor_id = None
+        proveedor = None
 
     if request.method == 'POST' and 'submit' in request.POST:
         compra_form = CompraForm(request.POST)
         detalle_formset = DetalleFormSet(request.POST)
+        
+        if not proveedor:
+            compra_form.add_error('proveedor', 'No se puede registrar una compra. Primero cargue los datos del proveedor y seleccione los productos que desea.')
+            return render(request, 'administrador/registrar_compra.html', {
+                'compra_form': compra_form,
+                'detalle_formset': detalle_formset,
+                'proveedor_seleccionado': proveedor,
+            })
+
 
         for form in detalle_formset:
             form.fields['producto'].queryset = proveedor.productos.filter(activo=True) if proveedor else Producto.objects.none()
@@ -840,10 +853,9 @@ def detalle_compra(request, compra_id):
 
 
 
+
 @login_required
 def dashboard_compras(request):
-    total_compras = Compra.objects.count()
-
     ultima_compra = Compra.objects.order_by('-fecha').first()
 
     proveedor_mas_compras = (
@@ -853,14 +865,32 @@ def dashboard_compras(request):
         .first()
     )
 
-    estados = Compra.objects.values('estado').annotate(cantidad=Count('estado'))
-    estado_data = {estado['estado']: estado['cantidad'] for estado in estados}
+    estado_data_raw = Compra.objects.values('estado').annotate(cantidad=Count('estado'))
+    estado_data = {}
+
+    for estado in estado_data_raw:
+        nombre_estado = estado['estado'].capitalize()
+        estado_data[nombre_estado] = estado['cantidad']
+
     total_estados = sum(estado_data.values())
-    porcentajes_estados = {
-        estado: round((cantidad / total_estados) * 100, 2)
-        for estado, cantidad in estado_data.items()
+
+    orden_deseado = ['Pendiente', 'Lista', 'Cancelada']
+    colores_estado = {
+        'Pendiente': 'yellow',
+        'Lista': 'green',
+        'Cancelada': 'red',
     }
 
+    estado_chart_data = []
+    for estado in orden_deseado:
+        porcentaje = round((estado_data.get(estado, 0) / total_estados) * 100, 2) if total_estados > 0 else 0
+        estado_chart_data.append({
+            'estado': estado,
+            'porcentaje': porcentaje,
+            'color': colores_estado.get(estado, '#ccc'),
+        })
+
+    # Top productos
     top_productos = (
         DetalleCompra.objects
         .values('producto__nombre')
@@ -871,12 +901,11 @@ def dashboard_compras(request):
     context = {
         'ultima_compra': ultima_compra,
         'proveedor_mas_compras': proveedor_mas_compras,
-        'porcentajes_estados': porcentajes_estados,
+        'estado_chart_data': estado_chart_data,
         'top_productos': top_productos,
     }
 
     return render(request, 'administrador/dashboard_compras.html', context)
-
 
 
 # ------------------------------------ GESTIÓN DE PRODUCTOS ------------------------------------

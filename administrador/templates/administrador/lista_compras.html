@@ -63,8 +63,8 @@
 
 <div id="confirmModal" class="modal hidden">
   <div class="modal-content">
-    <h3>¿Bloquear Compra?</h3>
-    <p>Las compras bloqueadas pasarán al listado de bloqueados y su estado pasará a "cancelado".</p>
+    <h3>¿Cancelar Compra?</h3>
+    <p>Las compras canceladas serán informadas al proveedor correspondiente.</p>
     <div class="modal-actions">
       <button type="button" id="confirmNo">Cancelar</button>
       <button type="button" id="confirmYes">Confirmar</button>
@@ -72,12 +72,13 @@
   </div>
 </div>
 
-<div id="confirmAprobarModal" class="modal" style="display: none;">
+<div id="confirmAprobarModal" class="modal hidden">
   <div class="modal-content">
-    <p>¿Estás seguro de que deseas aprobar esta compra?</p>
-    <div class="modal-buttons">
-      <button id="confirmAprobarBtn" class="btn-confirm">Sí, aprobar</button>
-      <button id="cancelAprobarBtn" class="btn-cancel">Cancelar</button>
+    <h3>¿Aprobar Compra?</h3>
+    <p>Se creará un lote con la fecha actual y los productos solicitados</p>
+    <div class="modal-actions">     
+      <button type="button" id="cancelAprobarBtn" class="btn-cancel">Cancelar</button>
+      <button type="button" id="confirmAprobarBtn" class="btn-confirm">Confirmar</button>
     </div>
   </div>
 </div>
@@ -169,10 +170,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                     body: new URLSearchParams({ 'compra_id': compraId })
                 })
-
                 .then(res => res.json())
                 .then(data => {
-                    console.log(data); // Útil para depurar
                     if (data.success) {
                         location.reload();
                     } else {
@@ -192,25 +191,24 @@ document.addEventListener('DOMContentLoaded', function () {
         const confirmBtn = document.getElementById('confirmAprobarBtn');
         const cancelBtn = document.getElementById('cancelAprobarBtn');
 
-        modal.style.display = 'block';
+        modal.classList.remove('hidden');
 
-        const closeModal = () => {
-            modal.style.display = 'none';
-            confirmBtn.removeEventListener('click', onConfirm);
-            cancelBtn.removeEventListener('click', closeModal);
-        };
-
-        const onConfirm = () => {
+        function onConfirm() {
             callback();
             closeModal();
-        };
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            confirmBtn.removeEventListener('click', onConfirm);
+            cancelBtn.removeEventListener('click', closeModal);
+        }
 
         confirmBtn.addEventListener('click', onConfirm);
         cancelBtn.addEventListener('click', closeModal);
     }
-});
 
-document.addEventListener('DOMContentLoaded', function () {
+    // Funcionalidad para bloquear compra con modal de confirmación
     const bloquearButtons = document.querySelectorAll('.btn-bloquear');
 
     bloquearButtons.forEach(function (button) {
@@ -223,13 +221,13 @@ document.addEventListener('DOMContentLoaded', function () {
             const confirmYes = document.getElementById('confirmYes');
             const confirmNo = document.getElementById('confirmNo');
 
-            const closeModal = () => {
+            function closeModal() {
                 modal.classList.add('hidden');
                 confirmYes.removeEventListener('click', onConfirm);
                 confirmNo.removeEventListener('click', closeModal);
-            };
+            }
 
-            const onConfirm = () => {
+            function onConfirm() {
                 fetch("{% url 'bloquear_compra' %}", {
                     method: 'POST',
                     headers: {
@@ -253,14 +251,60 @@ document.addEventListener('DOMContentLoaded', function () {
                 .finally(() => {
                     closeModal();
                 });
-            };
+            }
 
             confirmYes.addEventListener('click', onConfirm);
             confirmNo.addEventListener('click', closeModal);
         });
     });
-});
 
+    window.applyFilter = function(filter) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('order_by', filter);
+        url.searchParams.delete('page');
+        window.location.href = url.toString();
+    }
+
+    window.clearOrderFilter = function() {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('order_by');
+        url.searchParams.delete('page');
+        window.location.href = url.toString();
+    }
+
+    const inputBusqueda = document.querySelector('.input-busqueda');
+    if(inputBusqueda){
+        inputBusqueda.addEventListener('keyup', function(event) {
+            const query = event.target.value.toLowerCase();
+
+            const filas = document.querySelectorAll('.tabla-usuarios tbody tr');
+            filas.forEach(fila => {
+                const textoFila = fila.textContent.toLowerCase();
+                fila.style.display = textoFila.includes(query) ? '' : 'none';
+            });
+        });
+    }
+
+    window.onclick = function(event) {
+        const modals = ['confirmModal', 'confirmAprobarModal', 'detalleCompraModal'];
+        modals.forEach(modalId => {
+            const modal = document.getElementById(modalId);
+            if (modal && event.target == modal) {
+                modal.classList.add('hidden');
+            }
+        });
+    };
+
+    const cerrarDetalleCompra = document.getElementById('cerrarDetalleCompra');
+    if(cerrarDetalleCompra){
+        cerrarDetalleCompra.addEventListener('click', () => {
+            const modal = document.getElementById('detalleCompraModal');
+            if(modal){
+                modal.classList.add('hidden');
+            }
+        });
+    }
+});
 </script>
 
 <script src="{% static 'administrador/js/filtro_orden_usuario.js' %}"></script>
