@@ -104,9 +104,37 @@ document.addEventListener("DOMContentLoaded", function () {
     const formsetBody = document.getElementById("formset-body");
     const totalFormsInput = document.querySelector('input[name$="TOTAL_FORMS"]');
 
+    let emptyFormTemplate = null;
+    const firstForm = document.querySelector(".form-detalle");
+    if (firstForm) {
+        emptyFormTemplate = firstForm.cloneNode(true);
+        emptyFormTemplate.querySelectorAll("input, select, textarea").forEach(el => {
+            if (el.tagName === "SELECT") {
+                el.selectedIndex = 0;
+            } else {
+                el.value = "";
+            }
+        });
+    }
+
     addButton.addEventListener("click", function () {
         const currentFormCount = parseInt(totalFormsInput.value);
-        const newForm = document.querySelector(".form-detalle").cloneNode(true);
+
+        let newForm;
+        if (formsetBody.querySelector(".form-detalle")) {
+            newForm = formsetBody.querySelector(".form-detalle").cloneNode(true);
+            newForm.querySelectorAll("input, select, textarea").forEach(el => {
+                if (el.tagName === "SELECT") {
+                    el.selectedIndex = 0;
+                } else {
+                    el.value = "";
+                }
+            });
+        } else if (emptyFormTemplate) {
+            newForm = emptyFormTemplate.cloneNode(true);
+        } else {
+            return;
+        }
 
         newForm.querySelectorAll("input, select, textarea").forEach(function (el) {
             if (el.name) {
@@ -114,11 +142,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
             if (el.id) {
                 el.id = el.id.replace(/-\d+-/, `-${currentFormCount}-`);
-            }
-            if (el.tagName === "SELECT") {
-                el.selectedIndex = 0;
-            } else {
-                el.value = "";
             }
         });
 
@@ -144,7 +167,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
             });
             totalFormsInput.value = rows.length;
-            updateSubmitButtonState();
+            
         }
     });
 });
