@@ -6,3 +6,4 @@ pylint==2.6.0
 pylint-django
 pandas
 xlwt
+openpyxl==3.1.2
