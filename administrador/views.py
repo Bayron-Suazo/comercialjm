@@ -12,7 +12,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .forms import CargaMasivaUsuariosForm
 from registration.models import Profile, Proveedor, Compra, Producto, DetalleCompra, Merma, DetalleLote, Lote, Cliente
-from datetime import datetime
+from datetime import datetime, date
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 from administrador.forms import EditUserProfileForm, CrearProveedorForm, EditarProveedorForm, CompraForm, DetalleCompraForm
@@ -37,6 +37,11 @@ from registration.models import Profile, Venta
 from .forms import ClienteForm
 from django.core.exceptions import ObjectDoesNotExist
 import uuid
+from openpyxl import load_workbook
+import traceback
+from django.utils.crypto import get_random_string
+from openpyxl.utils.datetime import from_excel
+
 
 # ------------------------------------ GESTIÓN DE USUARIOS ------------------------------------
 
@@ -271,83 +276,96 @@ def perfil_view(request):
 
 
 
-def cargar_usuarios(request):
-    if request.method == "POST" and request.FILES.get("archivo"):
-        archivo_csv = request.FILES["archivo"]
-        try:
-            decoded_file = archivo_csv.read().decode('utf-8').splitlines()
-            reader = csv.DictReader(decoded_file)
-
-            for row in reader:
+def convertir_a_fecha(fecha_cruda):
+    try:
+        if isinstance(fecha_cruda, datetime):
+            return fecha_cruda.date()
+        elif isinstance(fecha_cruda, date):
+            return fecha_cruda
+        elif isinstance(fecha_cruda, (int, float)):
+            return from_excel(fecha_cruda).date()
+        elif isinstance(fecha_cruda, str):
+            for fmt in ('%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y'):
                 try:
-                    required_fields = [
-                        'rut', 'email', 'first_name', 'last_name',
-                        'fecha_nacimiento', 'sexo', 'direccion', 'cargo', 'telefono'
-                    ]
-                    for field in required_fields:
-                        if not row.get(field):
-                            raise ValidationError(f"El campo '{field}' es obligatorio.")
+                    return datetime.strptime(fecha_cruda.strip(), fmt).date()
+                except ValueError:
+                    continue
+        return None
+    except Exception as e:
+        print(f"[Error fecha] Valor: {fecha_cruda} - {type(fecha_cruda)} - {e}")
+        return None
 
-                    if User.objects.filter(username=row['rut']).exists():
-                        raise ValidationError(f"El usuario con RUT {row['rut']} ya existe.")
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
+def cargar_usuarios(request):
+    if request.method == 'POST' and request.FILES.get('archivo'):
+        archivo = request.FILES['archivo']
+        if not archivo.name.endswith('.xlsx'):
+            messages.error(request, 'El archivo debe estar en formato .xlsx (Excel).')
+            return redirect('lista_usuarios_activos')
 
-                    cargo = row['cargo'].strip().lower()
-                    if cargo not in ['empleado', 'administrador']:
-                        raise ValidationError(f"El cargo {row['cargo']} no es válido.")
+        try:
+            wb = load_workbook(archivo)
+            ws = wb.active
 
-                    grupo = Group.objects.get(name=cargo.capitalize())
+            headers = [cell.value for cell in ws[1]]
+            expected_headers = ['rut', 'first_name', 'last_name', 'fecha_nacimiento', 'sexo', 'correo', 'telefono', 'direccion', 'cargo']
+            if headers != expected_headers:
+                messages.error(request, 'Las columnas del archivo no coinciden con la plantilla esperada.')
+                return redirect('lista_usuarios_activos')
 
-                    user = User.objects.create_user(
-                        username=row['rut'],
-                        email=row['email'],
-                        first_name=row['first_name'],
-                        last_name=row['last_name'],
-                        password='contraseña_default'
-                    )
-                    user.is_active = True
-                    user.save()
+            for row in ws.iter_rows(min_row=2, values_only=True):
+                rut = str(row[0]).strip() if row[0] is not None else ''
+                first_name = str(row[1]).strip() if row[1] is not None else ''
+                last_name = str(row[2]).strip() if row[2] is not None else ''
+                fecha_nacimiento_excel = row[3]  # No se convierte a str
+                sexo = str(row[4]).strip() if row[4] is not None else ''
+                correo = str(row[5]).strip() if row[5] is not None else ''
+                telefono = str(row[6]).strip() if row[6] is not None else ''
+                direccion = str(row[7]).strip() if row[7] is not None else ''
+                cargos = str(row[8]).strip() if row[8] is not None else ''
 
-                    profile = Profile.objects.create(
-                        user=user,
-                        rut=row['rut'],
-                        fecha_nacimiento=convert_date(row['fecha_nacimiento']),
-                        sexo=row['sexo'],
-                        direccion=row['direccion'],
-                        telefono=row['telefono']
-                    )
+                if Profile.objects.filter(rut=rut).exists():
+                    continue
 
-                    # Asignar grupo al perfil y al usuario
-                    profile.groups.add(grupo)
-                    user.groups.add(grupo)
-                    user.save()
+                fecha_nacimiento = convertir_a_fecha(fecha_nacimiento_excel)
 
-                    print(f"[USUARIO CREADO] {user.username}")
+                password = get_random_string(length=8)
 
-                except ValidationError as e:
-                    print(f"[VALIDATION ERROR] {e}")
-                    messages.error(request, str(e))
-                except Exception as e:
-                    print(f"[ERROR] {row.get('rut', 'desconocido')}: {e}")
-                    messages.error(request, f"Error al procesar usuario {row.get('rut', 'desconocido')}: {e}")
+                user = User.objects.create_user(
+                    username=rut,
+                    email=correo,
+                    first_name=first_name,
+                    last_name=last_name,
+                    password=password
+                )
+                profile = Profile.objects.create(
+                    user=user,
+                    rut=rut,
+                    telefono=telefono,
+                    direccion=direccion,
+                    sexo=sexo,
+                    fecha_nacimiento=fecha_nacimiento,
+                )
 
-            messages.success(request, "Carga masiva completada.")
-            return redirect("lista_usuarios_activos")
+                for nombre_cargo in cargos.split(','):
+                    nombre_cargo = nombre_cargo.strip()
+                    if nombre_cargo:
+                        grupo, _ = Group.objects.get_or_create(name=nombre_cargo)
+                        user.groups.add(grupo)
+                        profile.groups.add(grupo)
+
+            messages.success(request, 'Usuarios cargados correctamente.')
+            return redirect('lista_usuarios_activos')
 
         except Exception as e:
-            messages.error(request, f"Error al procesar archivo: {e}")
-            return redirect("lista_usuarios_activos")
+            traceback.print_exc()
+            messages.error(request, f'Ocurrió un error al procesar el archivo: {e}')
+            return redirect('lista_usuarios_activos')
 
-    return redirect("lista_usuarios_activos")
+    messages.error(request, 'Debes seleccionar un archivo válido.')
+    return redirect('lista_usuarios_activos')
 
-
-
-# Función para convertir las fechas al formato YYYY-MM-DD
-def convert_date(date_str):
-    try:
-        # Convertir de 'DD/MM/YYYY' a 'YYYY-MM-DD'
-        return datetime.strptime(date_str, '%d/%m/%Y').date()
-    except ValueError:
-        return None
 
 
 

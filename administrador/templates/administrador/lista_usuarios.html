@@ -5,6 +5,7 @@
 <head>
 {% block extra_head%}
     <link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
+    <link rel="stylesheet" href="{% static 'administrador/css/modal_carga_masiva.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 {% endblock %}
 </head>
@@ -35,6 +36,25 @@
         {% endfor %}
     </ul>
 {% endif %}
+
+<!-- Modal Carga Masiva -->
+<div id="modalCargaMasiva" class="modal hidden">
+  <div class="modal-content modal-carga">
+    <h3>Carga Masiva de Usuarios</h3>
+    
+    <div id="dropzone" class="dropzone">
+      <p>Arrastra y suelta tu archivo Excel aquí</p>
+      <p>O</p>
+      <input type="file" id="fileInput" accept=".xlsx" hidden>
+      <button type="button" id="selectFileBtn">Seleccionar Archivo</button>
+    </div>
+
+    <div class="modal-actions">
+        <button type="button" id="cerrarModalCarga">Cerrar</button>
+        <a href="{% static 'administrador/plantillas/plantilla_usuarios.xlsx' %}" download class="btn-descargar">Descargar Plantilla</a>
+    </div>
+  </div>
+</div>
 
 <h2 class="titulo">Listado de Usuarios Activos</h2>
 
@@ -154,25 +174,6 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const cargaMasivaBtn = document.getElementById('carga-masiva-btn');
-        const archivoInput = document.getElementById('archivo-csv');
-        const formCargaMasiva = document.getElementById('form-carga-masiva');
-
-        // Al hacer clic en "Carga masiva", abrir el selector de archivo
-        cargaMasivaBtn.addEventListener('click', () => {
-            archivoInput.click();
-        });
-
-        // Cuando el archivo es seleccionado, enviar el formulario
-        archivoInput.addEventListener('change', () => {
-            if (archivoInput.files.length > 0) {
-                formCargaMasiva.submit();
-            }
-        });
-    });
-
-
-    document.addEventListener('DOMContentLoaded', () => {
         const bloquearBtn = document.querySelector('#bloquearBtn');
         const checkboxes = document.querySelectorAll('.select-user');
         const selectAll = document.getElementById('select-all');
@@ -290,6 +291,77 @@
                 });
             });
         });
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const modal = document.getElementById('modalCargaMasiva');
+        const openBtn = document.getElementById('carga-masiva-btn');
+        const closeBtn = document.getElementById('cerrarModalCarga');
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const selectFileBtn = document.getElementById('selectFileBtn');
+
+        openBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            modal.classList.remove('hidden');
+        });
+
+        closeBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+
+        selectFileBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Dropzone drag and drop
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('dragover');
+        });
+
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('dragover');
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) handleFileUpload(file);
+        });
+
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files[0];
+            if (file) handleFileUpload(file);
+        });
+
+        function handleFileUpload(file) {
+            if (!file.name.endsWith('.xlsx')) {
+                alert('Solo se permite archivos Excel (.xlsx)');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('archivo', file);
+
+            fetch("{% url 'cargar_usuarios' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: formData
+            }).then(res => res.json()).then(data => {
+                if (data.success) {
+                    alert('Usuarios cargados correctamente');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            }).catch(err => {
+                alert('Error al subir el archivo');
+            });
+        }
     });
 
 </script>
