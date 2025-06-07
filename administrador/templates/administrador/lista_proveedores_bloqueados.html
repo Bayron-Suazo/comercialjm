@@ -5,13 +5,15 @@
 
 {% block extra_head %}
     <link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
+    <link rel="stylesheet" href="{% static 'administrador/css/modal_carga_masiva.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 {% endblock %}
+
 
 {% block content %}
 
 <div class="acciones-derecha ancho-contenido">
-    <a href="#" class="boton-header" id="carga-masiva-btn">
+    <a href="#" class="boton-header" id="abrirModalCarga">
         Carga masiva
         <img src="{% static 'administrador/svg/carga-masiva.svg' %}">
     </a>
@@ -30,6 +32,39 @@
 </div>
 
 <h2 class="titulo">Listado de Proveedores Bloqueados</h2>
+
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<!-- Modal Carga Masiva -->
+<div id="modalCargaMasiva" class="modal hidden">
+  <div class="modal-content modal-carga">
+    <h3>Carga Masiva de Proveedores</h3>
+
+    <form method="post" action="{% url 'carga_masiva_proveedores' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ carga_masiva_form.as_p }}
+      <div id="dropzone" class="dropzone">
+        <p>Arrastra y suelta tu archivo Excel aquí</p>
+        <p>O</p>
+        <input type="file" name="archivo" id="fileInput" accept=".xlsx,.csv" required hidden>
+        <button type="button" id="selectFileBtn">Seleccionar Archivo</button>
+        <span id="fileName" style="display:block; margin-top: 10px;"></span>
+      </div>
+
+      <div class="modal-actions">
+          <button type="button" id="cerrarModalCarga">Cerrar</button>
+          <button type="submit" class="btn-descargar">Subir Archivo</button>
+          <a href="{% static 'administrador/plantillas/plantilla_proveedores.xlsx' %}" download class="btn-descargar">Descargar Plantilla</a>
+      </div>
+    </form>
+  </div>
+</div>
 
 <div class="busqueda-agregar">
     <input type="text" placeholder="Buscar Proveedores .........." class="input-busqueda">
@@ -133,6 +168,32 @@
 
 {% block extra_js %}
 <script>
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const abrirModal = document.getElementById('abrirModalCarga');
+        const modalCarga = document.getElementById('modalCargaMasiva');
+        const fileInput = document.getElementById('fileInput');
+        const selectFileBtn = document.getElementById('selectFileBtn');
+        const fileName = document.getElementById('fileName');
+        const cerrarModalBtn = document.getElementById('cerrarModalCarga');
+
+        abrirModal.addEventListener('click', (e) => {
+            e.preventDefault();
+            modalCarga.classList.remove('hidden');
+        });
+
+        selectFileBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', () => {
+            fileName.textContent = fileInput.files[0]?.name || '';
+        });
+
+        cerrarModalBtn.addEventListener('click', () => {
+            modalCarga.classList.add('hidden');
+        });
+    });
     
     document.addEventListener('DOMContentLoaded', () => {
         const activarBtn = document.querySelector('#activarBtn');

@@ -5,6 +5,7 @@
 
 {% block extra_head %}
     <link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
+    <link rel="stylesheet" href="{% static 'administrador/css/modal_carga_masiva.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 {% endblock %}
 
@@ -168,23 +169,31 @@
 <script>
 
     document.addEventListener('DOMContentLoaded', () => {
-        const cargaMasivaBtn = document.getElementById('carga-masiva-btn');
-        const archivoInput = document.getElementById('archivo-csv');
-        const formCargaMasiva = document.getElementById('form-carga-masiva');
+        const abrirModal = document.getElementById('abrirModalCarga');
+        const modalCarga = document.getElementById('modalCargaMasiva');
+        const fileInput = document.getElementById('fileInput');
+        const selectFileBtn = document.getElementById('selectFileBtn');
+        const fileName = document.getElementById('fileName');
+        const cerrarModalBtn = document.getElementById('cerrarModalCarga');
 
-        // Al hacer clic en "Carga masiva", abrir el selector de archivo
-        cargaMasivaBtn.addEventListener('click', () => {
-            archivoInput.click();
+        abrirModal.addEventListener('click', (e) => {
+            e.preventDefault();
+            modalCarga.classList.remove('hidden');
         });
 
-        // Cuando el archivo es seleccionado, enviar el formulario
-        archivoInput.addEventListener('change', () => {
-            if (archivoInput.files.length > 0) {
-                formCargaMasiva.submit();
-            }
+        selectFileBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', () => {
+            fileName.textContent = fileInput.files[0]?.name || '';
+        });
+
+        cerrarModalBtn.addEventListener('click', () => {
+            modalCarga.classList.add('hidden');
         });
     });
-    
+        
     document.addEventListener('DOMContentLoaded', () => {
         const activarBtn = document.querySelector('#activarBtn');
         const checkboxes = document.querySelectorAll('.select-user');
