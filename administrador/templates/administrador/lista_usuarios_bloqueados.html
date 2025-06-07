@@ -11,7 +11,7 @@
 {% block content %}
 
 <div class="acciones-derecha ancho-contenido">
-    <a href="#" class="boton-header" id="carga-masiva-btn">
+    <a href="#" class="boton-header" id="abrirModalCarga">
         Carga masiva
         <img src="{% static 'administrador/svg/carga-masiva.svg' %}">
     </a>
@@ -48,11 +48,30 @@
     </div>
 </div>
 
-<form id="form-carga-masiva" action="{% url 'cargar_usuarios' %}" method="POST" enctype="multipart/form-data" style="display: none;">
-    {% csrf_token %}
-    <input type="file" name="archivo" accept=".csv" id="archivo-csv" required>
-    <button type="submit" style="display: none;">Cargar archivo</button>
-</form>
+<!-- Modal Carga Masiva -->
+<div id="modalCargaMasiva" class="modal hidden">
+  <div class="modal-content modal-carga">
+    <h3>Carga Masiva de Usuarios</h3>
+
+    <form method="post" action="{% url 'carga_masiva_usuarios' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ carga_masiva_form.as_p }}
+      <div id="dropzone" class="dropzone">
+        <p>Arrastra y suelta tu archivo Excel aquí</p>
+        <p>O</p>
+        <input type="file" name="archivo" id="fileInput" accept=".xlsx,.csv" required hidden>
+        <button type="button" id="selectFileBtn">Seleccionar Archivo</button>
+        <span id="fileName" style="display:block; margin-top: 10px;"></span>
+      </div>
+
+      <div class="modal-actions">
+          <button type="button" id="cerrarModalCarga">Cerrar</button>
+          <button type="submit" class="btn-descargar">Subir Archivo</button>
+          <a href="{% static 'administrador/plantillas/plantilla_usuarios.xlsx' %}" download class="btn-descargar">Descargar Plantilla</a>
+      </div>
+    </form>
+  </div>
+</div>
 
 <div class="barra-acciones-usuarios ancho-contenido">
     <div class="boton-activar-seleccionados">

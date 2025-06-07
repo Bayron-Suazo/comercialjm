@@ -13,7 +13,7 @@
 {% block content %}
 
 <div class="acciones-derecha ancho-contenido">
-    <a href="#" class="boton-header" id="carga-masiva-btn">
+    <a href="#" class="boton-header" id="abrirModalCarga">
         Carga masiva
         <img src="{% static 'administrador/svg/carga-masiva.svg' %}">
     </a>
@@ -41,18 +41,24 @@
 <div id="modalCargaMasiva" class="modal hidden">
   <div class="modal-content modal-carga">
     <h3>Carga Masiva de Usuarios</h3>
-    
-    <div id="dropzone" class="dropzone">
-      <p>Arrastra y suelta tu archivo Excel aquí</p>
-      <p>O</p>
-      <input type="file" id="fileInput" accept=".xlsx" hidden>
-      <button type="button" id="selectFileBtn">Seleccionar Archivo</button>
-    </div>
 
-    <div class="modal-actions">
-        <button type="button" id="cerrarModalCarga">Cerrar</button>
-        <a href="{% static 'administrador/plantillas/plantilla_usuarios.xlsx' %}" download class="btn-descargar">Descargar Plantilla</a>
-    </div>
+    <form method="post" action="{% url 'carga_masiva_usuarios' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ carga_masiva_form.as_p }}
+      <div id="dropzone" class="dropzone">
+        <p>Arrastra y suelta tu archivo Excel aquí</p>
+        <p>O</p>
+        <input type="file" name="archivo" id="fileInput" accept=".xlsx,.csv" required hidden>
+        <button type="button" id="selectFileBtn">Seleccionar Archivo</button>
+        <span id="fileName" style="display:block; margin-top: 10px;"></span>
+      </div>
+
+      <div class="modal-actions">
+          <button type="button" id="cerrarModalCarga">Cerrar</button>
+          <button type="submit" class="btn-descargar">Subir Archivo</button>
+          <a href="{% static 'administrador/plantillas/plantilla_usuarios.xlsx' %}" download class="btn-descargar">Descargar Plantilla</a>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -75,12 +81,6 @@
         </ul>
     </div>
 </div>
-
-<form id="form-carga-masiva" action="{% url 'cargar_usuarios' %}" method="POST" enctype="multipart/form-data" style="display: none;">
-    {% csrf_token %}
-    <input type="file" name="archivo" accept=".csv" id="archivo-csv" required>
-    <button type="submit" style="display: none;">Cargar archivo</button>
-</form>
 
 <div class="barra-acciones-usuarios ancho-contenido">
     <div class="boton-bloquear-seleccionados">
@@ -173,93 +173,94 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const bloquearBtn = document.querySelector('#bloquearBtn');
-        const checkboxes = document.querySelectorAll('.select-user');
-        const selectAll = document.getElementById('select-all');
+document.addEventListener('DOMContentLoaded', () => {
+    // --- CARGA MASIVA ---
+    const abrirModal = document.getElementById('abrirModalCarga');
+    const modalCarga = document.getElementById('modalCargaMasiva');
+    const fileInput = document.getElementById('fileInput');
+    const selectFileBtn = document.getElementById('selectFileBtn');
+    const fileName = document.getElementById('fileName');
+    const cerrarModalBtn = document.getElementById('cerrarModalCarga');
 
-        function updateBloquearButton() {
-            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
-            bloquearBtn.disabled = !anyChecked;
-            bloquearBtn.classList.toggle('activo', anyChecked);
-        }
+    abrirModal.addEventListener('click', (e) => {
+        e.preventDefault();
+        modalCarga.classList.remove('hidden');
+    });
 
-        checkboxes.forEach(cb => cb.addEventListener('change', updateBloquearButton));
-        selectAll.addEventListener('change', () => {
-            checkboxes.forEach(cb => cb.checked = selectAll.checked);
-            updateBloquearButton();
-        });
+    selectFileBtn.addEventListener('click', () => {
+        fileInput.click();
+    });
 
-        bloquearBtn.addEventListener('click', () => {
-            const userIds = Array.from(checkboxes)
-                .filter(cb => cb.checked)
-                .map(cb => cb.getAttribute('data-user-id'));
+    fileInput.addEventListener('change', () => {
+        fileName.textContent = fileInput.files[0]?.name || '';
+    });
 
-            if (userIds.length === 0) return;
-        });
+    cerrarModalBtn.addEventListener('click', () => {
+        modalCarga.classList.add('hidden');
+    });
 
+    // --- BLOQUEAR USUARIOS ---
+    const bloquearBtn = document.querySelector('#bloquearBtn');
+    const checkboxes = document.querySelectorAll('.select-user');
+    const selectAll = document.getElementById('select-all');
+
+    function updateBloquearButton() {
+        const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+        bloquearBtn.disabled = !anyChecked;
+        bloquearBtn.classList.toggle('activo', anyChecked);
+    }
+
+    checkboxes.forEach(cb => cb.addEventListener('change', updateBloquearButton));
+    selectAll.addEventListener('change', () => {
+        checkboxes.forEach(cb => cb.checked = selectAll.checked);
         updateBloquearButton();
     });
 
+    // Confirmación modal
+    const modalConfirm = document.getElementById('confirmModal');
+    const confirmYes = document.getElementById('confirmYes');
+    const confirmNo = document.getElementById('confirmNo');
+    let confirmCallback = null;
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const modal = document.getElementById('confirmModal');
-        const modalText = document.getElementById('modalText');
-        const confirmYes = document.getElementById('confirmYes');
-        const confirmNo = document.getElementById('confirmNo');
+    function showConfirmModal(onConfirm) {
+        modalConfirm.classList.remove('hidden');
+        confirmCallback = onConfirm;
+    }
 
-        let onConfirmAction = null;
-
-        function showModal(message, onConfirm) {
-            modalText.textContent = message;
-            modal.classList.remove('hidden');
-            onConfirmAction = onConfirm;
-        }
-
-        confirmYes.addEventListener('click', () => {
-            modal.classList.add('hidden');
-            if (onConfirmAction) onConfirmAction();
-        });
-
-        confirmNo.addEventListener('click', () => {
-            modal.classList.add('hidden');
-            onConfirmAction = null;
-        });
-        
+    confirmYes.addEventListener('click', () => {
+        modalConfirm.classList.add('hidden');
+        if (confirmCallback) confirmCallback();
     });
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const modal = document.getElementById('confirmModal');
-        const confirmYes = document.getElementById('confirmYes');
-        const confirmNo = document.getElementById('confirmNo');
+    confirmNo.addEventListener('click', () => {
+        modalConfirm.classList.add('hidden');
+        confirmCallback = null;
+    });
 
-        let confirmCallback = null;
+    bloquearBtn.addEventListener('click', () => {
+        const usuarioIds = Array.from(checkboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.dataset.usuarioId);
 
-        function showConfirmModal(onConfirm) {
-            modal.classList.remove('hidden');
-            confirmCallback = onConfirm;
-        }
+        if (usuarioIds.length === 0) return;
 
-        confirmYes.addEventListener('click', () => {
-            modal.classList.add('hidden');
-            if (confirmCallback) confirmCallback();
+        showConfirmModal(() => {
+            fetch("{% url 'bloquear_usuario' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: new URLSearchParams({ 'usuario_ids': JSON.stringify(usuarioIds) })
+            }).then(res => res.json()).then(data => {
+                if (data.success) location.reload();
+            });
         });
+    });
 
-        confirmNo.addEventListener('click', () => {
-            modal.classList.add('hidden');
-            confirmCallback = null;
-        });
-
-        const bloquearBtn = document.querySelector('#bloquearBtn');
-        const checkboxes = document.querySelectorAll('.select-user');
-
-        bloquearBtn.addEventListener('click', () => {
-            const userIds = Array.from(checkboxes)
-                .filter(cb => cb.checked)
-                .map(cb => cb.dataset.userId);
-
-            if (userIds.length === 0) return;
-
+    document.querySelectorAll('.btn-bloquear').forEach(button => {
+        button.addEventListener('click', () => {
+            const usuarioId = button.dataset.usuarioId;
             showConfirmModal(() => {
                 fetch("{% url 'bloquear_usuario' %}", {
                     method: 'POST',
@@ -267,103 +268,16 @@
                         'Content-Type': 'application/x-www-form-urlencoded',
                         'X-CSRFToken': '{{ csrf_token }}'
                     },
-                    body: new URLSearchParams({ 'user_ids': JSON.stringify(userIds) })
+                    body: new URLSearchParams({ 'usuario_id': usuarioId })
                 }).then(res => res.json()).then(data => {
                     if (data.success) location.reload();
                 });
             });
         });
-
-        document.querySelectorAll('.btn-bloquear').forEach(button => {
-            button.addEventListener('click', () => {
-                const userId = button.dataset.userId;
-                showConfirmModal(() => {
-                    fetch("{% url 'bloquear_usuario' %}", {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                            'X-CSRFToken': '{{ csrf_token }}'
-                        },
-                        body: new URLSearchParams({ 'user_id': userId })
-                    }).then(res => res.json()).then(data => {
-                        if (data.success) location.reload();
-                    });
-                });
-            });
-        });
     });
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const modal = document.getElementById('modalCargaMasiva');
-        const openBtn = document.getElementById('carga-masiva-btn');
-        const closeBtn = document.getElementById('cerrarModalCarga');
-        const dropzone = document.getElementById('dropzone');
-        const fileInput = document.getElementById('fileInput');
-        const selectFileBtn = document.getElementById('selectFileBtn');
-
-        openBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            modal.classList.remove('hidden');
-        });
-
-        closeBtn.addEventListener('click', () => {
-            modal.classList.add('hidden');
-        });
-
-        selectFileBtn.addEventListener('click', () => {
-            fileInput.click();
-        });
-
-        // Dropzone drag and drop
-        dropzone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropzone.classList.add('dragover');
-        });
-
-        dropzone.addEventListener('dragleave', () => {
-            dropzone.classList.remove('dragover');
-        });
-
-        dropzone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropzone.classList.remove('dragover');
-            const file = e.dataTransfer.files[0];
-            if (file) handleFileUpload(file);
-        });
-
-        fileInput.addEventListener('change', () => {
-            const file = fileInput.files[0];
-            if (file) handleFileUpload(file);
-        });
-
-        function handleFileUpload(file) {
-            if (!file.name.endsWith('.xlsx')) {
-                alert('Solo se permite archivos Excel (.xlsx)');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('archivo', file);
-
-            fetch("{% url 'cargar_usuarios' %}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: formData
-            }).then(res => res.json()).then(data => {
-                if (data.success) {
-                    alert('Usuarios cargados correctamente');
-                    location.reload();
-                } else {
-                    alert('Error: ' + data.error);
-                }
-            }).catch(err => {
-                alert('Error al subir el archivo');
-            });
-        }
-    });
-
+    updateBloquearButton();
+});
 </script>
 
 <script src="{% static 'administrador/js/filtro_orden_usuario.js' %}"></script>

@@ -43,6 +43,8 @@ from django.utils.crypto import get_random_string
 from openpyxl.utils.datetime import from_excel
 from django.utils.timezone import now
 import re
+from django.utils.dateparse import parse_date
+from django.core.validators import validate_email
 
 # ------------------------------------ GESTIÓN DE USUARIOS ------------------------------------
 
@@ -276,95 +278,138 @@ def perfil_view(request):
 # ------------------ CARGA MASIVA ------------------
 
 
-
-def convertir_a_fecha(fecha_cruda):
-    try:
-        if isinstance(fecha_cruda, datetime):
-            return fecha_cruda.date()
-        elif isinstance(fecha_cruda, date):
-            return fecha_cruda
-        elif isinstance(fecha_cruda, (int, float)):
-            return from_excel(fecha_cruda).date()
-        elif isinstance(fecha_cruda, str):
-            for fmt in ('%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y'):
-                try:
-                    return datetime.strptime(fecha_cruda.strip(), fmt).date()
-                except ValueError:
-                    continue
-        return None
-    except Exception as e:
-        print(f"[Error fecha] Valor: {fecha_cruda} - {type(fecha_cruda)} - {e}")
-        return None
-
-@login_required
-@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name='Administrador').exists())
-def cargar_usuarios(request):
+def carga_masiva_usuarios(request):
     if request.method == 'POST' and request.FILES.get('archivo'):
         archivo = request.FILES['archivo']
-        if not archivo.name.endswith('.xlsx'):
-            messages.error(request, 'El archivo debe estar en formato .xlsx (Excel).')
-            return redirect('lista_usuarios_activos')
 
         try:
-            wb = load_workbook(archivo)
-            ws = wb.active
+            df = pd.read_excel(archivo)
 
-            headers = [cell.value for cell in ws[1]]
-            expected_headers = ['rut', 'first_name', 'last_name', 'fecha_nacimiento', 'sexo', 'correo', 'telefono', 'direccion', 'cargo']
-            if headers != expected_headers:
-                messages.error(request, 'Las columnas del archivo no coinciden con la plantilla esperada.')
-                return redirect('lista_usuarios_activos')
+            campos_requeridos = [
+                'rut', 'first_name', 'last_name', 'sexo', 'correo',
+                'telefono', 'direccion', 'fecha_nacimiento', 'cargo'
+            ]
+            for campo in campos_requeridos:
+                if campo not in df.columns:
+                    messages.error(request, f"Falta la columna: {campo}")
+                    return redirect('lista_usuarios_activos')
 
-            for row in ws.iter_rows(min_row=2, values_only=True):
-                rut = str(row[0]).strip() if row[0] is not None else ''
-                first_name = str(row[1]).strip() if row[1] is not None else ''
-                last_name = str(row[2]).strip() if row[2] is not None else ''
-                fecha_nacimiento_excel = row[3]  # No se convierte a str
-                sexo = str(row[4]).strip() if row[4] is not None else ''
-                correo = str(row[5]).strip() if row[5] is not None else ''
-                telefono = str(row[6]).strip() if row[6] is not None else ''
-                direccion = str(row[7]).strip() if row[7] is not None else ''
-                cargos = str(row[8]).strip() if row[8] is not None else ''
+            usuarios_creados = 0
+            usuarios_omitidos = 0
 
-                if Profile.objects.filter(rut=rut).exists():
+            for index, row in df.iterrows():
+                fila = index + 2
+
+                try:
+                    rut = str(row['rut']).strip()
+                    first_name = str(row['first_name']).strip()
+                    last_name = str(row['last_name']).strip()
+                    sexo = str(row['sexo']).strip().upper()
+                    correo = str(row['correo']).strip()
+                    telefono = str(row['telefono']).strip()
+                    direccion = str(row['direccion']).strip()
+                    cargo = str(row['cargo']).strip()
+
+                    # Validar RUT
+                    if not re.match(r'^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$', rut):
+                        messages.warning(request, f"Fila {fila}: RUT inválido (formato esperado XX.XXX.XXX-X)")
+                        usuarios_omitidos += 1
+                        continue
+
+                    # Validar nombres
+                    if not re.match(r'^([A-Za-zÁÉÍÓÚáéíóúÑñ]+(\s)?){1,3}$', first_name):
+                        messages.warning(request, f"Fila {fila}: Nombre inválido (solo letras, máximo 3 palabras)")
+                        usuarios_omitidos += 1
+                        continue
+
+                    # Validar apellidos
+                    if not re.match(r'^([A-Za-zÁÉÍÓÚáéíóúÑñ]+(\s)?){1,2}$', last_name):
+                        messages.warning(request, f"Fila {fila}: Apellido inválido (solo letras, máximo 2 palabras)")
+                        usuarios_omitidos += 1
+                        continue
+
+                    # Validar sexo
+                    if sexo not in ['M', 'F']:
+                        messages.warning(request, f"Fila {fila}: Sexo inválido (solo 'M' o 'F')")
+                        usuarios_omitidos += 1
+                        continue
+
+                    # Validar correo
+                    try:
+                        validate_email(correo)
+                    except ValidationError:
+                        messages.warning(request, f"Fila {fila}: Correo inválido")
+                        usuarios_omitidos += 1
+                        continue
+
+                    # Validar teléfono
+                    if not re.match(r'^\d\s\d{4}\s\d{4}$', telefono):
+                        messages.warning(request, f"Fila {fila}: Teléfono inválido (formato esperado: 9 1234 5678)")
+                        usuarios_omitidos += 1
+                        continue
+
+                    # Validar cargo
+                    if cargo not in ['Empleado', 'Administrador']:
+                        messages.warning(request, f"Fila {fila}: Cargo inválido (solo 'Empleado' o 'Administrador')")
+                        usuarios_omitidos += 1
+                        continue
+
+                    # Validar existencia
+                    if Profile.objects.filter(rut=rut).exists() or User.objects.filter(username=rut).exists():
+                        messages.warning(request, f"Fila {fila}: Usuario con ese RUT ya existe")
+                        usuarios_omitidos += 1
+                        continue
+
+                    # Fecha de nacimiento
+                    fecha_raw = row['fecha_nacimiento']
+                    if pd.isna(fecha_raw):
+                        fecha_nacimiento = None
+                    elif isinstance(fecha_raw, str):
+                        fecha_nacimiento = parse_date(fecha_raw)
+                    else:
+                        fecha_nacimiento = pd.to_datetime(fecha_raw).date()
+
+                    # Crear usuario
+                    password = get_random_string(12)
+                    user = User(
+                        username=rut,
+                        first_name=first_name,
+                        last_name=last_name,
+                        email=correo
+                    )
+                    user.set_password(password)
+                    user.save()
+
+                    # Crear perfil
+                    profile = Profile.objects.create(
+                        user=user,
+                        rut=rut,
+                        telefono=telefono,
+                        fecha_nacimiento=fecha_nacimiento,
+                        direccion=direccion,
+                        sexo=sexo
+                    )
+
+                    grupo, _ = Group.objects.get_or_create(name=cargo)
+                    profile.groups.add(grupo)
+
+                    usuarios_creados += 1
+
+                except Exception as e:
+                    messages.warning(request, f"Fila {fila}: Error inesperado - {str(e)}")
+                    usuarios_omitidos += 1
                     continue
 
-                fecha_nacimiento = convertir_a_fecha(fecha_nacimiento_excel)
-
-                password = get_random_string(length=8)
-
-                user = User.objects.create_user(
-                    username=rut,
-                    email=correo,
-                    first_name=first_name,
-                    last_name=last_name,
-                    password=password
-                )
-                profile = Profile.objects.create(
-                    user=user,
-                    rut=rut,
-                    telefono=telefono,
-                    direccion=direccion,
-                    sexo=sexo,
-                    fecha_nacimiento=fecha_nacimiento,
-                )
-
-                for nombre_cargo in cargos.split(','):
-                    nombre_cargo = nombre_cargo.strip()
-                    if nombre_cargo:
-                        grupo, _ = Group.objects.get_or_create(name=nombre_cargo)
-                        user.groups.add(grupo)
-                        profile.groups.add(grupo)
-
-            messages.success(request, 'Usuarios cargados correctamente.')
-            return redirect('lista_usuarios_activos')
+            messages.success(
+                request,
+                f"Carga completada. {usuarios_creados} usuarios creados, {usuarios_omitidos} filas omitidas por errores."
+            )
 
         except Exception as e:
-            traceback.print_exc()
-            messages.error(request, f'Ocurrió un error al procesar el archivo: {e}')
-            return redirect('lista_usuarios_activos')
+            messages.error(request, f"Ocurrió un error al procesar el archivo: {str(e)}")
 
-    messages.error(request, 'Debes seleccionar un archivo válido.')
+        return redirect('lista_usuarios_activos')
+
     return redirect('lista_usuarios_activos')
 
 

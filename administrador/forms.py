@@ -159,8 +159,7 @@ class UserProfileForm(forms.ModelForm):
  
     
 class CargaMasivaUsuariosForm(forms.Form):
-    archivo = forms.FileField()
-
+    archivo = forms.FileField(label="Archivo Excel", required=True)
 
 
 
@@ -578,3 +577,5 @@ class ClienteForm(forms.ModelForm):
     
 class CargaMasivaProveedorForm(forms.Form):
     archivo = forms.FileField(label="Archivo Excel", required=True)
+
+    
