@@ -15,7 +15,7 @@ from registration.models import Profile, Proveedor, Compra, Producto, DetalleCom
 from datetime import datetime, date
 from django.core.exceptions import ValidationError
 from django.contrib import messages
-from administrador.forms import EditUserProfileForm, CrearProveedorForm, EditarProveedorForm, CompraForm, DetalleCompraForm
+from administrador.forms import EditUserProfileForm, CrearProveedorForm, EditarProveedorForm, CompraForm, DetalleCompraForm, CargaMasivaProveedorForm, CargaMasivaUsuariosForm
 from django.views.decorators.http import require_POST
 from .forms import PerfilForm
 from django.db.models import Count, Avg, Max, Min
@@ -41,7 +41,8 @@ from openpyxl import load_workbook
 import traceback
 from django.utils.crypto import get_random_string
 from openpyxl.utils.datetime import from_excel
-
+from django.utils.timezone import now
+import re
 
 # ------------------------------------ GESTIÓN DE USUARIOS ------------------------------------
 
@@ -606,6 +607,9 @@ def dashboard_proveedores(request):
     }
 
     return render(request, 'administrador/dashboard_proveedores.html', context)
+
+
+# ------------------------------------ CARGA MASIVA DE PROVEEDORES ------------------------------------
 
 
 

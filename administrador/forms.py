@@ -575,3 +575,6 @@ class ClienteForm(forms.ModelForm):
         if not re.match(r'^9\d{8}$', telefono):
             raise ValidationError("El teléfono debe comenzar con 9 y tener 9 dígitos en total.")
         return telefono
+    
+class CargaMasivaProveedorForm(forms.Form):
+    archivo = forms.FileField(label="Archivo Excel", required=True)

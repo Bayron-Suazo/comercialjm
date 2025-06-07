@@ -2,17 +2,18 @@
 {% load static %}
 
 {% block title %}Listado de Proveedores Activos{% endblock %}
-<head>
+
 {% block extra_head%}
     <link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
+    <link rel="stylesheet" href="{% static 'administrador/css/modal_carga_masiva.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 {% endblock %}
-</head>
+
 
 {% block content %}
 
 <div class="acciones-derecha ancho-contenido">
-    <a href="#" class="boton-header" id="carga-masiva-btn">
+    <a href="#" class="boton-header" id="abrirModalCarga">
         Carga masiva
         <img src="{% static 'administrador/svg/carga-masiva.svg' %}">
     </a>
@@ -35,6 +36,31 @@
         {% endfor %}
     </ul>
 {% endif %}
+
+<!-- Modal Carga Masiva -->
+<div id="modalCargaMasiva" class="modal hidden">
+  <div class="modal-content modal-carga">
+    <h3>Carga Masiva de Proveedores</h3>
+
+    <form method="post" action="{% url 'carga_masiva_proveedores' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ carga_masiva_form.as_p }}
+      <div id="dropzone" class="dropzone">
+        <p>Arrastra y suelta tu archivo Excel aquí</p>
+        <p>O</p>
+        <input type="file" name="archivo" id="fileInput" accept=".xlsx,.csv" required hidden>
+        <button type="button" id="selectFileBtn">Seleccionar Archivo</button>
+        <span id="fileName" style="display:block; margin-top: 10px;"></span>
+      </div>
+
+      <div class="modal-actions">
+          <button type="button" id="cerrarModalCarga">Cerrar</button>
+          <button type="submit" class="btn-descargar">Subir Archivo</button>
+          <a href="{% static 'administrador/plantillas/plantilla_proveedores.xlsx' %}" download class="btn-descargar">Descargar Plantilla</a>
+      </div>
+    </form>
+  </div>
+</div>
 
 <h2 class="titulo">Listado de Proveedores Activos</h2>
 
@@ -138,94 +164,94 @@
 
 {% block extra_js %}
 <script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- CARGA MASIVA ---
+    const abrirModal = document.getElementById('abrirModalCarga');
+    const modalCarga = document.getElementById('modalCargaMasiva');
+    const fileInput = document.getElementById('fileInput');
+    const selectFileBtn = document.getElementById('selectFileBtn');
+    const fileName = document.getElementById('fileName');
+    const cerrarModalBtn = document.getElementById('cerrarModalCarga');
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const bloquearBtn = document.querySelector('#bloquearBtn');
-        const checkboxes = document.querySelectorAll('.select-user');
-        const selectAll = document.getElementById('select-all');
+    abrirModal.addEventListener('click', (e) => {
+        e.preventDefault();
+        modalCarga.classList.remove('hidden');
+    });
 
-        function updateBloquearButton() {
-            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
-            bloquearBtn.disabled = !anyChecked;
-            bloquearBtn.classList.toggle('activo', anyChecked);
-        }
+    selectFileBtn.addEventListener('click', () => {
+        fileInput.click();
+    });
 
-        checkboxes.forEach(cb => cb.addEventListener('change', updateBloquearButton));
-        selectAll.addEventListener('change', () => {
-            checkboxes.forEach(cb => cb.checked = selectAll.checked);
-            updateBloquearButton();
-        });
+    fileInput.addEventListener('change', () => {
+        fileName.textContent = fileInput.files[0]?.name || '';
+    });
 
-        bloquearBtn.addEventListener('click', () => {
-            const proveedorIds = Array.from(checkboxes)
-                .filter(cb => cb.checked)
-                .map(cb => cb.getAttribute('data-proveedor-id'));
+    cerrarModalBtn.addEventListener('click', () => {
+        modalCarga.classList.add('hidden');
+    });
 
-            if (proveedorIds.length === 0) return;
-        });
+    // --- BLOQUEAR PROVEEDORES ---
+    const bloquearBtn = document.querySelector('#bloquearBtn');
+    const checkboxes = document.querySelectorAll('.select-user');
+    const selectAll = document.getElementById('select-all');
 
+    function updateBloquearButton() {
+        const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+        bloquearBtn.disabled = !anyChecked;
+        bloquearBtn.classList.toggle('activo', anyChecked);
+    }
+
+    checkboxes.forEach(cb => cb.addEventListener('change', updateBloquearButton));
+    selectAll.addEventListener('change', () => {
+        checkboxes.forEach(cb => cb.checked = selectAll.checked);
         updateBloquearButton();
     });
 
+    // Confirmación modal
+    const modalConfirm = document.getElementById('confirmModal');
+    const confirmYes = document.getElementById('confirmYes');
+    const confirmNo = document.getElementById('confirmNo');
+    let confirmCallback = null;
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const modal = document.getElementById('confirmModal');
-        const modalText = document.getElementById('modalText');
-        const confirmYes = document.getElementById('confirmYes');
-        const confirmNo = document.getElementById('confirmNo');
+    function showConfirmModal(onConfirm) {
+        modalConfirm.classList.remove('hidden');
+        confirmCallback = onConfirm;
+    }
 
-        let onConfirmAction = null;
-
-        function showModal(message, onConfirm) {
-            modalText.textContent = message;
-            modal.classList.remove('hidden');
-            onConfirmAction = onConfirm;
-        }
-
-        confirmYes.addEventListener('click', () => {
-            modal.classList.add('hidden');
-            if (onConfirmAction) onConfirmAction();
-        });
-
-        confirmNo.addEventListener('click', () => {
-            modal.classList.add('hidden');
-            onConfirmAction = null;
-        });
-        
+    confirmYes.addEventListener('click', () => {
+        modalConfirm.classList.add('hidden');
+        if (confirmCallback) confirmCallback();
     });
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const modal = document.getElementById('confirmModal');
-        const confirmYes = document.getElementById('confirmYes');
-        const confirmNo = document.getElementById('confirmNo');
+    confirmNo.addEventListener('click', () => {
+        modalConfirm.classList.add('hidden');
+        confirmCallback = null;
+    });
 
-        let confirmCallback = null;
+    bloquearBtn.addEventListener('click', () => {
+        const proveedorIds = Array.from(checkboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.dataset.proveedorId);
 
-        function showConfirmModal(onConfirm) {
-            modal.classList.remove('hidden');
-            confirmCallback = onConfirm;
-        }
+        if (proveedorIds.length === 0) return;
 
-        confirmYes.addEventListener('click', () => {
-            modal.classList.add('hidden');
-            if (confirmCallback) confirmCallback();
+        showConfirmModal(() => {
+            fetch("{% url 'bloquear_proveedor' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: new URLSearchParams({ 'proveedor_ids': JSON.stringify(proveedorIds) })
+            }).then(res => res.json()).then(data => {
+                if (data.success) location.reload();
+            });
         });
+    });
 
-        confirmNo.addEventListener('click', () => {
-            modal.classList.add('hidden');
-            confirmCallback = null;
-        });
-
-        const bloquearBtn = document.querySelector('#bloquearBtn');
-        const checkboxes = document.querySelectorAll('.select-user');
-
-        bloquearBtn.addEventListener('click', () => {
-            const proveedorIds = Array.from(checkboxes)
-                .filter(cb => cb.checked)
-                .map(cb => cb.dataset.proveedorId);
-
-            if (proveedorIds.length === 0) return;
-
+    document.querySelectorAll('.btn-bloquear').forEach(button => {
+        button.addEventListener('click', () => {
+            const proveedorId = button.dataset.proveedorId;
             showConfirmModal(() => {
                 fetch("{% url 'bloquear_proveedor' %}", {
                     method: 'POST',
@@ -233,32 +259,16 @@
                         'Content-Type': 'application/x-www-form-urlencoded',
                         'X-CSRFToken': '{{ csrf_token }}'
                     },
-                    body: new URLSearchParams({ 'proveedor_ids': JSON.stringify(proveedorIds) })
+                    body: new URLSearchParams({ 'proveedor_id': proveedorId })
                 }).then(res => res.json()).then(data => {
                     if (data.success) location.reload();
                 });
             });
         });
-
-        document.querySelectorAll('.btn-bloquear').forEach(button => {
-            button.addEventListener('click', () => {
-                const proveedorId = button.dataset.proveedorId;
-                showConfirmModal(() => {
-                    fetch("{% url 'bloquear_proveedor' %}", {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                            'X-CSRFToken': '{{ csrf_token }}'
-                        },
-                        body: new URLSearchParams({ 'proveedor_id': proveedorId })
-                    }).then(res => res.json()).then(data => {
-                        if (data.success) location.reload();
-                    });
-                });
-            });
-        });
     });
 
+    updateBloquearButton();
+});
 </script>
 
 <script src="{% static 'administrador/js/filtro_orden_usuario.js' %}"></script>
