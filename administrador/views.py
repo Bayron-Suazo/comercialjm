@@ -184,7 +184,6 @@ def editar_usuario(request, user_id):
 
 
 
-@user_passes_test(lambda u: u.is_superuser)
 @require_POST
 @login_required
 def activar_usuario(request):
@@ -215,7 +214,6 @@ def activar_usuario(request):
 
 
 
-@user_passes_test(lambda u: u.is_superuser)
 @require_POST
 @login_required
 def bloquear_usuario(request):
@@ -528,7 +526,6 @@ def agregar_proveedor(request):
 
 
 
-@user_passes_test(lambda u: u.is_superuser)
 @require_POST
 @login_required
 def activar_proveedor(request):
@@ -554,7 +551,6 @@ def activar_proveedor(request):
     
 
 
-@user_passes_test(lambda u: u.is_superuser)
 @require_POST
 @login_required
 def bloquear_proveedor(request):

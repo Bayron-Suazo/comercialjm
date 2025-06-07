@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateBloquearButton();
     });
 
-    // Confirmación modal
+    // Modal confirmación
     const modalConfirm = document.getElementById('confirmModal');
     const confirmYes = document.getElementById('confirmYes');
     const confirmNo = document.getElementById('confirmNo');
@@ -237,38 +237,54 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmCallback = null;
     });
 
-    bloquearBtn.addEventListener('click', () => {
-        const usuarioIds = Array.from(checkboxes)
-            .filter(cb => cb.checked)
-            .map(cb => cb.dataset.usuarioId);
+    function getCSRFToken() {
+        let csrfToken = null;
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [key, value] = cookie.trim().split('=');
+            if (key === 'csrftoken') {
+                csrfToken = value;
+                break;
+            }
+        }
+        return csrfToken;
+    }
 
-        if (usuarioIds.length === 0) return;
+    // Bloquear usuarios seleccionados
+    bloquearBtn.addEventListener('click', () => {
+        const userIds = Array.from(checkboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.dataset.userId);
+
+        if (userIds.length === 0) return;
 
         showConfirmModal(() => {
-            fetch("{% url 'bloquear_usuario' %}", {
+            fetch("{% url 'bloquear_usuario' %}", { // Ajusta la URL si es necesario
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': '{{ csrf_token }}'
+                    'X-CSRFToken': getCSRFToken()
                 },
-                body: new URLSearchParams({ 'usuario_ids': JSON.stringify(usuarioIds) })
+                body: new URLSearchParams({ 'user_ids': JSON.stringify(userIds) })
             }).then(res => res.json()).then(data => {
                 if (data.success) location.reload();
             });
         });
     });
 
+    // Bloquear usuario individual (ícono de candado)
     document.querySelectorAll('.btn-bloquear').forEach(button => {
         button.addEventListener('click', () => {
-            const usuarioId = button.dataset.usuarioId;
+            const userId = button.dataset.userId;
+
             showConfirmModal(() => {
-                fetch("{% url 'bloquear_usuario' %}", {
+                fetch("{% url 'bloquear_usuario' %}", { // Ajusta la URL si es necesario
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
-                        'X-CSRFToken': '{{ csrf_token }}'
+                        'X-CSRFToken': getCSRFToken()
                     },
-                    body: new URLSearchParams({ 'usuario_id': usuarioId })
+                    body: new URLSearchParams({ 'user_id': userId })
                 }).then(res => res.json()).then(data => {
                     if (data.success) location.reload();
                 });
