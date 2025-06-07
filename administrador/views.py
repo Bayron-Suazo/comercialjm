@@ -609,11 +609,13 @@ def dashboard_proveedores(request):
     return render(request, 'administrador/dashboard_proveedores.html', context)
 
 
+
 # ------------------------------------ CARGA MASIVA DE PROVEEDORES ------------------------------------
 
 
 
 @login_required
+@require_POST
 @require_POST
 def carga_masiva_proveedores(request):
     form = CargaMasivaProveedorForm(request.POST, request.FILES)
@@ -621,57 +623,78 @@ def carga_masiva_proveedores(request):
     if form.is_valid():
         archivo = request.FILES['archivo']
         try:
-            # Determinar si es Excel o CSV
+            # Leer archivo
             if archivo.name.endswith('.xlsx'):
                 df = pd.read_excel(archivo)
             elif archivo.name.endswith('.csv'):
                 df = pd.read_csv(archivo)
             else:
-                messages.error(request, "Formato de archivo no soportado. Usa .xlsx o .csv.")
+                messages.error(request, "Formato no soportado. Usa .xlsx o .csv.")
                 return redirect('lista_proveedores_activos')
 
-            # Validación de columnas requeridas
             columnas_requeridas = ['nombre', 'rut', 'telefono', 'correo', 'direccion']
             if not all(col in df.columns for col in columnas_requeridas):
-                messages.error(request, "El archivo no contiene las columnas requeridas.")
+                messages.error(request, "Faltan columnas requeridas.")
                 return redirect('lista_proveedores_activos')
 
-            # Recorremos el dataframe y registramos proveedores
-            errores = []
-            nuevos = 0
+            errores, nuevos = [], 0
 
             for index, row in df.iterrows():
+                fila = index + 2  # Excel: fila 1 = encabezado
+
+                nombre = str(row['nombre']).strip()
                 rut = str(row['rut']).strip()
-                if not rut:
-                    errores.append(f"Fila {index + 2}: RUT vacío.")
+                telefono = str(row.get('telefono', '')).strip()
+                correo = str(row['correo']).strip()
+                direccion = str(row.get('direccion', '')).strip()
+
+                # Validaciones personalizadas
+                if not re.match(r"^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$", rut):
+                    errores.append(f"Fila {fila}: RUT inválido ({rut}). Formato: XX.XXX.XXX-X")
                     continue
 
                 if Proveedor.objects.filter(rut=rut).exists():
-                    errores.append(f"Fila {index + 2}: RUT {rut} ya registrado.")
+                    errores.append(f"Fila {fila}: RUT {rut} ya está registrado.")
                     continue
 
+                if re.search(r"[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]", nombre):
+                    errores.append(f"Fila {fila}: Nombre inválido. Solo letras y espacios.")
+                    continue
+
+                if not re.match(r"^\d\s\d{4}\s\d{4}$", telefono):
+                    errores.append(f"Fila {fila}: Teléfono inválido ({telefono}). Formato: 9 8765 4321")
+                    continue
+
+                if not re.match(r"^[\w\.-]+@[\w\.-]+\.\w+$", correo):
+                    errores.append(f"Fila {fila}: Correo inválido ({correo})")
+                    continue
+
+                # Crear proveedor
                 proveedor = Proveedor(
-                    nombre=str(row['nombre']).strip(),
+                    nombre=nombre,
                     rut=rut,
-                    telefono=str(row.get('telefono', '')).strip(),
-                    correo=str(row['correo']).strip(),
-                    direccion=str(row.get('direccion', '')).strip(),
+                    telefono=telefono,
+                    correo=correo,
+                    direccion=direccion,
                     estado=True
                 )
                 proveedor.save()
                 nuevos += 1
 
             if nuevos:
-                messages.success(request, f"Se cargaron correctamente {nuevos} proveedores.")
+                messages.success(request, f"{nuevos} proveedores cargados correctamente.")
             if errores:
                 for e in errores:
                     messages.warning(request, e)
+
         except Exception as e:
-            messages.error(request, f"Ocurrió un error al procesar el archivo: {str(e)}")
+            messages.error(request, f"Error al procesar archivo: {str(e)}")
     else:
-        messages.error(request, "Formulario inválido. Asegúrate de subir un archivo válido.")
+        messages.error(request, "Formulario inválido. Sube un archivo válido.")
 
     return redirect('lista_proveedores_activos')
+
+
 
 # ------------------------------------ FIN GESTIÓN DE PROVEEDORES ------------------------------------
 
