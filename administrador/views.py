@@ -613,6 +613,66 @@ def dashboard_proveedores(request):
 
 
 
+@login_required
+@require_POST
+def carga_masiva_proveedores(request):
+    form = CargaMasivaProveedorForm(request.POST, request.FILES)
+
+    if form.is_valid():
+        archivo = request.FILES['archivo']
+        try:
+            # Determinar si es Excel o CSV
+            if archivo.name.endswith('.xlsx'):
+                df = pd.read_excel(archivo)
+            elif archivo.name.endswith('.csv'):
+                df = pd.read_csv(archivo)
+            else:
+                messages.error(request, "Formato de archivo no soportado. Usa .xlsx o .csv.")
+                return redirect('lista_proveedores_activos')
+
+            # Validación de columnas requeridas
+            columnas_requeridas = ['nombre', 'rut', 'telefono', 'correo', 'direccion']
+            if not all(col in df.columns for col in columnas_requeridas):
+                messages.error(request, "El archivo no contiene las columnas requeridas.")
+                return redirect('lista_proveedores_activos')
+
+            # Recorremos el dataframe y registramos proveedores
+            errores = []
+            nuevos = 0
+
+            for index, row in df.iterrows():
+                rut = str(row['rut']).strip()
+                if not rut:
+                    errores.append(f"Fila {index + 2}: RUT vacío.")
+                    continue
+
+                if Proveedor.objects.filter(rut=rut).exists():
+                    errores.append(f"Fila {index + 2}: RUT {rut} ya registrado.")
+                    continue
+
+                proveedor = Proveedor(
+                    nombre=str(row['nombre']).strip(),
+                    rut=rut,
+                    telefono=str(row.get('telefono', '')).strip(),
+                    correo=str(row['correo']).strip(),
+                    direccion=str(row.get('direccion', '')).strip(),
+                    estado=True
+                )
+                proveedor.save()
+                nuevos += 1
+
+            if nuevos:
+                messages.success(request, f"Se cargaron correctamente {nuevos} proveedores.")
+            if errores:
+                for e in errores:
+                    messages.warning(request, e)
+        except Exception as e:
+            messages.error(request, f"Ocurrió un error al procesar el archivo: {str(e)}")
+    else:
+        messages.error(request, "Formulario inválido. Asegúrate de subir un archivo válido.")
+
+    return redirect('lista_proveedores_activos')
+
 # ------------------------------------ FIN GESTIÓN DE PROVEEDORES ------------------------------------
 
 
