@@ -67,6 +67,7 @@ class Compra(models.Model):
     activo = models.BooleanField(default=True)
     fecha = models.DateTimeField(auto_now_add=True)
     usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='compras')
+    total = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     estado = models.CharField(max_length=20, choices=[
         ('Pendiente', 'Pendiente'),
         ('Lista', 'Lista'),
@@ -75,9 +76,6 @@ class Compra(models.Model):
 
     def __str__(self):
         return f"Compra #{self.id} - {self.proveedor.nombre}"
-
-    def total(self):
-        return sum(item.subtotal() for item in self.detalles.all())
 
 
 

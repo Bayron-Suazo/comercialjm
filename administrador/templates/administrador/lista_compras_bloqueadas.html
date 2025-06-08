@@ -74,6 +74,7 @@
                 <th>Proveedor</th>
                 <th>Encargado</th>
                 <th>Fecha Compra</th>
+                <th>Total</th>
                 <th>Estado</th>            
                 <th>Acciones</th>
             </tr>
@@ -86,6 +87,7 @@
                 <td>{{ compra.proveedor.nombre }}</td>
                 <td>{{ compra.usuario }}</td>
                 <td>{{ compra.fecha }}</td>
+                <td>{{ compra.total|default:"-" }}</td>
                 <td>{{ compra.estado }}</td>
                 
                 <td>

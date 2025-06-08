@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User, Group
-from registration.models import Profile, Proveedor, Producto, Cliente, Merma
+from registration.models import Profile, Proveedor, Producto, Cliente, Merma, Compra
 import random
 import string
 import re
@@ -461,6 +461,14 @@ class DetalleCompraForm(forms.Form):
         required=False,
         label="Observaciones"
     )
+
+class AprobarCompraForm(forms.ModelForm):
+    class Meta:
+        model = Compra
+        fields = ['total']
+        widgets = {
+            'total': forms.NumberInput(attrs={'step': '0.01', 'class': 'form-control'})
+        }
 
 
 # ------------------ CLIENTE ------------------

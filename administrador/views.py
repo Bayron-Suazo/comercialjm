@@ -15,7 +15,7 @@ from registration.models import Profile, Proveedor, Compra, Producto, DetalleCom
 from datetime import datetime, date
 from django.core.exceptions import ValidationError
 from django.contrib import messages
-from administrador.forms import EditUserProfileForm, CrearProveedorForm, EditarProveedorForm, CompraForm, DetalleCompraForm, CargaMasivaProveedorForm, CargaMasivaUsuariosForm
+from administrador.forms import EditUserProfileForm, CrearProveedorForm, EditarProveedorForm, CompraForm, DetalleCompraForm, CargaMasivaProveedorForm, CargaMasivaUsuariosForm, AprobarCompraForm
 from django.views.decorators.http import require_POST
 from .forms import PerfilForm
 from django.db.models import Count, Avg, Max, Min
@@ -942,32 +942,42 @@ def aprobar_compra(request):
                 'message': 'La compra ya fue procesada.'
             })
 
-        compra.estado = 'Lista'
-        compra.activo = False
-        compra.save()
+        # Usar el formulario para validar el total
+        form = AprobarCompraForm(request.POST, instance=compra)
+        if form.is_valid():
+            form.save()  # Guarda el total
 
-        numero_lote = str(uuid.uuid4())[:8]
-        lote = Lote.objects.create(numero=numero_lote)
+            compra.estado = 'Lista'
+            compra.activo = False
+            compra.save()
 
-        for detalle in compra.detalles.all():
-            producto = detalle.producto
-            cantidad = detalle.cantidad
+            numero_lote = str(uuid.uuid4())[:8]
+            lote = Lote.objects.create(numero=numero_lote)
 
-            DetalleLote.objects.create(
-                lote=lote,
-                producto=producto.nombre,
-                cantidad=cantidad,
-                precio=producto.precio
-            )
+            for detalle in compra.detalles.all():
+                producto = detalle.producto
+                cantidad = detalle.cantidad
 
-            producto.cantidad += cantidad
-            producto.lote = lote
-            producto.save()
+                DetalleLote.objects.create(
+                    lote=lote,
+                    producto=producto.nombre,
+                    cantidad=cantidad,
+                    precio=producto.precio
+                )
 
-        return JsonResponse({
-            'success': True,
-            'message': 'Compra aprobada y lote creado correctamente.'
-        })
+                producto.cantidad += cantidad
+                producto.lote = lote
+                producto.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Compra aprobada y lote creado correctamente.'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': 'Formulario inválido: asegúrate de ingresar un total válido.'
+            })
 
     return JsonResponse({
         'success': False,

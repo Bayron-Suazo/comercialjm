@@ -76,10 +76,16 @@
   <div class="modal-content">
     <h3>¿Aprobar Compra?</h3>
     <p>Se creará un lote con la fecha actual y los productos solicitados</p>
-    <div class="modal-actions">     
-      <button type="button" id="cancelAprobarBtn" class="btn-cancel">Cancelar</button>
-      <button type="button" id="confirmAprobarBtn" class="btn-confirm">Confirmar</button>
-    </div>
+    <form id="formAprobacionCompra">
+        <div class="form-group" style="margin-bottom: 16px;">
+            <label for="totalCompra">Total de la compra ($):</label>
+            <input type="number" name="total" id="totalCompra" class="form-control" required min="1" style="width: 100%; padding: 8px;">
+        </div>
+        <div class="modal-actions">     
+            <button type="button" id="cancelAprobarBtn" class="btn-cancel">Cancelar</button>
+            <button type="submit" id="confirmAprobarBtn" class="btn-confirm">Confirmar</button>
+        </div>
+    </form>
   </div>
 </div>
 
@@ -161,51 +167,61 @@ document.addEventListener('DOMContentLoaded', function () {
     aprobarButtons.forEach(function (button) {
         button.addEventListener('click', function () {
             const compraId = this.getAttribute('data-id');
-            showConfirmAprobarModal(() => {
-                fetch("{% url 'aprobar_compra' %}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'X-CSRFToken': '{{ csrf_token }}'
-                    },
-                    body: new URLSearchParams({ 'compra_id': compraId })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert(data.message || 'Ocurrió un error al aprobar la compra.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error en fetch:', error);
-                    alert('Error inesperado al aprobar la compra.');
-                });
-            });
+            const form = document.getElementById('formAprobacionCompra');
+            form.dataset.compraId = compraId;  // Asigna el ID de compra al formulario
+            showConfirmAprobarModal();
         });
     });
 
     function showConfirmAprobarModal(callback) {
         const modal = document.getElementById('confirmAprobarModal');
-        const confirmBtn = document.getElementById('confirmAprobarBtn');
+        const form = document.getElementById('formAprobacionCompra');
+        const totalInput = document.getElementById('totalCompra');
         const cancelBtn = document.getElementById('cancelAprobarBtn');
 
         modal.classList.remove('hidden');
 
-        function onConfirm() {
-            callback();
-            closeModal();
-        }
+        form.onsubmit = function (e) {
+            e.preventDefault();
+            const total = totalInput.value;
+            if (!total || total <= 0) {
+                alert("Ingrese un total válido.");
+                return;
+            }
 
-        function closeModal() {
+            // Guardar el id de la compra temporalmente
+            const compraId = form.dataset.compraId;
+
+            fetch("{% url 'aprobar_compra' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: new URLSearchParams({
+                    'compra_id': compraId,
+                    'total': total
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Ocurrió un error al aprobar la compra.');
+                }
+            })
+            .catch(error => {
+                console.error('Error en fetch:', error);
+                alert('Error inesperado al aprobar la compra.');
+            });
+
             modal.classList.add('hidden');
-            confirmBtn.removeEventListener('click', onConfirm);
-            cancelBtn.removeEventListener('click', closeModal);
-        }
+        };
 
-        confirmBtn.addEventListener('click', onConfirm);
-        cancelBtn.addEventListener('click', closeModal);
+        cancelBtn.onclick = function () {
+            modal.classList.add('hidden');
+        };
     }
 
     // Funcionalidad para bloquear compra con modal de confirmación
