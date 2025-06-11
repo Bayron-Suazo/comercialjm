@@ -1,0 +1,93 @@
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f9f8e8;
+    margin: 0;
+    padding: 0;
+    color: #2e2e2e;
+}
+
+h2 {
+    font-size: 48px;
+    text-align: center;
+    font-weight: normal;
+    margin-bottom: 30px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+}
+
+.card {
+    background-color: white;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 50px;
+    margin-bottom: 50px;
+}
+
+.charts-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px;
+    justify-content: center;
+    margin-bottom: 40px;
+}
+
+.card-header {
+    font-size: 24px;
+    font-weight: 500;
+    text-align: center;
+    background-color: transparent;
+    border-bottom: none;
+}
+
+#productosChart {
+    width: 100% !important;
+    height: 400px !important;
+}
+
+/* === GRÁFICOS DE TORTA === */
+
+.torta-row {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.chart-card {
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+}
+
+.chart-card .card-body {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.chart-card canvas {
+    max-width: 500px;
+    max-height: 500px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    h2 {
+        font-size: 36px;
+    }
+
+    .card-header {
+        font-size: 20px;
+    }
+
+    .chart-card canvas {
+        max-width: 100%;
+    }
+}

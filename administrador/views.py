@@ -30,7 +30,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.urls import reverse
 from django.http import HttpResponse
-from django.db.models import Count
+from django.db.models import Count, Sum
 from django.contrib import messages
 from .forms import ProductoForm, MermaForm
 from registration.models import Profile, Venta
@@ -1408,3 +1408,50 @@ def dashboard_ventas(request):
 def listar_ventas(request):
     ventas = Venta.objects.all()
     return render(request, 'administrador/listar_ventas.html', {'ventas': ventas})
+
+
+
+# ------------------------------------ REPORTERIA ------------------------------------
+
+
+
+def reporteria_view(request):
+    productos = Producto.objects.filter(activo=True).values('nombre', 'cantidad')
+
+    # Datos para gráficos de torta (cantidad de registros)
+    compras_cantidad = Compra.objects.filter(activo=False, estado='Lista').count()
+    ventas_cantidad = Venta.objects.count()
+    mermas_cantidad = Merma.objects.filter(activo=True).count()
+
+    # Datos para gráficos de torta (totales en dinero)
+    compras_total = Compra.objects.filter(activo=False, estado='Lista').aggregate(total=Sum('total'))['total'] or 0
+    ventas_total = Venta.objects.aggregate(total=Sum('total'))['total'] or 0
+    mermas_total = sum([
+        merma.precio * merma.cantidad for merma in Merma.objects.filter(activo=True)
+    ])
+
+    # Nuevos datos: Usuarios activos y cantidad de compras realizadas
+    usuarios_activos = User.objects.filter(is_active=True).order_by('username')
+    compras_por_usuario = []
+    for usuario in usuarios_activos:
+        count_compras = Compra.objects.filter(usuario=usuario).count()
+        compras_por_usuario.append({
+            'username': usuario.username,
+            'compras': count_compras
+        })
+
+    context = {
+        'productos': list(productos),
+        'data_cantidad': {
+            'compras': compras_cantidad,
+            'ventas': ventas_cantidad,
+            'mermas': mermas_cantidad,
+        },
+        'data_total': {
+            'compras': float(compras_total),
+            'ventas': float(ventas_total),
+            'mermas': float(mermas_total),
+        },
+        'compras_por_usuario': compras_por_usuario,
+    }
+    return render(request, 'administrador/reporteria.html', context)

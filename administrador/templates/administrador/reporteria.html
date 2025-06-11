@@ -1,0 +1,173 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'administrador/css/reporteria.css' %}">
+<div class="container mt-4">
+    <h2 class="mb-4">Reportería General</h2>
+
+    <!-- Gráfico de Barras - Productos -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    Cantidad de productos activos
+                </div>
+                <div class="card-body">
+                    <canvas id="productosChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos de Torta -->
+    <div class="charts-section">
+        <div class="col-md-6 col-lg-5 d-flex">
+            <div class="card chart-card w-100">
+                <div class="card-header text-center">Gráfico Cantidad</div>
+                <div class="card-body">
+                    <canvas id="tortaCantidadChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-5 d-flex">
+            <div class="card chart-card w-100">
+                <div class="card-header text-center">Gráfico Total</div>
+                <div class="card-body">
+                    <canvas id="tortaTotalChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico de Barras - Compras por Usuario -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    Cantidad de compras por usuario activo
+                </div>
+                <div class="card-body">
+                    <canvas id="comprasUsuarioChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const productos = {{ productos|safe }};
+    const nombres = productos.map(p => p.nombre);
+    const cantidades = productos.map(p => p.cantidad);
+
+    const ctxBar = document.getElementById('productosChart').getContext('2d');
+    new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+            labels: nombres,
+            datasets: [{
+                label: 'Cantidad',
+                data: cantidades,
+                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            scales: {
+                x: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    const dataCantidad = {{ data_cantidad|safe }};
+    const ctxTortaCantidad = document.getElementById('tortaCantidadChart').getContext('2d');
+    new Chart(ctxTortaCantidad, {
+        type: 'pie',
+        data: {
+            labels: ['Compras', 'Ventas', 'Mermas'],
+            datasets: [{
+                label: 'Cantidad de registros',
+                data: [dataCantidad.compras, dataCantidad.ventas, dataCantidad.mermas],
+                backgroundColor: [
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(255, 99, 132, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(255, 99, 132, 1)'
+                ],
+                borderWidth: 1
+            }]
+        }
+    });
+
+    const dataTotal = {{ data_total|safe }};
+    const ctxTortaTotal = document.getElementById('tortaTotalChart').getContext('2d');
+    new Chart(ctxTortaTotal, {
+        type: 'pie',
+        data: {
+            labels: ['Compras ($)', 'Ventas ($)', 'Mermas ($)'],
+            datasets: [{
+                label: 'Totales en dinero',
+                data: [dataTotal.compras, dataTotal.ventas, dataTotal.mermas],
+                backgroundColor: [
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(255, 99, 132, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(255, 99, 132, 1)'
+                ],
+                borderWidth: 1
+            }]
+        }
+    });
+
+    const comprasPorUsuario = {{ compras_por_usuario|safe }};
+    const usuarios = comprasPorUsuario.map(u => u.username);
+    const comprasUsuario = comprasPorUsuario.map(u => u.compras);
+
+    const ctxComprasUsuario = document.getElementById('comprasUsuarioChart').getContext('2d');
+    new Chart(ctxComprasUsuario, {
+        type: 'bar',
+        data: {
+            labels: usuarios,
+            datasets: [{
+                label: 'Cantidad de Compras',
+                data: comprasUsuario,
+                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    precision: 0 
+                }
+            },
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    enabled: true
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
