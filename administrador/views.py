@@ -30,7 +30,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.urls import reverse
 from django.http import HttpResponse
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, F, ExpressionWrapper, FloatField
 from django.contrib import messages
 from .forms import ProductoForm, MermaForm
 from registration.models import Profile, Venta
@@ -45,6 +45,10 @@ from django.utils.timezone import now, timedelta
 import re
 from django.utils.dateparse import parse_date
 from django.core.validators import validate_email
+from django.template.loader import get_template
+from weasyprint import HTML
+from io import BytesIO
+
 
 # ------------------------------------ GESTIÓN DE USUARIOS ------------------------------------
 
@@ -1487,3 +1491,40 @@ def reporteria_view(request):
         'filtro': filtro,
     }
     return render(request, 'administrador/reporteria.html', context)
+
+
+def reporteria_pdf_view(request):
+    # Datos a mostrar
+    cantidad_compras = Compra.objects.count()
+    cantidad_ventas = Venta.objects.count()
+    cantidad_mermas = Merma.objects.count()
+
+    total_compras = Compra.objects.aggregate(total=Sum('total'))['total'] or 0
+
+    total_mermas = Merma.objects.aggregate(
+        total=Sum(ExpressionWrapper(F('precio') * F('cantidad'), output_field=FloatField()))
+    )['total'] or 0
+
+    total_ventas = Venta.objects.aggregate(total=Sum('total'))['total'] or 0
+
+    context = {
+        'cantidad_compras': cantidad_compras,
+        'cantidad_ventas': cantidad_ventas,
+        'cantidad_mermas': cantidad_mermas,
+        'total_compras': total_compras,
+        'total_mermas': total_mermas,
+        'total_ventas': total_ventas,
+    }
+
+    # Cargar la plantilla HTML
+    template = get_template('administrador/reporteria_pdf.html')
+    html_string = template.render(context)
+
+    # Crear PDF
+    html = HTML(string=html_string, base_url=request.build_absolute_uri())
+    pdf_file = html.write_pdf()
+
+    # Retornar PDF como respuesta
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    response['Content-Disposition'] = 'inline; filename="reporteria.pdf"'
+    return response

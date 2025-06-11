@@ -73,5 +73,6 @@ urlpatterns = [
 
     #REPORTERIA
     path('reporteria/', views.reporteria_view, name='reporteria'),
+    path('reporteria_pdf/', views.reporteria_pdf_view, name='reporteria_pdf'),
 
 ]

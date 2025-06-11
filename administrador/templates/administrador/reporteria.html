@@ -21,6 +21,11 @@
         </ul>
     </div>
 
+    <form method="get" action="{% url 'reporteria_pdf' %}" target="_blank">
+        <input type="hidden" name="rango" value="{{ rango }}">
+        <button type="submit" class="btn btn-primary mt-2">📄 Descargar Reporte PDF</button>
+    </form>
+
     <!-- Gráfico de Barras - Productos -->
     <div class="row mb-4">
         <div class="col-12">
