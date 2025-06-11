@@ -3,8 +3,23 @@
 
 {% block content %}
 <link rel="stylesheet" href="{% static 'administrador/css/reporteria.css' %}">
+<link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
 <div class="container mt-4">
     <h2 class="mb-4">Reportería General</h2>
+
+    <div class="dropdown">
+        <a href="#" class="boton-header" id="dropdownMenuButton">
+            Filtrar
+            <img src="{% static 'administrador/svg/filter-solid.svg' %}">
+        </a>
+        <ul id="filterOptions" class="dropdown-content" style="display:none;">
+            <li><a href="#" onclick="applyDateFilter('general')" class="{% if filtro == 'general' %}filtro-activo{% endif %}">General</a></li>
+            <li><a href="#" onclick="applyDateFilter('anual')" class="{% if filtro == 'anual' %}filtro-activo{% endif %}">Anual</a></li>
+            <li><a href="#" onclick="applyDateFilter('mensual')" class="{% if filtro == 'mensual' %}filtro-activo{% endif %}">Mensual</a></li>
+            <li><a href="#" onclick="applyDateFilter('semanal')" class="{% if filtro == 'semanal' %}filtro-activo{% endif %}">Semanal</a></li>
+            <li><a href="#" onclick="applyDateFilter('diario')" class="{% if filtro == 'diario' %}filtro-activo{% endif %}">Diario</a></li>
+        </ul>
+    </div>
 
     <!-- Gráfico de Barras - Productos -->
     <div class="row mb-4">
@@ -169,5 +184,18 @@
             }
         }
     });
+
+    // Mostrar/ocultar el menú desplegable
+    document.getElementById("dropdownMenuButton").addEventListener("click", function (e) {
+        e.preventDefault();
+        var menu = document.getElementById("filterOptions");
+        menu.style.display = menu.style.display === "none" ? "block" : "none";
+    });
+
+    function applyDateFilter(filtro) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('filtro', filtro);
+        window.location.href = url.toString();
+    }
 </script>
 {% endblock %}

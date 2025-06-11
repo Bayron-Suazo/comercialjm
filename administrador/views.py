@@ -41,7 +41,7 @@ from openpyxl import load_workbook
 import traceback
 from django.utils.crypto import get_random_string
 from openpyxl.utils.datetime import from_excel
-from django.utils.timezone import now
+from django.utils.timezone import now, timedelta
 import re
 from django.utils.dateparse import parse_date
 from django.core.validators import validate_email
@@ -1413,31 +1413,47 @@ def listar_ventas(request):
 
 # ------------------------------------ REPORTERIA ------------------------------------
 
-
-
 def reporteria_view(request):
+    filtro = request.GET.get('filtro', 'general')
+    hoy = now().date()
+
+    if filtro == 'diario':
+        fecha_inicio = hoy
+    elif filtro == 'semanal':
+        fecha_inicio = hoy - timedelta(days=hoy.weekday())
+    elif filtro == 'mensual':
+        fecha_inicio = hoy.replace(day=1)
+    elif filtro == 'anual':
+        fecha_inicio = hoy.replace(month=1, day=1)
+    else:
+        fecha_inicio = None
+
+    # Filtros condicionales
+    filtro_fecha = {}
+    if fecha_inicio:
+        filtro_fecha['fecha__gte'] = fecha_inicio
+
     productos = Producto.objects.filter(activo=True).values('nombre', 'cantidad')
 
-    # Datos para gráficos de torta (cantidad de registros)
-    compras_cantidad = Compra.objects.filter(activo=False, estado='Lista').count()
-    ventas_cantidad = Venta.objects.count()
-    mermas_cantidad = Merma.objects.filter(activo=True).count()
+    compras_qs = Compra.objects.filter(activo=False, estado='Lista', **filtro_fecha)
+    ventas_qs = Venta.objects.filter(**filtro_fecha)
+    mermas_qs = Merma.objects.filter(activo=True, **filtro_fecha)
 
-    # Datos para gráficos de torta (totales en dinero)
-    compras_total = Compra.objects.filter(activo=False, estado='Lista').aggregate(total=Sum('total'))['total'] or 0
-    ventas_total = Venta.objects.aggregate(total=Sum('total'))['total'] or 0
-    mermas_total = sum([
-        merma.precio * merma.cantidad for merma in Merma.objects.filter(activo=True)
-    ])
+    compras_cantidad = compras_qs.count()
+    ventas_cantidad = ventas_qs.count()
+    mermas_cantidad = mermas_qs.count()
 
-    # Nuevos datos: Usuarios activos y cantidad de compras realizadas
+    compras_total = compras_qs.aggregate(total=Sum('total'))['total'] or 0
+    ventas_total = ventas_qs.aggregate(total=Sum('total'))['total'] or 0
+    mermas_total = sum([merma.precio * merma.cantidad for merma in mermas_qs])
+
     usuarios_activos = User.objects.filter(is_active=True).order_by('username')
     compras_por_usuario = []
     for usuario in usuarios_activos:
-        count_compras = Compra.objects.filter(usuario=usuario).count()
+        user_compras = compras_qs.filter(usuario=usuario).count()
         compras_por_usuario.append({
             'username': usuario.username,
-            'compras': count_compras
+            'compras': user_compras
         })
 
     context = {
@@ -1453,5 +1469,6 @@ def reporteria_view(request):
             'mermas': float(mermas_total),
         },
         'compras_por_usuario': compras_por_usuario,
+        'filtro': filtro,
     }
     return render(request, 'administrador/reporteria.html', context)
