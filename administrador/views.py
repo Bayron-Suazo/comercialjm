@@ -1433,7 +1433,22 @@ def reporteria_view(request):
     if fecha_inicio:
         filtro_fecha['fecha__gte'] = fecha_inicio
 
-    productos = Producto.objects.filter(activo=True).values('nombre', 'cantidad')
+    productos_activos = Producto.objects.filter(activo=True)
+    detalles_lote = DetalleLote.objects.all()
+
+    if fecha_inicio:
+        detalles_lote = detalles_lote.filter(lote__fecha__gte=fecha_inicio)
+
+    productos = []
+    for producto in productos_activos:
+        cantidad_total = detalles_lote.filter(producto=producto.nombre).aggregate(
+            total=Sum('cantidad')
+        )['total'] or 0
+
+        productos.append({
+            'nombre': producto.nombre,
+            'cantidad': cantidad_total
+        })
 
     compras_qs = Compra.objects.filter(activo=False, estado='Lista', **filtro_fecha)
     ventas_qs = Venta.objects.filter(**filtro_fecha)
