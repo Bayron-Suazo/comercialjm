@@ -89,17 +89,28 @@ h2 {
     cursor: pointer;
 }
 
+canvas {
+    max-width: 100% !important;
+    height: auto !important;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
-    h2 {
-        font-size: 36px;
+    .boton-header {
+        width: 100%;
+        text-align: center;
     }
 
-    .card-header {
-        font-size: 20px;
+    .dropdown-content {
+        width: 100%;
     }
 
-    .chart-card canvas {
-        max-width: 100%;
+    .card-header, .card-body {
+        text-align: center;
+    }
+
+    .reporteria-header {
+        flex-direction: column;
+        gap: 1rem;
     }
 }
