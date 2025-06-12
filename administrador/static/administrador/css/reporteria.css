@@ -77,6 +77,14 @@ h2 {
     max-height: 500px;
 }
 
+.reporteria-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     h2 {

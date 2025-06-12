@@ -5,26 +5,29 @@
 <link rel="stylesheet" href="{% static 'administrador/css/reporteria.css' %}">
 <link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
 <div class="container mt-4">
-    <h2 class="mb-4">Reportería General</h2>
 
-    <div class="dropdown">
-        <a href="#" class="boton-header" id="dropdownMenuButton">
+    <div class="reporteria-header">
+        <form method="get" action="{% url 'reporteria_pdf' %}" target="_blank">
+            <input type="hidden" name="rango" value="{{ rango }}">
+            <button type="submit" class="boton-header">📄 Descargar Reporte PDF</button>
+        </form>
+
+        <div class="dropdown">
+            <a href="#" class="boton-header" id="dropdownMenuButton" onclick="toggleDropdown(event)">
             Filtrar
-            <img src="{% static 'administrador/svg/filter-solid.svg' %}">
-        </a>
-        <ul id="filterOptions" class="dropdown-content" style="display:none;">
+            <img src="{% static 'administrador/svg/filter-solid.svg' %}" alt="Filtro">
+            </a>
+            <ul id="filterOptions" class="dropdown-content">
             <li><a href="#" onclick="applyDateFilter('general')" class="{% if filtro == 'general' %}filtro-activo{% endif %}">General</a></li>
             <li><a href="#" onclick="applyDateFilter('anual')" class="{% if filtro == 'anual' %}filtro-activo{% endif %}">Anual</a></li>
             <li><a href="#" onclick="applyDateFilter('mensual')" class="{% if filtro == 'mensual' %}filtro-activo{% endif %}">Mensual</a></li>
             <li><a href="#" onclick="applyDateFilter('semanal')" class="{% if filtro == 'semanal' %}filtro-activo{% endif %}">Semanal</a></li>
             <li><a href="#" onclick="applyDateFilter('diario')" class="{% if filtro == 'diario' %}filtro-activo{% endif %}">Diario</a></li>
-        </ul>
+            </ul>
+        </div> 
     </div>
 
-    <form method="get" action="{% url 'reporteria_pdf' %}" target="_blank">
-        <input type="hidden" name="rango" value="{{ rango }}">
-        <button type="submit" class="btn btn-primary mt-2">📄 Descargar Reporte PDF</button>
-    </form>
+    <h2 class="mb-4">Reportería General</h2>
 
     <!-- Gráfico de Barras - Productos -->
     <div class="row mb-4">
