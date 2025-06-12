@@ -1494,37 +1494,41 @@ def reporteria_view(request):
 
 
 def reporteria_pdf_view(request):
-    # Datos a mostrar
     cantidad_compras = Compra.objects.count()
     cantidad_ventas = Venta.objects.count()
     cantidad_mermas = Merma.objects.count()
 
     total_compras = Compra.objects.aggregate(total=Sum('total'))['total'] or 0
-
+    total_ventas = Venta.objects.aggregate(total=Sum('total'))['total'] or 0
     total_mermas = Merma.objects.aggregate(
         total=Sum(ExpressionWrapper(F('precio') * F('cantidad'), output_field=FloatField()))
     )['total'] or 0
 
-    total_ventas = Venta.objects.aggregate(total=Sum('total'))['total'] or 0
+    productos_con_lotes = Producto.objects.annotate(
+        total_cantidad=Sum('detallecompra__cantidad')
+    )
+
+    compras_por_usuario = User.objects.annotate(
+        total_compras=Count('compras')
+    )
 
     context = {
         'cantidad_compras': cantidad_compras,
         'cantidad_ventas': cantidad_ventas,
         'cantidad_mermas': cantidad_mermas,
         'total_compras': total_compras,
-        'total_mermas': total_mermas,
         'total_ventas': total_ventas,
+        'total_mermas': total_mermas,
+        'productos_con_lotes': productos_con_lotes,
+        'compras_por_usuario': compras_por_usuario,
     }
 
-    # Cargar la plantilla HTML
     template = get_template('administrador/reporteria_pdf.html')
     html_string = template.render(context)
 
-    # Crear PDF
     html = HTML(string=html_string, base_url=request.build_absolute_uri())
     pdf_file = html.write_pdf()
 
-    # Retornar PDF como respuesta
     response = HttpResponse(pdf_file, content_type='application/pdf')
     response['Content-Disposition'] = 'inline; filename="reporteria.pdf"'
     return response
