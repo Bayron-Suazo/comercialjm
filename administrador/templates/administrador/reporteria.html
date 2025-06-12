@@ -7,10 +7,7 @@
 <div class="container mt-4">
 
     <div class="reporteria-header">
-        <form method="get" action="{% url 'reporteria_pdf' %}" target="_blank">
-            <input type="hidden" name="rango" value="{{ rango }}">
-            <button type="submit" class="boton-header">📄 Descargar Reporte PDF</button>
-        </form>
+        <button type="button" class="boton-header" onclick="descargarPDF()">📄 Descargar Reporte PDF</button>
 
         <div class="dropdown">
             <a href="#" class="boton-header" id="dropdownMenuButton" onclick="toggleDropdown(event)">
@@ -102,7 +99,28 @@
             indexAxis: 'y',
             scales: {
                 x: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    ticks: {
+                        font: {
+                            size: 20
+                        }
+                    }
+                },
+                y: {
+                    ticks: {
+                        font: {
+                            size: 20
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        font: {
+                            size: 20
+                        }
+                    }
                 }
             }
         }
@@ -178,13 +196,30 @@
             scales: {
                 x: {
                     beginAtZero: true,
-                    precision: 0 
+                    precision: 0,
+                    ticks: {
+                        font: {
+                            size: 20
+                        }
+                    }
+                },
+                y: {
+                    ticks: {
+                        font: {
+                            size: 20
+                        }
+                    }
                 }
             },
             responsive: true,
             plugins: {
                 legend: {
-                    display: false
+                    display: true,
+                    labels: {
+                        font: {
+                            size: 20
+                        }
+                    }
                 },
                 tooltip: {
                     enabled: true
@@ -205,5 +240,47 @@
         url.searchParams.set('filtro', filtro);
         window.location.href = url.toString();
     }
+
+    function descargarPDF() {
+        const canvasProductos = document.getElementById('productosChart');
+        const canvasTortaCantidad = document.getElementById('tortaCantidadChart');
+        const canvasTortaTotal = document.getElementById('tortaTotalChart');
+        const canvasComprasUsuario = document.getElementById('comprasUsuarioChart');
+
+        const data = {
+            img_productos: canvasProductos.toDataURL('image/png'),
+            img_torta_cantidad: canvasTortaCantidad.toDataURL('image/png'),
+            img_torta_total: canvasTortaTotal.toDataURL('image/png'),
+            img_compras_usuario: canvasComprasUsuario.toDataURL('image/png'),
+        };
+
+        // Crear formulario dinámico
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{% url 'reporteria_pdf' %}";
+        form.target = '_blank';
+
+        // CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+
+        // Añadir imágenes base64 como inputs ocultos
+        for (const key in data) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = data[key];
+            form.appendChild(input);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+    }
+
 </script>
 {% endblock %}

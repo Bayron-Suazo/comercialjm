@@ -30,7 +30,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.urls import reverse
 from django.http import HttpResponse
-from django.db.models import Count, Sum, F, ExpressionWrapper, FloatField
+from django.db.models import Count, Sum, F, Q,  ExpressionWrapper, FloatField
 from django.contrib import messages
 from .forms import ProductoForm, MermaForm
 from registration.models import Profile, Venta
@@ -1494,6 +1494,7 @@ def reporteria_view(request):
 
 
 def reporteria_pdf_view(request):
+    # Recolección de datos
     cantidad_compras = Compra.objects.count()
     cantidad_ventas = Venta.objects.count()
     cantidad_mermas = Merma.objects.count()
@@ -1505,12 +1506,21 @@ def reporteria_pdf_view(request):
     )['total'] or 0
 
     productos_con_lotes = Producto.objects.annotate(
-        total_cantidad=Sum('detallecompra__cantidad')
+        total_cantidad=Sum(
+            'detallecompra__cantidad',
+            filter=Q(detallecompra__compra__estado='Lista')
+        )
     )
 
     compras_por_usuario = User.objects.annotate(
         total_compras=Count('compras')
     )
+
+    # Obtener imágenes base64 del POST
+    img_productos = request.POST.get('img_productos')
+    img_torta_cantidad = request.POST.get('img_torta_cantidad')
+    img_torta_total = request.POST.get('img_torta_total')
+    img_compras_usuario = request.POST.get('img_compras_usuario')
 
     context = {
         'cantidad_compras': cantidad_compras,
@@ -1521,6 +1531,12 @@ def reporteria_pdf_view(request):
         'total_mermas': total_mermas,
         'productos_con_lotes': productos_con_lotes,
         'compras_por_usuario': compras_por_usuario,
+
+        # Las imágenes
+        'img_productos': img_productos,
+        'img_torta_cantidad': img_torta_cantidad,
+        'img_torta_total': img_torta_total,
+        'img_compras_usuario': img_compras_usuario,
     }
 
     template = get_template('administrador/reporteria_pdf.html')

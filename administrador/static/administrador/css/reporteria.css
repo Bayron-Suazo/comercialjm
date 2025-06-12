@@ -85,6 +85,10 @@ h2 {
   margin-bottom: 15px;
 }
 
+.boton-header {
+    cursor: pointer;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     h2 {
