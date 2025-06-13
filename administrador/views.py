@@ -1,6 +1,5 @@
-import csv
-import json
 from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User, Group
 from django.core.paginator import Paginator
@@ -36,13 +35,12 @@ from .forms import ProductoForm, MermaForm
 from registration.models import Profile, Venta
 from .forms import ClienteForm
 from django.core.exceptions import ObjectDoesNotExist
-import uuid
 from openpyxl import load_workbook
 import traceback
 from django.utils.crypto import get_random_string
 from openpyxl.utils.datetime import from_excel
 from django.utils.timezone import now, timedelta
-import re
+import re, random, string, uuid, csv, json
 from django.utils.dateparse import parse_date
 from django.core.validators import validate_email
 from django.template.loader import get_template
@@ -244,14 +242,6 @@ def bloquear_usuario(request):
 
 
 
-from django.contrib.auth import authenticate
-from django.contrib.auth.models import User
-from django.core.mail import send_mail
-from django.contrib import messages
-from django.shortcuts import get_object_or_404, redirect
-import random
-import string
-
 def generar_password_aleatoria(longitud=10):
     caracteres = string.ascii_letters + string.digits
     return ''.join(random.choice(caracteres) for _ in range(longitud))
@@ -262,18 +252,20 @@ def cambiar_credenciales(request, user_id):
         confirm_text = request.POST.get('confirm_text')
         usuario_objetivo = get_object_or_404(User, id=user_id)
 
-        # Verificar si el usuario actual es admin y la contraseña es correcta
         if not request.user.is_superuser:
+            messages.error(request, "No tiene permisos para realizar esta acción.")
             return redirect('mostrar_usuario', user_id)
 
         user_auth = authenticate(username=request.user.username, password=admin_password)
         if not user_auth:
+            messages.error(request, "Contraseña de administrador incorrecta.")
             return redirect('mostrar_usuario', user_id)
 
         if confirm_text.strip().lower() != "confirmar":
+            messages.error(request, "Debe escribir 'confirmar' para continuar.")
             return redirect('mostrar_usuario', user_id)
 
-        # Generar nueva contraseña
+        # Generar y asignar nueva contraseña
         nueva_password = generar_password_aleatoria()
         usuario_objetivo.set_password(nueva_password)
         usuario_objetivo.save()
@@ -294,8 +286,8 @@ def cambiar_credenciales(request, user_id):
             fail_silently=False
         )
 
+        messages.success(request, "Contraseña actualizada y enviada por correo.")
         return redirect('mostrar_usuario', user_id)
-
     
 
 
