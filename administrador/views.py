@@ -240,6 +240,65 @@ def bloquear_usuario(request):
     
 
 
+# ------------------ ACTUALIZAR CREDENCIALES ------------------
+
+
+
+from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, redirect
+import random
+import string
+
+def generar_password_aleatoria(longitud=10):
+    caracteres = string.ascii_letters + string.digits
+    return ''.join(random.choice(caracteres) for _ in range(longitud))
+
+def cambiar_credenciales(request, user_id):
+    if request.method == 'POST':
+        admin_password = request.POST.get('admin_password')
+        confirm_text = request.POST.get('confirm_text')
+        usuario_objetivo = get_object_or_404(User, id=user_id)
+
+        # Verificar si el usuario actual es admin y la contraseña es correcta
+        if not request.user.is_superuser:
+            return redirect('mostrar_usuario', user_id)
+
+        user_auth = authenticate(username=request.user.username, password=admin_password)
+        if not user_auth:
+            return redirect('mostrar_usuario', user_id)
+
+        if confirm_text.strip().lower() != "confirmar":
+            return redirect('mostrar_usuario', user_id)
+
+        # Generar nueva contraseña
+        nueva_password = generar_password_aleatoria()
+        usuario_objetivo.set_password(nueva_password)
+        usuario_objetivo.save()
+
+        # Enviar correo con nuevas credenciales
+        send_mail(
+            subject='Actualización de credenciales',
+            message=(
+                f'Hola usuario {usuario_objetivo.first_name},\n\n'
+                f'Le informamos que su contraseña ha sido actualizada recientemente por un administrador.\n'
+                f'Su nombre de usuario en caso de que lo haya olvidado es: {usuario_objetivo.username}\n'
+                f'Su nueva contraseña es: {nueva_password}\n\n'
+                'Por favor, inicie sesión y cámbiela lo antes posible.\n'
+                f'Equipo ComercialJM\n'
+            ),
+            from_email='noreply@tusistema.com',
+            recipient_list=[usuario_objetivo.email],
+            fail_silently=False
+        )
+
+        return redirect('mostrar_usuario', user_id)
+
+    
+
+
 # ------------------ VISTA PERFIL ------------------
 
 

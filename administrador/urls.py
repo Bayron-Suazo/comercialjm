@@ -14,6 +14,7 @@ urlpatterns = [
     path('perfil_admin/', views.perfil_view, name='perfil_admin'),
     path('dashboard_usuarios/', views.dashboard_usuarios, name='dashboard_usuarios'),
     path('usuarios/carga-masiva/', views.carga_masiva_usuarios, name='carga_masiva_usuarios'),
+    path('usuarios/<int:user_id>/cambiar-credenciales/', views.cambiar_credenciales, name='cambiar_credenciales'),
 
 
     # PROVEEDORES
@@ -40,7 +41,7 @@ urlpatterns = [
     path('dashboard_compras/', views.dashboard_compras, name='dashboard_compras'),
 
 
-    # PRODUCTOS
+    # PRODUCTOS, LOTES, MERMAS Y CLIENTES
     path('lotes/carga_excel/', views.carga_excel_lotes, name='carga_excel_lotes'),
     path('clientes/<int:pk>/desactivar/', views.toggle_estado_cliente, name='toggle_estado_cliente'),
     path('clientes/crear/', views.crear_cliente, name='crear_cliente'),

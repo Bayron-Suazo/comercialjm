@@ -60,7 +60,7 @@ p strong{
 }
 
 p span{
-    font-size: 21px;
+    font-size: 20px;
     font-weight: 400;
     display: flex;
     align-items: center;
@@ -71,7 +71,7 @@ p span{
     color: black;
     border-radius: 5px;
     padding: 15px;
-    font-size: 18px;
+    font-size: 20px;
     width: 90%;
     height: 150px;
     text-align: left; /* Alinea el texto a la izquierda */
@@ -124,21 +124,6 @@ strong {
     text-align: left; /* Alineación del texto al centro */
 }
 
-.btn-actualizar-credenciales {
-    background-color: #FF6161;
-    color: white;
-    font-size: 20px;
-    text-decoration: none;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.btn-actualizar-credenciales:hover {
-    background-color: #f67272; /* Azul más oscuro al pasar el mouse */
-}
-
 .contenido-modal {
     display: flex;
     padding: 20px;
@@ -170,7 +155,7 @@ strong {
     padding: 0.625rem 1.875rem;
     border: none;
     border-radius: 3.125rem;
-    font-size: 1rem;
+    font-size: 20px;
     cursor: pointer;
 }
 
@@ -180,7 +165,7 @@ strong {
     padding: 0.625rem 1.875rem;
     border: none;
     border-radius: 3.125rem;
-    font-size: 1rem;
+    font-size: 20px;
     cursor: pointer;
 }
 
@@ -225,7 +210,7 @@ strong {
     max-width: 300px;
     padding: 6px 8px;
     margin-top: 5px;
-    font-size: 14px;
+    font-size: 20px;
     box-sizing: border-box;
 }
 
@@ -261,6 +246,13 @@ strong {
     border-left-color: #09f;
     animation: spin 1s ease infinite;
     margin: 0 auto 15px;
+}
+
+.btn-actualizar-credenciales {
+    font-size: 20px;
+    width: auto;
+    max-width: 250px;
+    display: inline-block;
 }
 
 @keyframes spin {
