@@ -493,6 +493,20 @@ class ProductoForm(forms.ModelForm):
             raise forms.ValidationError("Ya existe este producto.")
         return nombre
     
+class EditarProductoForm(forms.ModelForm):
+    class Meta:
+        model = Producto
+        fields = ['nombre', 'tipo']
+
+    def clean_nombre(self):
+        nombre = self.cleaned_data.get('nombre')
+        qs = Producto.objects.filter(nombre__iexact=nombre)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise forms.ValidationError("Ya existe este producto.")
+        return nombre
+    
 class ProductoUnidadForm(forms.ModelForm):
     class Meta:
         model = ProductoUnidad

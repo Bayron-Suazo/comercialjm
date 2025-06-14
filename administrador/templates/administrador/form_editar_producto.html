@@ -1,0 +1,149 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'administrador/css/agregar_usuario.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<h2 class="titulo">Editar Producto</h2>
+
+<form method="post" novalidate>
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+
+  <div class="form-container">
+    <div class="form-column">
+      <div class="form-group">
+        <label for="{{ form.nombre.id_for_label }}">Nombre</label>
+        {{ form.nombre }}
+        {{ form.nombre.errors }}
+      </div>
+    </div>
+    <div class="form-column">
+      <div class="form-group">
+        <label for="{{ form.tipo.id_for_label }}">Tipo</label>
+        {{ form.tipo }}
+        {{ form.tipo.errors }}
+      </div>
+    </div>
+  </div>
+
+  <h3 class="subtitulo">Unidades de medida</h3>
+
+  {{ formset.management_form }}
+
+  <div class="tabla-boton-container">
+    <table class="tabla-usuarios">
+      <thead>
+        <tr class="cabecera-completa">
+          <th>Unidad de medida</th>
+          <th>Precio</th>
+          <th>Eliminar</th>
+        </tr>
+      </thead>
+      <tbody id="formset-body">
+        {% for form in formset %}
+        <tr class="formset-row">
+          {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+          <td>
+            {{ form.unidad_medida }}
+            {{ form.unidad_medida.errors }}
+          </td>
+          <td>
+            {{ form.precio }}
+            {{ form.precio.errors }}
+          </td>
+          <td>
+            {{ form.DELETE }}
+            <button type="button" class="boton-eliminar" title="Eliminar fila">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Template oculto para fila vacía -->
+    <template id="empty-form-template">
+      <tr class="formset-row">
+        {% for hidden in formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+        <td>{{ formset.empty_form.unidad_medida }}</td>
+        <td>{{ formset.empty_form.precio }}</td>
+        <td>
+          {{ formset.empty_form.DELETE }}
+          <button type="button" class="boton-eliminar" title="Eliminar fila">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </td>
+      </tr>
+    </template>
+
+    <div class="button-group" style="margin-top: 10px;">
+      <button type="button" id="add-formset-row" class="boton-agregar">+</button>
+    </div>
+  </div>
+
+  <div class="button-group" style="margin-top: 20px;">
+    <button type="button" class="cancelar" onclick="history.back()">Cancelar</button>
+    <button type="submit" class="añadir">Guardar Cambios</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const tbody      = document.getElementById('formset-body');
+  const addButton  = document.getElementById('add-formset-row');
+  // Esto captura el <input> de TOTAL_FORMS sin importar su prefijo
+  const totalForms = document.querySelector('input[name$="-TOTAL_FORMS"]');
+  // Extraemos el prefijo real (todo lo anterior a "-TOTAL_FORMS")
+  const prefix     = totalForms.name.replace(/-TOTAL_FORMS$/, '');
+  const template   = document.getElementById('empty-form-template').content;
+
+  function updateRowAttributes(row, index) {
+    row.querySelectorAll('input, select, textarea').forEach(el => {
+      if (!el.name) return;
+      // Reemplaza "__prefix__" o cualquier número que ya exista por el nuevo índice
+      el.name = el.name.replace(new RegExp(`${prefix}-(?:__prefix__|\\d+)-`), `${prefix}-${index}-`);
+      el.id   = 'id_' + el.name;
+      if (el.type === 'checkbox') el.checked = false;
+      else if (el.tagName === 'INPUT') el.value = '';
+      else if (el.tagName === 'SELECT') el.selectedIndex = 0;
+    });
+  }
+
+  addButton.addEventListener('click', () => {
+    const count = parseInt(totalForms.value, 10);
+    if (count >= {{ formset.max_num }}) {
+      alert(`No se pueden agregar más de {{ formset.max_num }} unidades de medida.`);
+      return;
+    }
+    const newRow = template.cloneNode(true).querySelector('tr');
+    updateRowAttributes(newRow, count);
+    tbody.appendChild(newRow);
+    totalForms.value = count + 1;
+  });
+
+  tbody.addEventListener('click', e => {
+    const btn = e.target.closest('.boton-eliminar');
+    if (!btn) return;
+    const row = btn.closest('tr');
+    const deleteInput = row.querySelector(`input[name^="${prefix}"][name$="-DELETE"]`);
+    if (deleteInput) {
+      deleteInput.checked = true;
+      row.style.display = 'none';
+    } else {
+      row.remove();
+      // Reindexamos todas las filas restantes
+      const rows = tbody.querySelectorAll('tr.formset-row');
+      rows.forEach((r, i) => updateRowAttributes(r, i));
+      totalForms.value = rows.length;
+    }
+  });
+});
+</script>
+{% endblock %}

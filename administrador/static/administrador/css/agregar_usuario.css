@@ -43,6 +43,10 @@ label {
     border-top-right-radius: 20px;
 }
 
+input[type="checkbox"][name$="-DELETE"] {
+  display: none;
+}
+
 input[type="text"],
 input[type="email"],
 input[type="date"],

@@ -5,168 +5,153 @@
   <link rel="stylesheet" href="{% static 'administrador/css/agregar_usuario.css' %}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-{% endblock %}
+  {% endblock %}
 
 {% block content %}
-<h2 class="titulo">Crear Producto</h2>
-
-{% if messages %}
-    <ul class="messages">
-        {% for message in messages %}
-            <li class="{{ message.tags }}">{{ message }}</li>
-        {% endfor %}
-    </ul>
-{% endif %}
+<h2 class="titulo">Editar Producto</h2>
 
 <form method="post" novalidate>
-    {% csrf_token %}
-    {% if form.non_field_errors %}
-        <div class="form-errors">
-            {{ form.non_field_errors }}
-        </div>
-    {% endif %}
+  {% csrf_token %}
+  {{ form.non_field_errors }}
 
-    <div class="form-container">
-        <div class="form-column">
-            <div class="form-group">
-                <label for="id_nombre">Nombre</label>
-                {{ form.nombre }}
-                {{ form.nombre.errors }}
-            </div>
-        </div>
-
-        <div class="form-column">
-            <div class="form-group">
-                <label for="id_tipo">Tipo</label>
-                {{ form.tipo }}
-                {{ form.tipo.errors }}
-            </div>
-        </div>
+  <div class="form-container">
+    <div class="form-column">
+      <div class="form-group">
+        <label for="id_nombre">Nombre</label>
+        {{ form.nombre }}
+        {{ form.nombre.errors }}
+      </div>
     </div>
+    <div class="form-column">
+      <div class="form-group">
+        <label for="id_tipo">Tipo</label>
+        {{ form.tipo }}
+        {{ form.tipo.errors }}
+      </div>
+    </div>
+  </div>
 
-    <h3 class="subtitulo">Unidades de medida</h3>
+  <h3 class="subtitulo">Unidades de medida</h3>
 
-    {{ formset.management_form }}
-    <div class="tabla-boton-container">
-        <table class="tabla-usuarios">
-        <thead>
-            <tr class="cabecera-completa">
-            <th>Unidad de medida</th>
-            <th>Precio</th>
-            <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody id="formset-body">
-            {% for form in formset %}
-            <tr class="formset-row">
-            <td>
-                {{ form.unidad_medida }}
-                {% for error in form.unidad_medida.errors %}
-                <div class="errorlist">{{ error }}</div>
-                {% endfor %}
-            </td>
-            <td>
-                {{ form.precio }}
-                {% for error in form.precio.errors %}
-                <div class="errorlist">{{ error }}</div>
-                {% endfor %}
-            </td>
-            <td>
-                <button type="button" class="boton-eliminar" title="Eliminar fila">
-                <i class="fas fa-trash-alt"></i>
-                </button>
-            </td>
-            </tr>
+  {{ formset.management_form }}
+
+  <div class="tabla-boton-container">
+    <table class="tabla-usuarios">
+      <thead>
+        <tr class="cabecera-completa">
+          <th>Unidad de medida</th>
+          <th>Precio</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="formset-body">
+        {% for form in formset %}
+        <tr class="formset-row">
+          <td>
+            {{ form.unidad_medida }}
+            {% for error in form.unidad_medida.errors %}
+              <div class="errorlist">{{ error }}</div>
             {% endfor %}
-        </tbody>
-        </table>
+          </td>
+          <td>
+            {{ form.precio }}
+            {% for error in form.precio.errors %}
+              <div class="errorlist">{{ error }}</div>
+            {% endfor %}
+          </td>
+          <td>
+            <button type="button" class="boton-eliminar" title="Eliminar fila">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
 
-        <div class="button-group">
-            <button type="button" id="add-formset-row" class="boton-agregar">+</button>
-        </div>
-    </div>
+    <!-- Template oculto -->
+    <template id="empty-form-template">
+      <tr class="formset-row">
+        <td>
+          {{ formset.empty_form.unidad_medida.as_widget }}
+        </td>
+        <td>
+          {{ formset.empty_form.precio.as_widget }}
+        </td>
+        <td>
+          <button type="button" class="boton-eliminar" title="Eliminar fila">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </td>
+      </tr>
+    </template>
 
-    <div class="button-group">
-        <button type="button" class="cancelar" onclick="history.back()">Cancelar</button>
-        <button type="submit" class="añadir">Guardar</button>
+    <div class="button-group" style="margin-top: 10px;">
+      <button type="button" id="add-formset-row" class="boton-agregar">+</button>
     </div>
+  </div>
+
+  <div class="button-group" style="margin-top: 20px;">
+    <button type="button" class="cancelar" onclick="history.back()">Cancelar</button>
+    <button type="submit" class="añadir">Guardar Cambios</button>
+  </div>
 </form>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const tbody = document.getElementById('formset-body');
-    const addButton = document.getElementById('add-formset-row');
-    let totalForms = document.getElementById('id_form-TOTAL_FORMS');
+  const tbody = document.getElementById('formset-body');
+  const addButton = document.getElementById('add-formset-row');
+  const totalForms = document.getElementById('id_form-TOTAL_FORMS');
+  const template = document.getElementById('empty-form-template').content;
 
-    function updateAttributes(row, index) {
-        row.querySelectorAll('input, select').forEach((input) => {
-            const name = input.name.replace(/form-\d+-/, `form-${index}-`);
-            const id = 'id_' + name;
-            input.name = name;
-            input.id = id;
-            if (input.tagName === 'INPUT') input.value = '';
-            if (input.tagName === 'SELECT') input.selectedIndex = 0;
-        });
+  function updateAttributes(row, index) {
+    row.querySelectorAll('input, select').forEach(input => {
+      if (!input.name) return;
+
+      const name = input.name.replace(/form-(\d+|__prefix__)-/, `form-${index}-`);
+      const id = 'id_' + name;
+
+      input.name = name;
+      input.id = id;
+
+      if (input.tagName === 'INPUT' && input.type !== 'hidden') {
+        input.value = '';
+      }
+      if (input.tagName === 'SELECT') {
+        input.selectedIndex = 0;
+      }
+    });
+  }
+
+  addButton.addEventListener('click', function () {
+    const formCount = parseInt(totalForms.value);
+    if (formCount >= 3) {
+      alert('No se pueden agregar más de 3 unidades de medida.');
+      return;
     }
 
-    function updateAllAttributes() {
+    const newRow = template.cloneNode(true).querySelector('tr');
+    updateAttributes(newRow, formCount);
+    tbody.appendChild(newRow);
+    totalForms.value = formCount + 1;
+  });
+
+  tbody.addEventListener('click', function (e) {
+    if (e.target.closest('.boton-eliminar')) {
+      const row = e.target.closest('tr');
+      if (tbody.querySelectorAll('.formset-row').length > 1) {
+        row.remove();
+        // Reindexar
         const rows = tbody.querySelectorAll('.formset-row');
-        rows.forEach((row, i) => updateAttributes(row, i));
+        rows.forEach((r, i) => updateAttributes(r, i));
         totalForms.value = rows.length;
+      } else {
+        alert('Debe haber al menos una unidad de medida.');
+      }
     }
-
-    function getSelectedUnidades() {
-        return Array.from(tbody.querySelectorAll('select'))
-            .map(select => select.value)
-            .filter(val => val !== '');
-    }
-
-    function showError(message) {
-        alert(message);
-    }
-
-    // Agregar fila
-    addButton.addEventListener('click', function () {
-        const rows = tbody.querySelectorAll('.formset-row');
-        if (rows.length >= 3) {
-            showError('No se pueden agregar más de 3 unidades de medida.');
-            return;
-        }
-
-        const newRow = rows[0].cloneNode(true);
-        updateAttributes(newRow, rows.length);
-        tbody.appendChild(newRow);
-        updateAllAttributes();
-    });
-
-    // Eliminar fila
-    tbody.addEventListener('click', function (e) {
-        if (e.target.closest('.boton-eliminar')) {
-            const rows = tbody.querySelectorAll('.formset-row');
-            if (rows.length <= 1) {
-                showError('Debe haber al menos una unidad de medida.');
-                return;
-            }
-
-            e.target.closest('tr').remove();
-            updateAllAttributes();
-        }
-    });
-
-    // Validación en tiempo real para evitar duplicados
-    tbody.addEventListener('change', function (e) {
-        if (e.target.tagName === 'SELECT') {
-            const selected = getSelectedUnidades();
-            const duplicates = selected.filter((val, i, arr) => arr.indexOf(val) !== i);
-
-            if (duplicates.length > 0) {
-                showError('No se pueden seleccionar unidades de medida repetidas.');
-                e.target.value = '';
-            }
-        }
-    });
+  });
 });
 </script>
 {% endblock %}

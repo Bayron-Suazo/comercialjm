@@ -10,11 +10,11 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .forms import CargaMasivaUsuariosForm
-from registration.models import Profile, Proveedor, Compra, Producto, DetalleCompra, Merma, DetalleLote, Lote, Cliente
+from registration.models import Profile, Proveedor, Compra, Producto, DetalleCompra, Merma, DetalleLote, Lote, Cliente, ProductoUnidad
 from datetime import datetime, date
 from django.core.exceptions import ValidationError
 from django.contrib import messages
-from administrador.forms import EditUserProfileForm, CrearProveedorForm, EditarProveedorForm, CompraForm, DetalleCompraForm, CargaMasivaProveedorForm, CargaMasivaUsuariosForm, AprobarCompraForm, ProductoForm, ProductoUnidadFormSet
+from administrador.forms import EditUserProfileForm, CrearProveedorForm, EditarProveedorForm, CompraForm, DetalleCompraForm, CargaMasivaProveedorForm, CargaMasivaUsuariosForm, AprobarCompraForm, ProductoForm, ProductoUnidadFormSet, ProductoUnidadForm, EditarProductoForm
 from django.views.decorators.http import require_POST
 from .forms import PerfilForm
 from django.db.models import Count, Avg, Max, Min
@@ -1131,6 +1131,25 @@ def productos_inactivos(request):
     productos = Producto.objects.filter(activo=False)
     return render(request, 'administrador/listar_productos_inactivos.html', {'productos': productos})
 
+
+
+# importar el inlineformset_factory fuera de la vista, para no redeclararlo en cada request
+from django.forms import inlineformset_factory
+
+# al inicio del archivo
+ProductoUnidadFormSet = inlineformset_factory(
+    Producto,
+    ProductoUnidad,
+    form=ProductoUnidadForm,
+    extra=0,
+    can_delete=True,
+    min_num=1,
+    validate_min=True,
+    max_num=3,
+    validate_max=True,
+)
+
+
 def agregar_producto(request):
     if request.method == 'POST':
         form = ProductoForm(request.POST)
@@ -1156,16 +1175,43 @@ def agregar_producto(request):
         'titulo': 'Agregar Producto'
     })
 
-def editar_producto(request, id):
-    producto = get_object_or_404(Producto, id=id)
+
+from django.shortcuts import get_object_or_404
+from django.forms import inlineformset_factory
+from django.utils import timezone
+
+
+
+def editar_producto(request, producto_id):
+    producto = get_object_or_404(Producto, id=producto_id)
+    ProductoUnidadFormSet = inlineformset_factory(
+        Producto,
+        ProductoUnidad,
+        form=ProductoUnidadForm,
+        extra=0,
+        can_delete=True,
+        min_num=1,
+        validate_min=True,
+        max_num=3,
+        validate_max=True,
+    )
+
     if request.method == 'POST':
-        form = ProductoForm(request.POST, instance=producto)
-        if form.is_valid():
+        form = EditarProductoForm(request.POST, instance=producto)
+        formset = ProductoUnidadFormSet(request.POST, instance=producto)
+        if form.is_valid() and formset.is_valid():
             form.save()
+            formset.save()
             return redirect('listar_productos')
     else:
-        form = ProductoForm(instance=producto)
-    return render(request, 'administrador/form_producto.html', {'form': form, 'titulo': 'Editar Producto'})
+        form = EditarProductoForm(instance=producto)
+        formset = ProductoUnidadFormSet(instance=producto)
+
+    return render(request, 'administrador/form_editar_producto.html', {
+        'form': form,
+        'formset': formset,
+        'titulo': 'Editar Producto'
+    })
 
 def eliminar_producto(request, id):
     producto = get_object_or_404(Producto, id=id)

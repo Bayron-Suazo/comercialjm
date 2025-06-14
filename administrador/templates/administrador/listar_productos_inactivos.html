@@ -23,7 +23,13 @@
 </div>
 
 <h1 class="titulo-pagina">Listado de productos inactivos</h1>
-
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
 <div class="buscador-wrapper">
     <form method="GET" action="">
         <div class="contenedor-busqueda">
