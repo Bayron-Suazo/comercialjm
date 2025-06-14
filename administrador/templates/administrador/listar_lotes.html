@@ -1,68 +1,50 @@
 {% extends 'core/base_admin.html' %}
 {% load static %}
 
-{% block title %}
-Listado de Lotes Activos
-{% endblock %}
+{% block title %}Listado de Lotes Activos{% endblock %}
 
-{% if mensaje %}
-    <div class="alert alert-success">{{ mensaje }}</div>
-{% endif %}
 
-{% if error %}
-    <div class="alert alert-danger">{{ error }}</div>
-{% endif %}
-
-<head>
-    <link rel="stylesheet" href="{% static 'administrador/css/productos.css' %}">
+{% block extra_head %}
+  
+    <link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-    {% block extra_head %}
-        <link href="{% static 'administrador/css/lista_usuarios.css' %}" rel="stylesheet"/>
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
-        <link rel="stylesheet" href="{% static 'administrador/css/productos.css' %}">
-    {% endblock %}
-</head>
+{% endblock %}
 
 {% block content %}
+
+
 <div class="acciones-derecha ancho-contenido">
-
-    <form id="form-carga-excel" method="POST" action="{% url 'carga_excel_lotes' %}" enctype="multipart/form-data" style="display: none;">
-        {% csrf_token %}
-        <input type="file" id="input-excel" name="archivo_excel" accept=".xlsx,.xls"
-               onchange="document.getElementById('form-carga-excel').submit();" />
-    </form>
-
     <a class="boton-header" href="{% url 'dashboard_productos' %}">
         Dashboard
         <img src="{% static 'administrador/svg/reporteria.svg' %}">
     </a>
+    <a class="boton-header" href="{% url 'listar_productos' %}" >Productos</a>
+    <a class="boton-header" href="{% url 'listar_mermas' %}" >Mermas</a>
+
+    <a class="boton-header" href="{% url 'agregar_lote' %}">
+        Agregar lote
+        <img src="{% static 'administrador/svg/plus.svg' %}">
+    </a>
 </div>
 
-<h1 class="titulo-pagina">Listado de Lotes</h1>
+<h2 class="titulo">Listado de Lotes</h2>
 
-<div class="buscador-wrapper">
-    <form method="GET" action="">
-        <div class="contenedor-busqueda">
-            <div class="input-icono">
-                <input type="text" name="q" placeholder="Buscar Producto ........">
-                <i class="fa fa-search icono-input"></i>
-            </div>
-            <button type="submit" class="btn-filtrar">
-                Filtrar <i class="fa fa-filter"></i>
-            </button>
-        </div>
-    </form>
-</div>
+<div class="busqueda-agregar">
+    <input type="text" placeholder="Buscar Producto .........." class="input-busqueda">
 
-<div class="filtro-busqueda ancho-contenido">
-    <form class="formulario-busqueda" method="GET">
-        <!-- Puedes agregar filtros aquí -->
-    </form>
-</div>
 
-<div class="tabs ancho-contenido">
-    <!-- Contenido de tabs si aplica -->
+    <div class="dropdown">
+        <a href="#" class="boton-header" id="dropdownMenuButton">
+            Filtrar
+            <img src="{% static 'administrador/svg/filter-solid.svg' %}">
+        </a>
+        <ul id="filterOptions" class="dropdown-content" style="display:none;">
+            <li><a href="#" onclick="applyFilter('nombre')" data-filter="nombre" class="{% if order_by == 'nombre' %}filtro-activo{% endif %}">Nombre</a></li>
+            <li><a href="#" onclick="applyFilter('tipo')" data-filter="tipo" class="{% if order_by == 'tipo' %}filtro-activo{% endif %}">Tipo</a></li>
+            <li><a href="#" onclick="clearOrderFilter()">Limpiar filtro</a></li>
+        </ul>
+    </div>
 </div>
 
 <div class="contenedor-tabla ancho-contenido">
@@ -70,7 +52,7 @@ Listado de Lotes Activos
         <thead>
             <tr>
                 <th><input disabled type="checkbox"/></th>
-                <th>Nombre</th>
+                <th>Número</th>
                 <th>Total de Productos</th>
                 <th>Fecha de Ingreso</th>
                 <th>Acciones</th>
@@ -86,10 +68,6 @@ Listado de Lotes Activos
                 <td class="acciones">
                     <a href="{% url 'ver_lote' lote.id %}" title="Ver">
                         <i class="fa fa-eye"></i>
-                    </a>
-                    <a href="{% url 'eliminar_lote' lote.id %}" title="Eliminar"
-                       onclick="return confirm('¿Estás seguro de que deseas eliminar este lote?');">
-                        <i class="fa fa-trash"></i>
                     </a>
                 </td>                
             </tr>

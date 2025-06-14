@@ -14,7 +14,7 @@ from registration.models import Profile, Proveedor, Compra, Producto, DetalleCom
 from datetime import datetime, date
 from django.core.exceptions import ValidationError
 from django.contrib import messages
-from administrador.forms import EditUserProfileForm, CrearProveedorForm, EditarProveedorForm, CompraForm, DetalleCompraForm, CargaMasivaProveedorForm, CargaMasivaUsuariosForm, AprobarCompraForm, ProductoForm, ProductoUnidadFormSet, ProductoUnidadForm, EditarProductoForm
+from administrador.forms import EditUserProfileForm, CrearProveedorForm, EditarProveedorForm, CompraForm, DetalleCompraForm, CargaMasivaProveedorForm, CargaMasivaUsuariosForm, AprobarCompraForm, ProductoForm, ProductoUnidadFormSet, ProductoUnidadForm, EditarProductoForm, LoteForm, DetalleLoteFormSet
 from django.views.decorators.http import require_POST
 from .forms import PerfilForm
 from django.db.models import Count, Avg, Max, Min
@@ -1235,7 +1235,7 @@ def editar_producto(request, producto_id):
         'titulo': 'Editar Producto'
     })
 
-from registration .models import Producto, ProductoUnidad, DetalleLote, Lote
+
 
 def detalle_producto(request, producto_id):
     producto = get_object_or_404(Producto, id=producto_id, activo=True)
@@ -1319,18 +1319,9 @@ def listar_productos_bloqueados(request):
     })
 
 
-
-
-def eliminar_producto(request, id):
-    producto = get_object_or_404(Producto, id=id)
-    producto.delete()
-    return redirect('listar_productos')
-
-
-
 def ver_lotes_producto(request, id):
     producto = get_object_or_404(Producto, id=id)
-    lotes = Lote.objects.filter(producto=producto)  # ajusta según tu modelo
+    lotes = Lote.objects.filter(producto=producto)
     return render(request, 'administrador/lotes_por_producto.html', {
         'producto': producto,
         'lotes': lotes,
@@ -1344,6 +1335,26 @@ def eliminar_producto(request, id):
 
 
 # ------------------------------------ GESTIÓN DE LOTES ------------------------------------
+
+@login_required
+def agregar_lote(request):
+    lote_form = LoteForm(request.POST or None)
+    formset = DetalleLoteFormSet(request.POST or None, queryset=DetalleLote.objects.none())
+
+    if request.method == 'POST':
+        if lote_form.is_valid() and formset.is_valid():
+            lote = lote_form.save()
+            for form in formset:
+                if form.cleaned_data and not form.cleaned_data.get('DELETE'):
+                    detalle = form.save(commit=False)
+                    detalle.lote = lote
+                    detalle.save()
+            return redirect('listar_lotes')
+
+    return render(request, 'administrador/agregar_lote.html', {
+        'lote_form': lote_form,
+        'formset': formset,
+    })
 
 
 

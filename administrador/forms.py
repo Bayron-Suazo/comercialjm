@@ -1,12 +1,13 @@
 from django import forms
 from django.contrib.auth.models import User, Group
-from registration.models import Profile, Proveedor, Producto, Cliente, Merma, Compra
+from registration.models import Profile, Proveedor, Producto, Cliente, Merma, Compra, Lote, DetalleLote
 import random
 import string
 import re
 from datetime import date
 from itertools import cycle
 from django.core.exceptions import ValidationError
+from django.forms import modelformset_factory
 
 # ------------------ AGREGAR USUARIO ------------------
 
@@ -525,6 +526,25 @@ ProductoUnidadFormSet = inlineformset_factory(
     min_num=1,
     validate_min=True,
 )
+
+class LoteForm(forms.ModelForm):
+    class Meta:
+        model = Lote
+        fields = ['numero']
+        widgets = {
+            'numero': forms.TextInput(attrs={'class': 'form-control'})
+        }
+
+class DetalleLoteForm(forms.ModelForm):
+    class Meta:
+        model = DetalleLote
+        fields = ['producto_unidad', 'cantidad']
+        widgets = {
+            'producto_unidad': forms.Select(attrs={'class': 'form-control'}),
+            'cantidad': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+        }
+
+
 
 
  

@@ -72,6 +72,7 @@ urlpatterns = [
     path('producto/<int:producto_id>/', views.detalle_producto, name='detalle_producto'),
     path('productos/bloquear/', views.bloquear_productos, name='bloquear_productos'),
     path('productos/activar/', views.activar_productos, name='activar_productos'),
+    path('lotes/agregar/', views.agregar_lote, name='agregar_lote'),
 
 
     #REPORTERIA

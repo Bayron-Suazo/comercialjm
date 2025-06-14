@@ -1,0 +1,139 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'administrador/css/agregar_usuario.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<h2 class="titulo">Agregar Lote</h2>
+
+<form method="post" novalidate>
+  {% csrf_token %}
+  {{ lote_form.non_field_errors }}
+
+  <div class="form-container">
+    <div class="form-column">
+      <div class="form-group">
+        <label for="id_numero">Número de lote</label>
+        {{ lote_form.numero }}
+        {{ lote_form.numero.errors }}
+      </div>
+    </div>
+  </div>
+
+  <h3 class="subtitulo">Detalle del lote</h3>
+
+  {{ formset.management_form }}
+
+  <div class="tabla-boton-container">
+    <table class="tabla-usuarios">
+      <thead>
+        <tr class="cabecera-completa">
+          <th>Producto y unidad</th>
+          <th>Cantidad</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="formset-body">
+        {% for form in formset %}
+        <tr class="formset-row">
+          <td>
+            {{ form.producto_unidad }}
+            {% for error in form.producto_unidad.errors %}
+              <div class="errorlist">{{ error }}</div>
+            {% endfor %}
+          </td>
+          <td>
+            {{ form.cantidad }}
+            {% for error in form.cantidad.errors %}
+              <div class="errorlist">{{ error }}</div>
+            {% endfor %}
+          </td>
+          <td>
+            <button type="button" class="boton-eliminar" title="Eliminar fila">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <template id="empty-form-template">
+      <tr class="formset-row">
+        <td>{{ formset.empty_form.producto_unidad.as_widget }}</td>
+        <td>{{ formset.empty_form.cantidad.as_widget }}</td>
+        <td>
+          <button type="button" class="boton-eliminar" title="Eliminar fila">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </td>
+      </tr>
+    </template>
+
+    <div class="button-group" style="margin-top: 10px;">
+      <button type="button" id="add-formset-row" class="boton-agregar">+</button>
+    </div>
+  </div>
+
+  <div class="button-group" style="margin-top: 20px;">
+    <button type="button" class="cancelar" onclick="history.back()">Cancelar</button>
+    <button type="submit" class="añadir">Guardar Lote</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const tbody = document.getElementById('formset-body');
+  const addButton = document.getElementById('add-formset-row');
+  const totalForms = document.getElementById('id_form-TOTAL_FORMS');
+  const template = document.getElementById('empty-form-template').content;
+
+  function updateAttributes(row, index) {
+    row.querySelectorAll('input, select').forEach(input => {
+      if (!input.name) return;
+
+      const name = input.name.replace(/form-(\d+|__prefix__)-/, `form-${index}-`);
+      const id = 'id_' + name;
+
+      input.name = name;
+      input.id = id;
+
+      if (input.tagName === 'INPUT' && input.type !== 'hidden') {
+        input.value = '';
+      }
+      if (input.tagName === 'SELECT') {
+        input.selectedIndex = 0;
+      }
+    });
+  }
+
+  addButton.addEventListener('click', function () {
+    const formCount = parseInt(totalForms.value);
+    const newRow = template.cloneNode(true).querySelector('tr');
+    updateAttributes(newRow, formCount);
+    tbody.appendChild(newRow);
+    totalForms.value = formCount + 1;
+  });
+
+  tbody.addEventListener('click', function (e) {
+    if (e.target.closest('.boton-eliminar')) {
+      const row = e.target.closest('tr');
+      if (tbody.querySelectorAll('.formset-row').length > 1) {
+        row.remove();
+        // Reindexar
+        const rows = tbody.querySelectorAll('.formset-row');
+        rows.forEach((r, i) => updateAttributes(r, i));
+        totalForms.value = rows.length;
+      } else {
+        alert('Debe haber al menos una fila.');
+      }
+    }
+  });
+});
+</script>
+{% endblock %}
