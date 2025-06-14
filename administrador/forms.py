@@ -586,10 +586,7 @@ DetalleLoteFormSet = modelformset_factory(
 
  
 
-class MermaForm(forms.ModelForm):
-    class Meta:
-        model = Merma
-        fields = ['producto', 'lote']
+# MERMAFORM
 
 def validar_rut_chileno(rut):
     try:

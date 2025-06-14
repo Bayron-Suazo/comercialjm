@@ -4,80 +4,129 @@
 {% block title %}Listado de Mermas{% endblock %}
 
 {% block extra_head %}
-<link href="{% static 'administrador/css/productos.css' %}" rel="stylesheet"/>
-<link href="{% static 'administrador/css/lista_usuarios.css' %}" rel="stylesheet"/>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+
+    <link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 {% endblock %}
 
 {% block content %}
+
 <div class="acciones-derecha ancho-contenido">
-    <a class="boton-header" href="#" id="carga-masiva-btn">
-        Carga masiva
-        <img src="{% static 'administrador/svg/carga-masiva.svg' %}"/>
-    </a>
     <a class="boton-header" href="{% url 'dashboard_productos' %}">
         Dashboard
-        <img src="{% static 'administrador/svg/reporteria.svg' %}"/>
+        <img src="{% static 'administrador/svg/reporteria.svg' %}">
     </a>
+    <a class="boton-header" href="{% url 'listar_lotes' %}" >Lotes</a>
+    <a class="boton-header" href="{% url 'listar_productos' %}" >Productos</a>
+
     <a class="boton-header" href="{% url 'agregar_merma' %}">
-        Agregar Merma
-        <img src="{% static 'administrador/svg/plus.svg' %}"/>
+        Registrar Merma
+        <img src="{% static 'administrador/svg/plus.svg' %}">
     </a>
 </div>
 
-<h1 class="titulo-pagina">Listado de Mermas</h1>
+<h2 class="titulo">Listado de Mermas</h2>
 
-<div class="buscador-wrapper">
-    <form action="" method="GET">
-        <div class="contenedor-busqueda">
-            <div class="input-icono">
-                <input name="q" placeholder="Buscar Producto ........" type="text"/>
-                <i class="fa fa-search icono-input"></i>
-            </div>
-            <button class="btn-filtrar" type="submit">
-                Filtrar <i class="fa fa-filter"></i>
-            </button>
-        </div>
-    </form>
+<div class="busqueda-agregar">
+    <input type="text" placeholder="Buscar Merma .........." class="input-busqueda">
+
+
+    <div class="dropdown">
+        <a href="#" class="boton-header" id="dropdownMenuButton">
+            Filtrar
+            <img src="{% static 'administrador/svg/filter-solid.svg' %}">
+        </a>
+        <ul id="filterOptions" class="dropdown-content" style="display:none;">
+            <li><a href="#" onclick="applyFilter('id')" data-filter="id" class="{% if order_by == 'id' %}filtro-activo{% endif %}">Fecha</a></li>
+            <li><a href="#" onclick="applyFilter('lote')" data-filter="lote" class="{% if order_by == 'lote' %}filtro-activo{% endif %}">Lote</a></li>
+            <li><a href="#" onclick="clearOrderFilter()">Limpiar filtro</a></li>
+        </ul>
+    </div>
 </div>
 
-<div class="filtro-busqueda ancho-contenido">
-    <form class="formulario-busqueda" method="GET"></form>
+<div class="barra-acciones-usuarios ancho-contenido" style="visibility: hidden;">
+    <div class="boton-bloquear-seleccionados">
+        <button id="bloquearBtn" disabled>Bloquear</button>
+    </div>
+
+    <div class="toggle-estado-usuarios">
+        <a href="{% url 'listar_productos' %}" class="estado-btn activo">Activos</a>
+        <a href="{% url 'productos_inactivos' %}" class="estado-btn">Bloqueados</a>
+    </div>
 </div>
 
-<div class="contenedor-tabla ancho-contenido">
-    <table class="tabla-usuarios tabla-productos">
-        <thead>
-            <tr>
-                <th><input disabled type="checkbox"/></th>
-                <th>Nombre</th>
-                <th>Cantidad</th>
-                <th>Lote</th>
-                <th>Fecha de Ingreso</th>
-                <th>Precio</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for merma in mermas %}
-            <tr>
-                <td><input name="producto_ids" type="checkbox" value="{{ merma.id }}"/></td>
-                <td>{{ merma.producto }}</td>
-                <td>{{ merma.cantidad }}</td>
-                <td>{{ merma.lote }}</td>
-                <td>{{ merma.fecha }}</td>
-                <td>${{ merma.precio|floatformat:0 }}</td>
-                <td class="acciones">
-                    <a href="#" title="Editar"><i class="fa fa-pen"></i></a>
-                    <a href="#" title="Bloquear"><i class="fa fa-lock"></i></a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="7">No hay mermas registradas.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+
+{% if mermas %}
+<table class="tabla-usuarios tabla-productos">
+    <thead>
+        <tr>
+            <th><input type="checkbox" id="select-all-mermas"></th>
+            <th>Nombre</th>
+            <th>Cantidad</th>
+            <th>Lote</th>
+            <th>Fecha de Ingreso</th>
+            <th>Precio</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for merma in mermas %}
+        <tr>
+            <td><input type="checkbox" class="select-merma" data-merma-id="{{ merma.id }}"></td>
+            <td>{{ merma.producto }}</td>
+            <td>{{ merma.cantidad }}</td>
+            <td>{{ merma.lote }}</td>
+            <td>{{ merma.fecha }}</td>
+            <td>${{ merma.precio|floatformat:0 }}</td>
+            <td class="acciones">
+                <a href="#" title="Editar">
+                    <img src="{% static 'administrador/svg/lapiz.svg' %}" alt="Editar">
+                </a>
+                <button title="Bloquear" class="btn-bloquear" data-merma-id="{{ merma.id }}">
+                    <img src="{% static 'core/svg/lock-open-solid.svg' %}" alt="Bloquear">
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p style="text-align: center; font-size: 24px; margin-top: 40px;">No hay mermas registradas.</p>
+{% endif %}
+
+<div class="custom-pagination">
+    {% if mermas.has_previous %}
+    <a href="?page=1" class="page-btn">&laquo;</a>
+    <a href="?page={{ mermas.previous_page_number }}" class="page-btn">&lsaquo;</a>
+    {% else %}
+    <span class="page-btn disabled">&laquo;</span>
+    <span class="page-btn disabled">&lsaquo;</span>
+    {% endif %}
+
+    <span class="page-btn current">{{ mermas.number }}</span>
+
+    {% if mermas.has_next %}
+    <a href="?page={{ mermas.next_page_number }}" class="page-btn">&rsaquo;</a>
+    <a href="?page={{ mermas.paginator.num_pages }}" class="page-btn">&raquo;</a>
+    {% else %}
+    <span class="page-btn disabled">&rsaquo;</span>
+    <span class="page-btn disabled">&raquo;</span>
+    {% endif %}
 </div>
+
+<div id="confirmModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>¿Bloquear Merma?</h3>
+    <p>Las mermas bloqueadas ya no aparecerán en los listados principales.</p>
+    <div class="modal-actions">
+      <button type="button" id="confirmNo">Cancelar</button>
+      <button type="button" id="confirmYes">Confirmar</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'administrador/js/busca_usuarios.js' %}"></script>
 {% endblock %}

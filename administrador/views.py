@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .forms import CargaMasivaUsuariosForm
-from registration.models import Profile, Proveedor, Compra, Producto, DetalleCompra, Merma, DetalleLote, Lote, Cliente, ProductoUnidad
+from registration.models import Profile, Proveedor, Compra, Producto, DetalleCompra, DetalleLote, Lote, Cliente, ProductoUnidad, Merma
 from datetime import datetime, date
 from django.core.exceptions import ValidationError
 from django.contrib import messages
@@ -33,7 +33,7 @@ from django.urls import reverse
 from django.http import HttpResponse
 from django.db.models import Count, Sum, F, Q,  ExpressionWrapper, FloatField
 from django.contrib import messages
-from .forms import ProductoForm, MermaForm
+from .forms import ProductoForm
 from registration.models import Profile, Venta
 from .forms import ClienteForm
 from django.core.exceptions import ObjectDoesNotExist
@@ -1495,19 +1495,37 @@ def carga_excel_lotes(request):
 
 
 
+
+
+@login_required
 def listar_mermas(request):
-    mermas = Merma.objects.filter(activo=True)
-    return render(request, 'administrador/listar_mermas.html', {'mermas': mermas})
+    order_by = request.GET.get('order_by', '-id')
+
+    mermas_activos = Merma.objects.all()
+
+    if order_by:
+        if order_by == 'id':
+            mermas = mermas_activos.order_by('id')
+        elif order_by == 'lote':
+            mermas = mermas_activos.order_by('lote')
+        else:
+            mermas = mermas_activos
+    else:
+        mermas = mermas_activos
+
+    paginator = Paginator(mermas, 10)
+    page_number = request.GET.get('page')
+    mermas = paginator.get_page(page_number)
+
+    return render(request, 'administrador/listar_mermas.html', {
+        'mermas': mermas,
+        'order_by': order_by
+    })
+
+
 
 def agregar_merma(request):
-    if request.method == 'POST':
-        form = MermaForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('listar_mermas')
-    else:
-        form = MermaForm()
-    return render(request, 'administrador/form_merma.html', {'form': form, 'titulo': 'Agregar Merma'})
+    pass
 
 
 

@@ -4,7 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.shortcuts import get_object_or_404, redirect
 from datetime import datetime, timezone
-
+from django.core.validators import MinValueValidator
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -140,18 +140,20 @@ class Cliente(models.Model):
 
 
 
-class Merma(models.Model):
-    producto = models.CharField(max_length=100)
-    cantidad = models.IntegerField()
-    lote = models.CharField(max_length=100)
-    fecha = models.DateField(auto_now_add=True)
-    precio = models.DecimalField(max_digits=10, decimal_places=2)
-    activo = models.BooleanField(default=True)
 
+class Merma(models.Model):
+    fecha = models.DateField(auto_now_add=True)  # Fecha en que se registra la merma
+    producto_unidad = models.ForeignKey(ProductoUnidad, on_delete=models.CASCADE, related_name="mermas")
+    lote = models.ForeignKey(Lote, on_delete=models.SET_NULL, null=True, blank=True, related_name="mermas")
+    cantidad = models.IntegerField(validators=[MinValueValidator(1)])  # Cantidad mínima 1
+    precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])  # Precio manual ingresado
+    motivo = models.TextField(blank=True, null=True)  # Descripción opcional de la merma
 
     def __str__(self):
-        return self.producto
+        return f"Merma de {self.cantidad} {self.producto_unidad.get_unidad_medida_display()} de {self.producto_unidad.producto.nombre} en {self.fecha}"
 
+    class Meta:
+        ordering = ['-fecha']
 
 
 
