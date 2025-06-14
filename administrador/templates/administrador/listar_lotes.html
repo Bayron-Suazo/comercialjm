@@ -31,7 +31,7 @@
 <h2 class="titulo">Listado de Lotes</h2>
 
 <div class="busqueda-agregar">
-    <input type="text" placeholder="Buscar Producto .........." class="input-busqueda">
+    <input type="text" placeholder="Buscar Lote .........." class="input-busqueda">
 
 
     <div class="dropdown">
@@ -40,46 +40,104 @@
             <img src="{% static 'administrador/svg/filter-solid.svg' %}">
         </a>
         <ul id="filterOptions" class="dropdown-content" style="display:none;">
-            <li><a href="#" onclick="applyFilter('nombre')" data-filter="nombre" class="{% if order_by == 'nombre' %}filtro-activo{% endif %}">Nombre</a></li>
-            <li><a href="#" onclick="applyFilter('tipo')" data-filter="tipo" class="{% if order_by == 'tipo' %}filtro-activo{% endif %}">Tipo</a></li>
+            <li><a href="#" onclick="applyFilter('id')" data-filter="id" class="{% if order_by == 'id' %}filtro-activo{% endif %}">Número</a></li>
             <li><a href="#" onclick="clearOrderFilter()">Limpiar filtro</a></li>
         </ul>
     </div>
 </div>
 
-<div class="contenedor-tabla ancho-contenido">
-    <table class="tabla-usuarios tabla-productos">
-        <thead>
-            <tr>
-                <th><input disabled type="checkbox"/></th>
-                <th>Número</th>
-                <th>Total de Productos</th>
-                <th>Fecha de Ingreso</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for lote in lotes %}
-            <tr>
-                <td><input disabled type="checkbox"/></td>
-                <td>{{ lote.id }}</td>
-                <td>{{ lote.detalles.count }}</td>
-                <td>{{ lote.fecha }}</td>
-                <td class="acciones">
-                    <a href="{% url 'ver_lote' lote.id %}" title="Ver">
-                        <i class="fa fa-eye"></i>
-                    </a>
-                </td>                
-            </tr>
-            {% endfor %}
-        </tbody>        
-    </table>
+<div class="barra-acciones-usuarios ancho-contenido" style="visibility: hidden;">
+    <div class="boton-bloquear-seleccionados">
+        <button id="bloquearBtn" disabled>Bloquear</button>
+    </div>
+
+    <div class="toggle-estado-usuarios">
+        <a href="{% url 'listar_productos' %}" class="estado-btn activo">Activos</a>
+        <a href="{% url 'productos_inactivos' %}" class="estado-btn">Bloqueados</a>
+    </div>
 </div>
 
+
+<table class="tabla-usuarios tabla-productos">
+    <thead>
+        <tr>
+            <th><input type="checkbox" style="visibility: hidden;" /></th>
+            <th>Número de Lote</th>
+            <th>Total de Productos</th>
+            <th>Fecha de Ingreso</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for lote in lotes %}
+        <tr>
+            <td><input type="checkbox" style="visibility: hidden;" /></td>
+            <td>{{ lote.id }}</td>
+            <td>{{ lote.detalles.count }}</td>
+            <td>{{ lote.fecha }}</td>
+            <td class="acciones">
+                <a href="{% url 'ver_lote' lote.id %}" title="Mostrar">
+                <img src="{% static 'administrador/svg/reporteria.svg' %}" alt="Mostrar" class="svg-compra">
+            </a>
+            </td>                
+        </tr>
+        {% endfor %}
+    </tbody>        
+</table>
+
+<div class="custom-pagination">
+    {% if lotes.has_previous %}
+    <a href="?page=1" class="page-btn">&laquo;</a>
+    <a href="?page={{ lotes.previous_page_number }}" class="page-btn">&lsaquo;</a>
+    {% else %}
+    <span class="page-btn disabled">&laquo;</span>
+    <span class="page-btn disabled">&lsaquo;</span>
+    {% endif %}
+
+    <span class="page-btn current">{{ lotes.number }}</span>
+
+    {% if lotes.has_next %}
+    <a href="?page={{ lotes.next_page_number }}" class="page-btn">&rsaquo;</a>
+    <a href="?page={{ lotes.paginator.num_pages }}" class="page-btn">&raquo;</a>
+    {% else %}
+    <span class="page-btn disabled">&rsaquo;</span>
+    <span class="page-btn disabled">&raquo;</span>
+    {% endif %}
+</div>
+
+
 <script>
-    function activarCargaExcel() {
-        document.getElementById('input-excel').click();
+    // Mostrar/ocultar menú de filtros
+    document.addEventListener('DOMContentLoaded', function () {
+        const dropdownButton = document.getElementById('dropdownMenuButton');
+        const filterOptions = document.getElementById('filterOptions');
+
+        dropdownButton.addEventListener('click', function (event) {
+        event.preventDefault();
+        filterOptions.style.display = filterOptions.style.display === 'none' ? 'block' : 'none';
+        });
+
+        // Cerrar el menú si se hace clic fuera de él
+        document.addEventListener('click', function (e) {
+        if (!dropdownButton.contains(e.target) && !filterOptions.contains(e.target)) {
+            filterOptions.style.display = 'none';
+        }
+        });
+    });
+
+    // Aplicar filtro por número
+    function applyFilter(value) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('order_by', value);
+        window.location.href = url.toString();
+    }
+
+    // Limpiar filtro
+    function clearOrderFilter() {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('order_by');
+        window.location.href = url.toString();
     }
 </script>
-
+<script src="{% static 'administrador/js/busca_usuarios.js' %}"></script>
 {% endblock %}

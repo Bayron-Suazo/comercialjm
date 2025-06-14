@@ -1,32 +1,45 @@
 {% extends 'core/base_admin.html' %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'administrador/css/detalle_compra.css' %}">
+{% endblock %}
 
 {% block content %}
-<h2 style="text-align: center;">Detalle del Lote {{ lote.numero }}</h2>
+<div class="page-wrapper">
+    <h2 class="titulo">Detalle del Lote #{{ lote.id }}</h2>
 
-<table style="margin: 20px auto; width: 80%; border-collapse: collapse;">
-    <thead>
-        <tr>
-            <th style="border: 1px solid #ccc; padding: 10px;">Producto</th>
-            <th style="border: 1px solid #ccc; padding: 10px;">Cantidad</th>
-            <th style="border: 1px solid #ccc; padding: 10px;">Precio</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for detalle in detalles %}
-        <tr>
-            <td style="border: 1px solid #ccc; padding: 10px;">{{ detalle.producto }}</td>
-            <td style="border: 1px solid #ccc; padding: 10px;">{{ detalle.cantidad }}</td>
-            <td style="border: 1px solid #ccc; padding: 10px;">${{ detalle.precio }}</td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="3" style="text-align: center;">Este lote no tiene productos registrados.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <div class="detalle-compra">
+        <p><strong>Fecha de creación:</strong> {{ lote.fecha }}</p>
 
-<div style="text-align: center; margin-top: 20px;">
-    <a href="{% url 'listar_lotes' %}" class="btn btn-secondary">Volver</a>
+        <table>
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Unidad</th>
+                    <th>Precio</th>
+                    <th>Cantidad</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in detalle_lote %}
+                <tr>
+                    <td>{{ item.producto }}</td>
+                    <td>{{ item.unidad }}</td>
+                    <td>${{ item.precio }}</td>
+                    <td>{{ item.cantidad }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align:center;">No hay productos en este lote.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="boton-header">
+      <a href="{% url 'listar_lotes' %}">Volver</a>
+    </div>
 </div>
 {% endblock %}

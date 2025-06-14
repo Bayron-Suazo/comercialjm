@@ -1330,10 +1330,6 @@ def ver_lotes_producto(request, id):
         'lotes': lotes,
     })
 
-def eliminar_producto(request, id):
-    producto = get_object_or_404(Producto, id=id)
-    producto.delete()
-    return redirect('listar_productos')
 
 
 
@@ -1370,28 +1366,50 @@ def agregar_lote(request):
     })
 
 
-
+@login_required
 def listar_lotes(request):
-    lotes = Lote.objects.filter(activo=True).order_by('-fecha')
-    return render(request, 'administrador/listar_lotes.html', {'lotes': lotes})
+    order_by = request.GET.get('order_by', '-id')
+    lotes_activos = Lote.objects.filter(activo=True)
 
+    if order_by == 'id':
+        lotes = lotes_activos.order_by('id')
+    else:
+        lotes = lotes_activos.order_by('-id')
 
-def ver_lote(request, id):
-    lote = get_object_or_404(Lote, id=id)
-    detalles = DetalleLote.objects.filter(lote=lote)
+    paginator = Paginator(lotes, 10)
+    page_number = request.GET.get('page')
+    lotes = paginator.get_page(page_number)
 
-    return render(request, 'administrador/ver_lote.html', {
-        'lote': lote,
-        'detalles': detalles
+    return render(request, 'administrador/listar_lotes.html', {
+        'lotes': lotes,
+        'order_by': order_by
     })
 
 
+def ver_lote(request, lote_id):
+    lote = get_object_or_404(Lote, id=lote_id, activo=True)
 
-def eliminar_lote(request, lote_id):
-    lote = get_object_or_404(Lote, id=lote_id)
-    lote.delete()
-    messages.success(request, 'Lote eliminado correctamente.')
-    return redirect('listar_lotes')
+    detalles = lote.detalles.select_related('producto_unidad__producto')
+
+    detalle_lote = []
+    for detalle in detalles:
+        detalle_lote.append({
+            'producto': detalle.producto_unidad.producto.nombre,
+            'unidad': detalle.producto_unidad.get_unidad_medida_display(),
+            'precio': detalle.producto_unidad.precio,
+            'cantidad': detalle.cantidad,
+            'fecha': lote.fecha,
+            'numero': lote.id,
+        })
+
+    context = {
+        'detalle_lote': detalle_lote,
+        'lote': lote,
+    }
+
+    return render(request, 'administrador/ver_lote.html', context)
+
+
 
 
 
