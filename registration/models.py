@@ -48,18 +48,46 @@ class Lote(models.Model):
         return f"{self.numero} - {self.fecha}"
     
 
-    
 class Producto(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
-    lote = models.ForeignKey(Lote, on_delete=models.SET_NULL, null=True, blank=True)
-    cantidad = models.IntegerField()
     tipo = models.CharField(max_length=50)
-    precio = models.DecimalField(max_digits=10, decimal_places=2)
-    fecha = models.DateField(auto_now_add=True) 
+    fecha = models.DateField(auto_now_add=True)
     activo = models.BooleanField(default=True)
 
     def __str__(self):
         return self.nombre
+
+    def obtener_cantidad_total(self):
+        return sum([
+            detalle.cantidad for detalle in self.unidades.all().prefetch_related('detallelote_set')
+        ])
+
+
+class UnidadMedida(models.TextChoices):
+    KILOGRAMO = 'kg', 'Kilogramo'
+    UNIDAD = 'unidad', 'Unidad'
+    CAJA = 'caja', 'Caja'
+
+class ProductoUnidad(models.Model):
+    producto = models.ForeignKey(Producto, related_name='unidades', on_delete=models.CASCADE)
+    unidad_medida = models.CharField(max_length=10, choices=UnidadMedida.choices)
+    precio = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        unique_together = ('producto', 'unidad_medida')  # evita duplicados
+
+    def __str__(self):
+        return f"{self.producto.nombre} - {self.get_unidad_medida_display()}"
+    
+
+class DetalleLote(models.Model):
+    lote = models.ForeignKey(Lote, related_name="detalles", on_delete=models.CASCADE)
+    producto_unidad = models.ForeignKey(ProductoUnidad, on_delete=models.CASCADE)
+    cantidad = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.producto_unidad} ({self.cantidad})"
+
 
 
 class Compra(models.Model):

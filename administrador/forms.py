@@ -478,24 +478,47 @@ class ClienteForm(forms.ModelForm):
         model = Cliente
         fields = ['nombre', 'rut', 'categoria', 'correo', 'telefono']
 
-
+from django import forms
+from registration .models import Producto, ProductoUnidad, UnidadMedida
+from django.forms import inlineformset_factory
 
 class ProductoForm(forms.ModelForm):
     class Meta:
         model = Producto
-        fields = ['nombre', 'cantidad', 'tipo', 'precio'] 
-        
+        fields = ['nombre', 'tipo']
+
     def clean_nombre(self):
         nombre = self.cleaned_data.get('nombre')
         if Producto.objects.filter(nombre__iexact=nombre).exists():
             raise forms.ValidationError("Ya existe este producto.")
         return nombre
+    
+class ProductoUnidadForm(forms.ModelForm):
+    class Meta:
+        model = ProductoUnidad
+        fields = ['unidad_medida', 'precio']
+        widgets = {
+            'unidad_medida': forms.Select(choices=UnidadMedida.choices),
+            'precio': forms.NumberInput(attrs={'step': '0.01'}),
+        }
+
+ProductoUnidadFormSet = inlineformset_factory(
+    Producto,
+    ProductoUnidad,
+    form=ProductoUnidadForm,
+    extra=1,
+    can_delete=True,
+    min_num=1,
+    validate_min=True,
+)
+
+
  
 
 class MermaForm(forms.ModelForm):
     class Meta:
         model = Merma
-        fields = ['producto', 'cantidad', 'lote', 'precio']
+        fields = ['producto', 'lote']
 
 def validar_rut_chileno(rut):
     try:

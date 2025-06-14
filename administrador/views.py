@@ -14,7 +14,7 @@ from registration.models import Profile, Proveedor, Compra, Producto, DetalleCom
 from datetime import datetime, date
 from django.core.exceptions import ValidationError
 from django.contrib import messages
-from administrador.forms import EditUserProfileForm, CrearProveedorForm, EditarProveedorForm, CompraForm, DetalleCompraForm, CargaMasivaProveedorForm, CargaMasivaUsuariosForm, AprobarCompraForm
+from administrador.forms import EditUserProfileForm, CrearProveedorForm, EditarProveedorForm, CompraForm, DetalleCompraForm, CargaMasivaProveedorForm, CargaMasivaUsuariosForm, AprobarCompraForm, ProductoForm, ProductoUnidadFormSet
 from django.views.decorators.http import require_POST
 from .forms import PerfilForm
 from django.db.models import Count, Avg, Max, Min
@@ -1134,20 +1134,27 @@ def productos_inactivos(request):
 def agregar_producto(request):
     if request.method == 'POST':
         form = ProductoForm(request.POST)
-        if form.is_valid():
+        formset = ProductoUnidadFormSet(request.POST)
+        if form.is_valid() and formset.is_valid():
             producto = form.save(commit=False)
             producto.activo = True
-            fecha_actual = timezone.now().date()
-            lote_actual, creado = Lote.objects.get_or_create(
-                fecha=fecha_actual,
-                defaults={'numero': fecha_actual.strftime('%Y%m%d'), 'activo': True}
-            )
-            producto.lote = lote_actual
+            producto.fecha = timezone.now().date()
             producto.save()
+
+            # Guardar unidades de medida
+            formset.instance = producto
+            formset.save()
+
             return redirect('listar_productos')
     else:
         form = ProductoForm()
-    return render(request, 'administrador/form_producto.html', {'form': form, 'titulo': 'Agregar Producto'})
+        formset = ProductoUnidadFormSet()
+
+    return render(request, 'administrador/form_producto.html', {
+        'form': form,
+        'formset': formset,
+        'titulo': 'Agregar Producto'
+    })
 
 def editar_producto(request, id):
     producto = get_object_or_404(Producto, id=id)
