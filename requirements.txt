@@ -7,3 +7,4 @@ pylint-django
 pandas
 xlwt
 openpyxl==3.1.2
+WeasyPrint
