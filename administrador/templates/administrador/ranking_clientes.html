@@ -7,24 +7,26 @@
 <link href="{% static 'administrador/css/productos.css' %}" rel="stylesheet"/>
 <link href="{% static 'administrador/css/lista_usuarios.css' %}" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 {% endblock %}
 
 {% block content %}
 <div class="acciones-derecha ancho-contenido">
   <a class="boton-header" href="{% url 'dashboard_clientes' %}">
-    Dashboard
-    <img src="{% static 'administrador/svg/reporteria.svg' %}"/>
+          Dashboard
+          <img src="{% static 'administrador/svg/reporteria.svg' %}"/>
   </a>
+  
 </div>
 
-<h1 class="titulo-pagina" style="margin-top: 40px;">Ranking de clientes</h1>
+<div style="margin-top: 40px;"></div>
+
+<h1 class="titulo-pagina">Ranking de clientes</h1>
 
 <div class="buscador-wrapper">
   <form action="" method="GET">
     <div class="contenedor-busqueda">
       <div class="input-icono">
-        <input name="q" placeholder="Buscar Cliente..." type="text" value="{{ request.GET.q }}"/>
+        <input name="q" placeholder="Buscar Cliente..." type="text"/>
         <i class="fa fa-search icono-input"></i>
       </div>
       <button class="btn-filtrar" type="submit">
@@ -32,102 +34,54 @@
       </button>
     </div>
   </form>
+
+  
+</div>
+
+<div class="filtro-busqueda ancho-contenido">
+  <form class="formulario-busqueda" method="GET">
+    <!-- Opcional: filtros -->
+  </form>
 </div>
 
 <div class="contenedor-tabla ancho-contenido">
   <table class="tabla-usuarios tabla-productos">
     <thead>
       <tr>
+        <th><input type="checkbox" disabled/></th>
         <th>Nombre</th>
         <th>RUT</th>
         <th>Categoría</th>
-        <th>Total Comprado</th>
-        <th>Veces que compró</th>
+        <th>Correo</th>
+        <th>Teléfono</th>
         <th>Acciones</th>
       </tr>
     </thead>
     <tbody>
       {% for cliente in clientes %}
       <tr>
+        <td><input type="checkbox" disabled /></td>
         <td>{{ cliente.nombre }}</td>
         <td>{{ cliente.rut }}</td>
         <td>{{ cliente.categoria }}</td>
-        <td>{{ cliente.total_ventas|floatformat:0 }}$</td>
-        <td>{{ cliente.cantidad_ventas }}</td>
+        <td>{{ cliente.correo }}</td>
+        <td>{{ cliente.telefono }}</td>
         <td class="acciones">
-          <a href="{% url 'detalle_compras_cliente' cliente.id %}" title="Ver compras">
-            <i class="fa fa-eye" style="color: blue;"></i>
-          </a>
-          <a href="javascript:void(0);" class="btn-cupon" data-cliente="{{ cliente.id }}" title="Generar cupón">
-            <i class="fa-solid fa-ticket" style="color: blue; margin-left: 10px;"></i>
-          </a>          
+          <a href="#" title="Editar"><i class="fa fa-pen"></i></a>
+          <a href="{% url 'toggle_estado_cliente' pk=cliente.id %}" title=“Desactivar onclick="return confirm('¿Estás seguro de desactivar este cliente?');">
+            <i class="fa fa-lock" style="color: blue;"></i>
+          </a> 
+          <a href="{% url 'eliminar_cliente' pk=cliente.id %}" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar este cliente?');">
+                <i class="fa fa-trash" style="color: blue;"></i>
+          </a>      
         </td>
-        
       </tr>
       {% empty %}
       <tr>
-        <td colspan="6">No hay clientes activos con ventas registradas.</td>
+        <td colspan="7">No hay clientes activos.</td>
       </tr>
       {% endfor %}
     </tbody>
-    
   </table>
 </div>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const botonesCupon = document.querySelectorAll('.btn-cupon');
-  
-    botonesCupon.forEach(boton => {
-      boton.addEventListener('click', function () {
-        const clienteId = this.getAttribute('data-cliente');
-  
-        Swal.fire({
-          title: 'Generar cupón de descuento',
-          input: 'range',
-          inputLabel: 'Selecciona el % de descuento',
-          inputAttributes: {
-            min: 1,
-            max: 100,
-            step: 1
-          },
-          inputValue: 10, // valor por defecto
-          showCancelButton: true,
-          confirmButtonText: 'Generar cupón',
-          cancelButtonText: 'Cancelar',
-          preConfirm: (value) => {
-            return value;
-          }
-        }).then(result => {
-          if (result.isConfirmed) {
-            const descuento = result.value;
-  
-            // Aquí puedes enviar el descuento al backend vía fetch o form oculto
-            console.log(`Cliente ${clienteId} recibirá un cupón de ${descuento}%`);
-  
-            // Enviar a tu URL de Django (ejemplo)
-            fetch("{% url 'generar_cupon_ajax' %}", {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}',
-              },
-              body: JSON.stringify({
-                cliente_id: clienteId,
-                descuento: descuento
-              })
-            })
-            .then(response => response.json())
-            .then(data => {
-              Swal.fire('Cupón generado', `Se asignó un ${descuento}% de descuento`, 'success');
-            })
-            .catch(error => {
-              Swal.fire('Error', 'No se pudo generar el cupón', 'error');
-            });
-          }
-        });
-      });
-    });
-  });
-  </script>
-  
 {% endblock %}

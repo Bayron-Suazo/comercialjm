@@ -7,328 +7,72 @@
     <link rel="stylesheet" href="{% static 'administrador/css/productos.css' %}">
     <link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <style>
-        body {
-            background-color: #fef9f1; /* Fondo café claro */
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .productos-container {
-            background-color: transparent;
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 40px 50px;
-            border-radius: 20px;
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .titulo-pagina {
-            text-align: center;
-            font-size: 2em;
-            margin-bottom: 30px;
-            color: #333;
-            position: relative;
-            padding-bottom: 15px;
-        }
-
-        .titulo-pagina::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
-            height: 4px;
-            background-color: #4CAF50;
-            border-radius: 2px;
-        }
-
-        .acciones-derecha {
-            display: flex;
-            justify-content: flex-end;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .boton-header {
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .boton-header:hover {
-            background-color: #45a049;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .boton-header img {
-            width: 18px;
-            height: 18px;
-        }
-
-        .buscador-wrapper {
-            margin-bottom: 30px;
-        }
-
-        .contenedor-busqueda {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .input-icono {
-            position: relative;
-            flex-grow: 1;
-        }
-
-        .input-icono input {
-            width: 100%;
-            padding: 15px 20px 15px 45px;
-            border: 2px solid #e0e0e0;
-            border-radius: 30px;
-            font-size: 16px;
-            outline: none;
-            transition: all 0.3s ease;
-            background-color: #fffef6;
-        }
-
-        .input-icono input:focus {
-            border-color: #4CAF50;
-            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
-        }
-
-        .icono-input {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #4CAF50;
-            font-size: 18px;
-        }
-
-        .btn-filtrar {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 0 20px;
-            border-radius: 30px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn-filtrar:hover {
-            background-color: #45a049;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .selector-estado {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .selector-estado a {
-            padding: 10px 25px;
-            border-radius: 30px;
-            text-decoration: none;
-            color: #333;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            background-color: #f0f0f0;
-        }
-
-        .selector-estado a:hover {
-            background-color: #e0e0e0;
-        }
-
-        .selector-estado a.activo {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        .contenedor-tabla {
-            margin-top: 30px;
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: transparent;
-            box-shadow: none;
-            border-radius: 0;
-            overflow: hidden;
-        }
-
-        th, td {
-            padding: 15px 20px;
-            text-align: left;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        th {
-            background-color: #4CAF50;
-            color: white;
-            font-weight: bold;
-        }
-
-        tr:hover {
-            background-color: #f5f5f5;
-        }
-
-        .acciones a {
-            color: #4CAF50;
-            margin-right: 10px;
-            transition: color 0.3s ease;
-        }
-
-        .acciones a:hover {
-            color: #45a049;
-        }
-
-        .acciones a.eliminar {
-            color: #e74c3c;
-        }
-
-        .acciones a.eliminar:hover {
-            color: #c0392b;
-        }
-
-        /* Paginación */
-        .custom-pagination {
-            display: flex;
-            justify-content: center;
-            margin-top: 30px;
-            gap: 5px;
-        }
-
-        .page-btn {
-            padding: 8px 15px;
-            border-radius: 8px;
-            text-decoration: none;
-            color: #333;
-            background-color: #f0f0f0;
-            transition: all 0.3s ease;
-        }
-
-        .page-btn:hover:not(.disabled):not(.current) {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        .page-btn.current {
-            background-color: #4CAF50;
-            color: white;
-            font-weight: bold;
-        }
-
-        .page-btn.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        @media (max-width: 768px) {
-            .productos-container {
-                padding: 25px;
-            }
-            
-            .acciones-derecha {
-                flex-direction: column;
-                align-items: flex-end;
-            }
-            
-            .contenedor-busqueda {
-                flex-direction: column;
-            }
-            
-            .btn-filtrar {
-                justify-content: center;
-                padding: 12px;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .productos-container {
-                padding: 20px;
-            }
-            
-            .titulo-pagina {
-                font-size: 1.5em;
-            }
-            
-            th, td {
-                padding: 10px 12px;
-                font-size: 14px;
-            }
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-        }
-    </style>
 {% endblock %}
 
 {% block content %}
-<div class="productos-container">
-    <div class="acciones-derecha ancho-contenido">
-        <a class="boton-header" href="{% url 'dashboard_productos' %}">
-            Dashboard
-            <img src="{% static 'administrador/svg/reporteria.svg' %}">
-        </a>
 
-        <a class="boton-header" href="{% url 'agregar_producto' %}">
-            Agregar producto
-            <img src="{% static 'administrador/svg/plus.svg' %}">
-        </a>
-    </div>
+<div class="acciones-derecha ancho-contenido">
+    <a class="boton-header" href="{% url 'dashboard_productos' %}">
+        Dashboard
+        <img src="{% static 'administrador/svg/reporteria.svg' %}">
+    </a>
+    <a class="boton-header" href="{% url 'agregar_producto' %}">
+        Agregar producto
+        <img src="{% static 'administrador/svg/plus.svg' %}">
+    </a>
+</div>
 
-    <h1 class="titulo-pagina">Listado de productos inactivos</h1>
+<h1 class="titulo-pagina">Listado de productos inactivos</h1>
 
-    <div class="buscador-wrapper">
-        <form method="GET" action="">
-            <div class="contenedor-busqueda">
-                <div class="input-icono">
-                    <input type="text" name="q" placeholder="Buscar Producto ........" value="{{ query }}">
-                    <i class="fa fa-search icono-input"></i>
-                </div>
-                <button type="submit" class="btn-filtrar">
-                    Filtrar <i class="fa fa-filter"></i>
-                </button>
+<div class="buscador-wrapper">
+    <form method="GET" action="">
+        <div class="contenedor-busqueda">
+            <div class="input-icono">
+                <input type="text" name="q" placeholder="Buscar Producto ........">
+                <i class="fa fa-search icono-input"></i>
             </div>
-        </form>
+            <button type="submit" class="btn-filtrar">
+                Filtrar <i class="fa fa-filter"></i>
+            </button>
+        </div>
+    </form>
 
-        <div class="selector-estado">
-            <a href="{% url 'listar_productos' %}" class="{% if request.resolver_match.url_name == 'listar_productos' %}activo{% endif %}">Activos</a>
-            <a href="{% url 'productos_inactivos' %}" class="{% if request.resolver_match.url_name == 'productos_inactivos' %}activo{% endif %}">Inactivos</a>
-        </div>     
+    <div class="selector-estado">
+        <a href="{% url 'listar_productos' %}" class="{% if request.path == '/productos/' %}activo{% endif %}">Activos</a>
+        <a href="{% url 'productos_inactivos' %}" class="{% if request.path == '/productos/inactivos/' %}activo{% endif %}">Inactivos</a>
     </div>
+</div>
 
-    <div id="tabla-productos-container">
-        {% include 'administrador/partials/tabla_productos_inactivos.html' %}
-    </div>
-    
+<div class="contenedor-tabla ancho-contenido">
+    <table class="tabla-usuarios tabla-productos">
+        <thead>
+            <tr>
+                <th><input disabled type="checkbox"/></th>
+                <th>Nombre</th>
+                <th>Cantidad</th>
+                <th>Tipo</th>
+                <th>Precio</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for producto in productos %}
+            <tr>
+                <td><input name="producto_ids" type="checkbox" value="{{ producto.id }}"/></td>
+                <td>{{ producto.nombre }}</td>
+                <td>{{ producto.cantidad }}</td>
+                <td>{{ producto.tipo }}</td>
+                <td>${{ producto.precio|floatformat:0 }}</td>
+                <td class="acciones">
+                    <a href="{% url 'editar_producto' producto.id %}" title="Editar"><i class="fa fa-pen"></i></a>
+                    <a href="{% url 'toggle_estado_producto' producto.id %}?origen=inactivos" title="Activar"><i class="fa fa-unlock"></i></a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6">No hay productos inactivos.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
 {% endblock %}

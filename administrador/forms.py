@@ -473,19 +473,23 @@ class AprobarCompraForm(forms.ModelForm):
 
 # ------------------ CLIENTE ------------------
 
+class ClienteForm(forms.ModelForm):
+    class Meta:
+        model = Cliente
+        fields = ['nombre', 'rut', 'categoria', 'correo', 'telefono']
+
+
 
 class ProductoForm(forms.ModelForm):
     class Meta:
         model = Producto
-        fields = ['nombre', 'tipo', 'precio_venta']  # Solo los visibles
-
-    def clean_existencias(self):
-        existencias = self.cleaned_data.get('existencias', 0)
-        if existencias < 0:
-            raise forms.ValidationError("❌ ¡Las existencias no pueden ser negativas!")
-        return existencias
-
-
+        fields = ['nombre', 'cantidad', 'tipo', 'precio'] 
+        
+    def clean_nombre(self):
+        nombre = self.cleaned_data.get('nombre')
+        if Producto.objects.filter(nombre__iexact=nombre).exists():
+            raise forms.ValidationError("Ya existe este producto.")
+        return nombre
  
 
 class MermaForm(forms.ModelForm):
@@ -519,8 +523,6 @@ def validar_rut_chileno(rut):
 
 
 class ClienteForm(forms.ModelForm):
-    """Formulario personalizado para clientes."""
-
     CATEGORIAS = [
         ('mayorista', 'Mayorista'),
         ('frecuente', 'Frecuente'),
@@ -540,6 +542,8 @@ class ClienteForm(forms.ModelForm):
             'telefono': forms.TextInput(attrs={'class': 'input-estilo', 'id': 'telefono', 'autocomplete': 'off'}),
         }
 
+
+
     def clean_nombre(self):
         nombre = self.cleaned_data['nombre']
         if not re.match(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$', nombre):
@@ -547,26 +551,17 @@ class ClienteForm(forms.ModelForm):
         return nombre
 
     def clean_rut(self):
-        rut = self.cleaned_data.get('rut', '').strip().upper()
-        rut = rut.replace(".", "").replace("-", "")
+        rut = self.cleaned_data.get('rut')
 
-        if not rut[:-1].isdigit() or rut[-1] not in '0123456789K':
-            raise ValidationError("Formato de RUT no válido.")
+        # Si estamos editando y el RUT no cambió, lo aceptamos directamente
+        if self.instance and self.instance.pk and rut == self.instance.rut:
+            return rut
 
-        cuerpo = rut[:-1]
-        dv_ingresado = rut[-1]
+        # Si es un nuevo registro o cambió el RUT, validamos normalmente
+        if not validar_rut_chileno(rut):
+            raise forms.ValidationError("rut_invalido_swal")
 
-        reversed_digits = list(map(int, reversed(cuerpo)))
-        factors = cycle([2, 3, 4, 5, 6, 7])
-        total = sum(d * next(factors) for d in reversed_digits)
-        mod = 11 - (total % 11)
-        verificador = '0' if mod == 11 else 'K' if mod == 10 else str(mod)
-
-        if dv_ingresado != verificador:
-            raise ValidationError("El RUT no es válido.")
-
-        # Guardar RUT formateado uniforme
-        return f"{cuerpo}-{dv_ingresado}"
+        return rut
 
 
 
@@ -587,58 +582,6 @@ class ClienteForm(forms.ModelForm):
         if not re.match(r'^9\d{8}$', telefono):
             raise ValidationError("El teléfono debe comenzar con 9 y tener 9 dígitos en total.")
         return telefono
-
-#-----------------------VENTA-----------------------
-
-from django import forms
-
-class UnidadVentaForm(forms.Form):
-    unidad_compra = forms.ChoiceField(
-        choices=[('unidad', 'Unidad/Kilo'), ('caja', 'Caja')],
-        widget=forms.Select(attrs={
-            'class': 'form-control',
-            'style': 'min-width: 150px; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 15px;'
-        }),
-        required=True,
-        label='Tipo de compra'
-    )
-
-from django import forms
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import User, Group
-from registration.models import Cliente, Venta
-from django import forms
-
-
-class AgregarProductoVentaForm(forms.Form):
-    producto = forms.ModelChoiceField(
-        queryset=Producto.objects.filter(activo=True),
-        label="Producto",
-        empty_label="Seleccione un producto",
-        widget=forms.Select(attrs={'id': 'id_producto'})
-    )
-    cantidad = forms.IntegerField(
-        min_value=1,
-        label="Cantidad",
-        widget=forms.NumberInput(attrs={'placeholder': 'Ingrese cantidad'})
-    )
-
-class VentaForm(forms.ModelForm):
-    class Meta:
-        model = Venta
-        fields = ['cliente', 'metodo_pago']
-        widgets = {
-            'metodo_pago': forms.Select(attrs={'class': 'form-control'}),
-        }
-
-    def init(self, args, **kwargs):
-        super().init(args, **kwargs)
-        self.fields['cliente'].queryset = Cliente.objects.filter(activo=True)
-        self.fields['cliente'].required = False 
-        self.fields['cliente'].widget.attrs.update({
-            'class': 'form-control',
-            'placeholder': 'Seleccione un cliente'
-        })
     
 class CargaMasivaProveedorForm(forms.Form):
     archivo = forms.FileField(label="Archivo Excel", required=True)
