@@ -55,12 +55,11 @@ urlpatterns = [
     path('productos/dashboard/', views.dashboard_productos, name='dashboard_productos'),
     path('mermas/', views.listar_mermas, name='listar_mermas'),
     path('productos/dashboard/', views.dashboard_productos, name='dashboard_productos'),
-    path('productos/inactivos/', views.productos_inactivos, name='productos_inactivos'),
+    path('productos/inactivos/', views.listar_productos_bloqueados, name='productos_inactivos'),
     path('productos/', views.listar_productos, name='listar_productos'),
     path('productos/agregar/', views.agregar_producto, name='agregar_producto'),
     path('productos/<int:id>/eliminar/', views.eliminar_producto, name='eliminar_producto'),
     path('productos/<int:id>/lotes/', views.ver_lotes_producto, name='ver_lotes_producto'),
-    path('productos/toggle/<int:id>/', views.toggle_estado_producto, name='toggle_estado_producto'),
     path('productos/editar/<int:producto_id>/', views.editar_producto, name='editar_producto'),
     path('productos/eliminar/<int:id>/', views.eliminar_producto, name='eliminar_producto'),
     path('lotes/', views.listar_lotes, name='listar_lotes'),
@@ -71,6 +70,8 @@ urlpatterns = [
     path('ventas/', views.listar_ventas, name='listar_ventas'),
     path('debug/', views.debug_url_test),
     path('producto/<int:producto_id>/', views.detalle_producto, name='detalle_producto'),
+    path('productos/bloquear/', views.bloquear_productos, name='bloquear_productos'),
+    path('productos/activar/', views.activar_productos, name='activar_productos'),
 
 
     #REPORTERIA

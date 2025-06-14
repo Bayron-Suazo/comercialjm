@@ -4,9 +4,10 @@
 {% block title %}Listado de productos inactivos{% endblock %}
 
 {% block extra_head %}
-    <link rel="stylesheet" href="{% static 'administrador/css/productos.css' %}">
+
     <link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 {% endblock %}
 
 {% block content %}
@@ -18,69 +19,240 @@
     </a>
     <a class="boton-header" href="{% url 'listar_lotes' %}" >Lotes</a>
     <a class="boton-header" href="{% url 'listar_mermas' %}" >Mermas</a>
+
     <a class="boton-header" href="{% url 'agregar_producto' %}">
         Agregar producto
         <img src="{% static 'administrador/svg/plus.svg' %}">
     </a>
 </div>
 
-<h1 class="titulo-pagina">Listado de Productos Inactivos</h1>
-<div class="buscador-wrapper">
-    <form method="GET" action="">
-        <div class="contenedor-busqueda">
-            <div class="input-icono">
-                <input type="text" name="q" placeholder="Buscar Producto ........">
-                <i class="fa fa-search icono-input"></i>
-            </div>
-            <button type="submit" class="btn-filtrar">
-                Filtrar <i class="fa fa-filter"></i>
-            </button>
-        </div>
-    </form>
+<h2 class="titulo">Listado de Productos Bloqueados</h2>
 
-    <div class="selector-estado">
-        <a href="{% url 'listar_productos' %}" class="{% if request.path == '/productos/' %}activo{% endif %}">Activos</a>
-        <a href="{% url 'productos_inactivos' %}" class="{% if request.path == '/productos/inactivos/' %}activo{% endif %}">Inactivos</a>
+<div class="busqueda-agregar">
+    <input type="text" placeholder="Buscar Producto .........." class="input-busqueda">
+
+
+    <div class="dropdown">
+        <a href="#" class="boton-header" id="dropdownMenuButton">
+            Filtrar
+            <img src="{% static 'administrador/svg/filter-solid.svg' %}">
+        </a>
+        <ul id="filterOptions" class="dropdown-content" style="display:none;">
+            <li><a href="#" onclick="applyFilter('nombre')" data-filter="nombre" class="{% if order_by == 'nombre' %}filtro-activo{% endif %}">Nombre</a></li>
+            <li><a href="#" onclick="applyFilter('tipo')" data-filter="tipo" class="{% if order_by == 'tipo' %}filtro-activo{% endif %}">Tipo</a></li>
+            <li><a href="#" onclick="clearOrderFilter()">Limpiar filtro</a></li>
+        </ul>
     </div>
 </div>
 
-<div class="contenedor-tabla ancho-contenido">
-    <table class="tabla-usuarios tabla-productos">
-        {% if messages %}
-            <ul class="messages">
-                {% for message in messages %}
-                    <li class="{{ message.tags }}">{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-        <thead>
-            <tr>
-                <th><input disabled type="checkbox"/></th>
-                <th>Nombre</th>
-                <th>Cantidad</th>
-                <th>Tipo</th>
-                <th>Precio</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for producto in productos %}
-            <tr>
-                <td><input name="producto_ids" type="checkbox" value="{{ producto.id }}"/></td>
-                <td>{{ producto.nombre }}</td>
-                <td>{{ producto.cantidad }}</td>
-                <td>{{ producto.tipo }}</td>
-                <td>${{ producto.precio|floatformat:0 }}</td>
-                <td class="acciones">
-                    <a href="{% url 'editar_producto' producto.id %}" title="Editar"><i class="fa fa-pen"></i></a>
-                    <a href="{% url 'toggle_estado_producto' producto.id %}?origen=inactivos" title="Activar"><i class="fa fa-unlock" onclick="return confirm('¿Estás seguro de que deseas activar este producto?');"></i></a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="6">No hay productos inactivos.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="barra-acciones-usuarios ancho-contenido">
+    <div class="boton-activar-seleccionados">
+        <button id="activarBtn" disabled>Activar</button>
+    </div>
+
+    <div class="toggle-estado-usuarios">
+        <a href="{% url 'listar_productos' %}" class="estado-btn">Activos</a>
+        <a href="{% url 'productos_inactivos' %}" class="estado-btn activo">Bloqueados</a>
+    </div>
 </div>
 
+<div id="confirmModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>¿Activar Producto?</h3>
+    <p>Los productos activos pasarán al listado de productos activos y estarán disponibles para su uso.</p>
+    <div class="modal-actions">
+      <button type="button" id="confirmNo">Cancelar</button>
+      <button type="button" id="confirmYes">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+{% if productos %}
+<table class="tabla-usuarios tabla-productos">
+    <thead>
+        <tr>
+            <th><input type="checkbox" id="select-all-products"></th>
+            <th>Nombre</th>
+            <th>Cantidad</th>
+            <th>Tipo</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for producto in productos %}
+        <tr>
+            <td data-label="Seleccionar">
+                <input type="checkbox" class="select-product" data-product-id="{{ producto.id }}">
+            </td>
+            <td data-label="Nombre">{{ producto.nombre }}</td>
+            <td data-label="Cantidad">{{ producto.cantidad }}</td>
+            <td data-label="Tipo">{{ producto.tipo }}</td>
+            <td data-label="Acciones" class="acciones">
+                <a href="{% url 'editar_producto' producto.id %}" title="Editar">
+                    <img src="{% static 'administrador/svg/lapiz.svg' %}" alt="Editar">
+                </a>
+                <a href="{% url 'detalle_producto' producto.id %}" title="Mostrar">
+                    <img src="{% static 'administrador/svg/reporteria.svg' %}" alt="Mostrar" class="svg-compra">
+                </a>
+                <button title="Activar" class="btn-activar" data-product-id="{{ producto.id }}">
+                    <img src="{% static 'core/svg/lock-solid.svg' %}" alt="Activar">
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="custom-pagination">
+    {% if productos.has_previous %}
+    <a href="?page=1" class="page-btn">&laquo;</a>
+    <a href="?page={{ productos.previous_page_number }}" class="page-btn">&lsaquo;</a>
+    {% else %}
+    <span class="page-btn disabled">&laquo;</span>
+    <span class="page-btn disabled">&lsaquo;</span>
+    {% endif %}
+
+    <span class="page-btn current">{{ productos.number }}</span>
+
+    {% if productos.has_next %}
+    <a href="?page={{ productos.next_page_number }}" class="page-btn">&rsaquo;</a>
+    <a href="?page={{ productos.paginator.num_pages }}" class="page-btn">&raquo;</a>
+    {% else %}
+    <span class="page-btn disabled">&rsaquo;</span>
+    <span class="page-btn disabled">&raquo;</span>
+    {% endif %}
+</div>
+{% else %}
+<p style="text-align: center; font-size: 24px; margin-top: 40px;">No hay productos registrados.</p>
+{% endif %}
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- FILTRO ---
+    const dropdownBtn = document.getElementById('dropdownMenuButton');
+    const filterOptions = document.getElementById('filterOptions');
+
+    dropdownBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        filterOptions.style.display = filterOptions.style.display === 'none' ? 'block' : 'none';
+    });
+
+    window.applyFilter = function (filter) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('order_by', filter);
+        url.searchParams.set('page', 1);
+        window.location.href = url.toString();
+    };
+
+    window.clearOrderFilter = function () {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('order_by');
+        url.searchParams.set('page', 1);
+        window.location.href = url.toString();
+    };
+
+    // --- SELECCIÓN DE PRODUCTOS ---
+    const activarBtn = document.querySelector('#activarBtn');
+    const checkboxes = document.querySelectorAll('.select-product');
+    const selectAll = document.getElementById('select-all-products');
+
+    function updateActivarButton() {
+        const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+        activarBtn.disabled = !anyChecked;
+        activarBtn.classList.toggle('activo', anyChecked);
+    }
+
+    checkboxes.forEach(cb => cb.addEventListener('change', updateActivarButton));
+
+    selectAll.addEventListener('change', () => {
+        checkboxes.forEach(cb => cb.checked = selectAll.checked);
+        updateActivarButton();
+    });
+
+    updateActivarButton();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const activarBtn = document.querySelector('#activarBtn');
+    const checkboxes = document.querySelectorAll('.select-product');
+    const selectAll = document.getElementById('select-all-products');
+    const confirmModal = document.getElementById('confirmModal');
+    const confirmYes = document.getElementById('confirmYes');
+    const confirmNo = document.getElementById('confirmNo');
+    let selectedIds = [];
+
+    // Mostrar modal al presionar "Activar"
+    activarBtn.addEventListener('click', () => {
+        selectedIds = Array.from(checkboxes)
+                          .filter(cb => cb.checked)
+                          .map(cb => cb.getAttribute('data-product-id'));
+
+        if (selectedIds.length > 0) {
+            confirmModal.classList.remove('hidden');
+        }
+    });
+
+    // Activar desde botón individual (de una fila)
+    document.querySelectorAll('.btn-activar').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            selectedIds = [btn.getAttribute('data-product-id')];
+            confirmModal.classList.remove('hidden');
+        });
+    });
+
+    // Función para obtener el token CSRF desde la cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Busca la cookie por nombre
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const csrfToken = getCookie('csrftoken');
+
+    confirmYes.addEventListener('click', () => {
+        fetch("{% url 'activar_productos' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrfToken
+            },
+            body: new URLSearchParams({
+                'producto_ids': JSON.stringify(selectedIds)
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.updated > 0) {
+                location.reload();  // recarga sin mostrar JSON
+            } else {
+                alert("No se pudieron activar productos.");
+            }
+        })
+        .catch(error => {
+            console.error(error);
+            alert("Error en la activación.");
+        });
+    });
+
+    // Cancelar acción
+    confirmNo.addEventListener('click', () => {
+        confirmModal.classList.add('hidden');
+        selectedIds = [];
+    });
+});
+</script>
+
+<script src="{% static 'administrador/js/busca_usuarios.js' %}"></script>
 {% endblock %}

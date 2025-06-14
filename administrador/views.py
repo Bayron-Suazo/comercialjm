@@ -1260,21 +1260,73 @@ def detalle_producto(request, producto_id):
     }
     return render(request, 'administrador/detalle_producto.html', context)
 
+
+@require_POST
+def bloquear_productos(request):
+    ids = request.POST.get('ids', '')
+    id_list = [int(i) for i in ids.split(',') if i.isdigit()]
+    Producto.objects.filter(id__in=id_list).update(activo=False)
+    return redirect('listar_productos')
+
+
+@require_POST
+@login_required
+def activar_productos(request):
+    try:
+        producto_id = request.POST.get('producto_id')
+        producto_ids = json.loads(request.POST.get('producto_ids', '[]')) if request.POST.get('producto_ids') else []
+
+        if producto_id:
+            producto_ids = [int(producto_id)]
+
+        producto_ids = [int(uid) for uid in producto_ids]
+        productos = Producto.objects.filter(id__in=producto_ids, activo=False)
+
+        updated_count = 0
+        for producto in productos:
+            producto.activo = True
+            producto.save()
+            updated_count += 1
+
+        return JsonResponse({'success': True, 'updated': updated_count})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+def listar_productos_bloqueados(request):
+    order_by = request.GET.get('order_by', '')
+
+    productos_bloqueados = Producto.objects.filter(activo=False)
+
+    if order_by:
+        if order_by == 'nombre':
+            productos = productos_bloqueados.order_by('nombre')
+        elif order_by == 'tipo':
+            productos = productos_bloqueados.order_by('tipo')
+        else:
+            productos = productos_bloqueados
+    else:
+        productos = productos_bloqueados
+
+    paginator = Paginator(productos, 10)  # 10 productos por página
+    page_number = request.GET.get('page')
+    productos = paginator.get_page(page_number)
+
+    return render(request, 'administrador/listar_productos_inactivos.html', {
+        'productos': productos,
+        'order_by': order_by
+    })
+
+
+
+
 def eliminar_producto(request, id):
     producto = get_object_or_404(Producto, id=id)
     producto.delete()
     return redirect('listar_productos')
 
-def toggle_estado_producto(request, id):
-    producto = get_object_or_404(Producto, id=id)
-    producto.activo = not producto.activo
-    producto.save()
-    if producto.activo:
-        messages.success(request, "Producto activado con éxito.")
-    else:
-        messages.warning(request, "Producto desactivado con éxito.")
-    origen = request.GET.get('origen', 'activos')
-    return redirect('productos_inactivos' if origen == 'inactivos' else 'listar_productos')
+
 
 def ver_lotes_producto(request, id):
     producto = get_object_or_404(Producto, id=id)
