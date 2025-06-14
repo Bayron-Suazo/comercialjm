@@ -26,10 +26,6 @@ Listado de Lotes Activos
 
 {% block content %}
 <div class="acciones-derecha ancho-contenido">
-    <a class="boton-header" href="#" id="carga-masiva-btn" onclick="activarCargaExcel();">
-        Carga masiva
-        <img src="{% static 'administrador/svg/carga-masiva.svg' %}">
-    </a>
 
     <form id="form-carga-excel" method="POST" action="{% url 'carga_excel_lotes' %}" enctype="multipart/form-data" style="display: none;">
         {% csrf_token %}

@@ -4,9 +4,10 @@
 {% block title %}Listado de productos activos{% endblock %}
 
 {% block extra_head %}
-    <link rel="stylesheet" href="{% static 'administrador/css/productos.css' %}">
+  
     <link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 {% endblock %}
 
 {% block content %}
@@ -16,6 +17,8 @@
         Dashboard
         <img src="{% static 'administrador/svg/reporteria.svg' %}">
     </a>
+    <a class="boton-header" href="{% url 'listar_lotes' %}" >Lotes</a>
+    <a class="boton-header" href="{% url 'listar_mermas' %}" >Mermas</a>
 
     <a class="boton-header" href="{% url 'agregar_producto' %}">
         Agregar producto
@@ -23,77 +26,221 @@
     </a>
 </div>
 
-<h1 class="titulo-pagina">Listado de productos activos</h1>
+<h2 class="titulo">Listado de Productos Activos</h2>
 
-<div class="buscador-wrapper">
-    <form method="GET" action="">
-        <div class="contenedor-busqueda">
-            <div class="input-icono">
-                <input type="text" name="q" placeholder="Buscar Producto ........">
-                <i class="fa fa-search icono-input"></i>
-            </div>
-            <button type="submit" class="btn-filtrar">
-                Filtrar <i class="fa fa-filter"></i>
-            </button>
-        </div>
-    </form>
+<div class="busqueda-agregar">
+    <input type="text" placeholder="Buscar Producto .........." class="input-busqueda">
 
-    <div class="selector-estado">
-        <a href="{% url 'listar_productos' %}" class="{% if request.path == '/productos/' %}activo{% endif %}">Activos</a>
-        <a href="{% url 'productos_inactivos' %}" class="{% if request.path == '/productos/inactivos/' %}activo{% endif %}">Inactivos</a>
+
+    <div class="dropdown">
+        <a href="#" class="boton-header" id="dropdownMenuButton">
+            Filtrar
+            <img src="{% static 'administrador/svg/filter-solid.svg' %}">
+        </a>
+        <ul id="filterOptions" class="dropdown-content" style="display:none;">
+            <li><a href="#" onclick="applyFilter('nombre')" data-filter="nombre" class="{% if order_by == 'nombre' %}filtro-activo{% endif %}">Nombre</a></li>
+            <li><a href="#" onclick="applyFilter('tipo')" data-filter="tipo" class="{% if order_by == 'tipo' %}filtro-activo{% endif %}">Tipo</a></li>
+            <li><a href="#" onclick="clearOrderFilter()">Limpiar filtro</a></li>
+        </ul>
     </div>
 </div>
 
-<div class="contenedor-tabla ancho-contenido">
-    <table class="tabla-usuarios tabla-productos">
-        {% if messages %}
-            <ul class="messages">
-                {% for message in messages %}
-                    <li class="{{ message.tags }}">{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-        <thead>
-            <tr>
-                <th><input disabled type="checkbox"/></th>
-                <th>Nombre</th>
-                <th>Cantidad</th>
-                <th>Tipo</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for producto in productos %}
-                <tr>
-                    <td><input name="producto_ids" type="checkbox" value="{{ producto.id }}"/></td>
-                    <td>{{ producto.nombre }}</td>
-                    <td>{{ producto.cantidad }}</td>
-                    <td>{{ producto.tipo }}</td>
-                    <td class="acciones">
-                        <a href="{% url 'editar_producto' producto.id %}" title="Editar">
-                            <i class="fa fa-pen"></i>
-                        </a>
-                        
-                        <a href="{% url 'toggle_estado_producto' producto.id %}" title="Bloquear" onclick="return confirm('¿Estás seguro de que deseas bloquear este producto?');">
-                            <i class="fa fa-lock"></i>
-                        </a>
-                        
-                        <a href="{% url 'detalle_producto' producto.id %}" title="Ver Lotes">
-                            <i class="fa fa-eye"></i>
-                        </a>
+<div class="barra-acciones-usuarios ancho-contenido">
+    <div class="boton-bloquear-seleccionados">
+        <button id="bloquearBtn" disabled>Bloquear</button>
+    </div>
 
-                        <a href="{% url 'eliminar_producto' producto.id %}" title="Eliminar" onclick="return confirm('¿Estás seguro de que deseas eliminar este producto?');">
-                            <i class="fa fa-trash"></i>
-                        </a>
-                    </td>                    
-                </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="7">No hay productos activos aún.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="toggle-estado-usuarios">
+        <a href="{% url 'listar_productos' %}" class="estado-btn activo">Activos</a>
+        <a href="{% url 'productos_inactivos' %}" class="estado-btn">Bloqueados</a>
+    </div>
 </div>
 
+{% if productos %}
+<table class="tabla-usuarios tabla-productos">
+    <thead>
+        <tr>
+            <th><input type="checkbox" id="select-all-products"></th>
+            <th>Nombre</th>
+            <th>Cantidad</th>
+            <th>Tipo</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for producto in productos %}
+        <tr>
+            <td data-label="Seleccionar">
+                <input type="checkbox" class="select-product" data-product-id="{{ producto.id }}">
+            </td>
+            <td data-label="Nombre">{{ producto.nombre }}</td>
+            <td data-label="Cantidad">{{ producto.cantidad }}</td>
+            <td data-label="Tipo">{{ producto.tipo }}</td>
+            <td data-label="Acciones" class="acciones">
+                <a href="{% url 'editar_producto' producto.id %}" title="Editar">
+                    <img src="{% static 'administrador/svg/lapiz.svg' %}" alt="Editar">
+                </a>
+                <a href="{% url 'detalle_producto' producto.id %}" title="Mostrar">
+                    <img src="{% static 'administrador/svg/reporteria.svg' %}" alt="Mostrar" class="svg-compra">
+                </a>
+                <button title="Bloquear" onclick="return confirm('¿Estás seguro de que deseas bloquear este producto?');" class="btn-bloquear" data-product-id="{{ producto.id }}">
+                    <img src="{% static 'core/svg/lock-solid.svg' %}" alt="Bloquear">
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="custom-pagination">
+    {% if productos.has_previous %}
+    <a href="?page=1" class="page-btn">&laquo;</a>
+    <a href="?page={{ productos.previous_page_number }}" class="page-btn">&lsaquo;</a>
+    {% else %}
+    <span class="page-btn disabled">&laquo;</span>
+    <span class="page-btn disabled">&lsaquo;</span>
+    {% endif %}
+
+    <span class="page-btn current">{{ productos.number }}</span>
+
+    {% if productos.has_next %}
+    <a href="?page={{ productos.next_page_number }}" class="page-btn">&rsaquo;</a>
+    <a href="?page={{ productos.paginator.num_pages }}" class="page-btn">&raquo;</a>
+    {% else %}
+    <span class="page-btn disabled">&rsaquo;</span>
+    <span class="page-btn disabled">&raquo;</span>
+    {% endif %}
+</div>
+{% else %}
+<p style="text-align: center; font-size: 24px; margin-top: 40px;">No hay productos registrados.</p>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- CARGA MASIVA ---
+    const abrirModal = document.getElementById('abrirModalCarga');
+    const modalCarga = document.getElementById('modalCargaMasiva');
+    const fileInput = document.getElementById('fileInput');
+    const selectFileBtn = document.getElementById('selectFileBtn');
+    const fileName = document.getElementById('fileName');
+    const cerrarModalBtn = document.getElementById('cerrarModalCarga');
+
+    abrirModal.addEventListener('click', (e) => {
+        e.preventDefault();
+        modalCarga.classList.remove('hidden');
+    });
+
+    selectFileBtn.addEventListener('click', () => {
+        fileInput.click();
+    });
+
+    fileInput.addEventListener('change', () => {
+        fileName.textContent = fileInput.files[0]?.name || '';
+    });
+
+    cerrarModalBtn.addEventListener('click', () => {
+        modalCarga.classList.add('hidden');
+    });
+
+    // --- BLOQUEAR USUARIOS ---
+    const bloquearBtn = document.querySelector('#bloquearBtn');
+    const checkboxes = document.querySelectorAll('.select-user');
+    const selectAll = document.getElementById('select-all');
+
+    function updateBloquearButton() {
+        const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+        bloquearBtn.disabled = !anyChecked;
+        bloquearBtn.classList.toggle('activo', anyChecked);
+    }
+
+    checkboxes.forEach(cb => cb.addEventListener('change', updateBloquearButton));
+    selectAll.addEventListener('change', () => {
+        checkboxes.forEach(cb => cb.checked = selectAll.checked);
+        updateBloquearButton();
+    });
+
+    // Modal confirmación
+    const modalConfirm = document.getElementById('confirmModal');
+    const confirmYes = document.getElementById('confirmYes');
+    const confirmNo = document.getElementById('confirmNo');
+    let confirmCallback = null;
+
+    function showConfirmModal(onConfirm) {
+        modalConfirm.classList.remove('hidden');
+        confirmCallback = onConfirm;
+    }
+
+    confirmYes.addEventListener('click', () => {
+        modalConfirm.classList.add('hidden');
+        if (confirmCallback) confirmCallback();
+    });
+
+    confirmNo.addEventListener('click', () => {
+        modalConfirm.classList.add('hidden');
+        confirmCallback = null;
+    });
+
+    function getCSRFToken() {
+        let csrfToken = null;
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [key, value] = cookie.trim().split('=');
+            if (key === 'csrftoken') {
+                csrfToken = value;
+                break;
+            }
+        }
+        return csrfToken;
+    }
+
+    // Bloquear usuarios seleccionados
+    bloquearBtn.addEventListener('click', () => {
+        const userIds = Array.from(checkboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.dataset.userId);
+
+        if (userIds.length === 0) return;
+
+        showConfirmModal(() => {
+            fetch("{% url 'bloquear_usuario' %}", { // Ajusta la URL si es necesario
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: new URLSearchParams({ 'user_ids': JSON.stringify(userIds) })
+            }).then(res => res.json()).then(data => {
+                if (data.success) location.reload();
+            });
+        });
+    });
+
+    // Bloquear usuario individual (ícono de candado)
+    document.querySelectorAll('.btn-bloquear').forEach(button => {
+        button.addEventListener('click', () => {
+            const userId = button.dataset.userId;
+
+            showConfirmModal(() => {
+                fetch("{% url 'bloquear_usuario' %}", { // Ajusta la URL si es necesario
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: new URLSearchParams({ 'user_id': userId })
+                }).then(res => res.json()).then(data => {
+                    if (data.success) location.reload();
+                });
+            });
+        });
+    });
+
+    updateBloquearButton();
+});
+</script>
+
+<script src="{% static 'administrador/js/busca_usuarios.js' %}"></script>
 {% endblock %}

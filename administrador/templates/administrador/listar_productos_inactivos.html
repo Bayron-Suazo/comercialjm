@@ -16,13 +16,15 @@
         Dashboard
         <img src="{% static 'administrador/svg/reporteria.svg' %}">
     </a>
+    <a class="boton-header" href="{% url 'listar_lotes' %}" >Lotes</a>
+    <a class="boton-header" href="{% url 'listar_mermas' %}" >Mermas</a>
     <a class="boton-header" href="{% url 'agregar_producto' %}">
         Agregar producto
         <img src="{% static 'administrador/svg/plus.svg' %}">
     </a>
 </div>
 
-<h1 class="titulo-pagina">Listado de productos inactivos</h1>
+<h1 class="titulo-pagina">Listado de Productos Inactivos</h1>
 <div class="buscador-wrapper">
     <form method="GET" action="">
         <div class="contenedor-busqueda">

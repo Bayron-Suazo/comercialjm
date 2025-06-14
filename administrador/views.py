@@ -1123,9 +1123,31 @@ def dashboard_compras(request):
 
 
 
+
+@login_required
 def listar_productos(request):
-    productos = Producto.objects.filter(activo=True)
-    return render(request, 'administrador/listar_productos.html', {'productos': productos})
+    order_by = request.GET.get('order_by', '')
+
+    productos_activos = Producto.objects.filter(activo=True)
+
+    if order_by:
+        if order_by == 'nombre':
+            productos = productos_activos.order_by('nombre')
+        elif order_by == 'tipo':
+            productos = productos_activos.order_by('tipo')
+        else:
+            productos = productos_activos
+    else:
+        productos = productos_activos
+
+    paginator = Paginator(productos, 10)  # 10 productos por página
+    page_number = request.GET.get('page')
+    productos = paginator.get_page(page_number)
+
+    return render(request, 'administrador/listar_productos.html', {
+        'productos': productos,
+        'order_by': order_by
+    })
 
 def productos_inactivos(request):
     productos = Producto.objects.filter(activo=False)
