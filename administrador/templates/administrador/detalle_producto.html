@@ -1,0 +1,43 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'administrador/css/detalle_compra.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <h2 class="titulo">{{ producto.nombre }}</h2>
+
+    <div class="detalle-compra">
+        <p><strong>Tipo:</strong> {{ producto.tipo }}</p>
+        <p><strong>Fecha de creación:</strong> {{ producto.fecha }}</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Unidad de Medida</th>
+                    <th>Precio</th>
+                    <th>Cantidad Total en Stock</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in detalle_stock %}
+                <tr>
+                    <td>{{ item.unidad_medida }}</td>
+                    <td>${{ item.precio }}</td>
+                    <td>{{ item.cantidad_total }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" style="text-align:center;">No hay unidades disponibles para este producto.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="boton-header">
+      <a href="{% url 'listar_productos' %}">Volver</a>
+    </div>
+</div>
+{% endblock %}

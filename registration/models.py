@@ -82,7 +82,7 @@ class ProductoUnidad(models.Model):
 
 class DetalleLote(models.Model):
     lote = models.ForeignKey(Lote, related_name="detalles", on_delete=models.CASCADE)
-    producto_unidad = models.ForeignKey(ProductoUnidad, on_delete=models.CASCADE)
+    producto_unidad = models.ForeignKey(ProductoUnidad, on_delete=models.CASCADE, null=True, blank=True)
     cantidad = models.IntegerField()
 
     def __str__(self):
@@ -130,16 +130,7 @@ class Cliente(models.Model):
 
     def __str__(self):
         return self.nombre
-    
 
-class DetalleLote(models.Model):
-    lote = models.ForeignKey(Lote, related_name="detalles", on_delete=models.CASCADE)
-    producto = models.CharField(max_length=100)
-    cantidad = models.IntegerField()
-    precio = models.DecimalField(max_digits=10, decimal_places=2)
-
-    def __str__(self):
-        return f"{self.producto} ({self.cantidad})"
 
 
 class Merma(models.Model):

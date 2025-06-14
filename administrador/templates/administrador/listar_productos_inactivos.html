@@ -23,13 +23,6 @@
 </div>
 
 <h1 class="titulo-pagina">Listado de productos inactivos</h1>
-{% if messages %}
-    <ul class="messages">
-        {% for message in messages %}
-            <li class="{{ message.tags }}">{{ message }}</li>
-        {% endfor %}
-    </ul>
-{% endif %}
 <div class="buscador-wrapper">
     <form method="GET" action="">
         <div class="contenedor-busqueda">
@@ -51,6 +44,13 @@
 
 <div class="contenedor-tabla ancho-contenido">
     <table class="tabla-usuarios tabla-productos">
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
         <thead>
             <tr>
                 <th><input disabled type="checkbox"/></th>
@@ -71,7 +71,7 @@
                 <td>${{ producto.precio|floatformat:0 }}</td>
                 <td class="acciones">
                     <a href="{% url 'editar_producto' producto.id %}" title="Editar"><i class="fa fa-pen"></i></a>
-                    <a href="{% url 'toggle_estado_producto' producto.id %}?origen=inactivos" title="Activar"><i class="fa fa-unlock"></i></a>
+                    <a href="{% url 'toggle_estado_producto' producto.id %}?origen=inactivos" title="Activar"><i class="fa fa-unlock" onclick="return confirm('¿Estás seguro de que deseas activar este producto?');"></i></a>
                 </td>
             </tr>
             {% empty %}

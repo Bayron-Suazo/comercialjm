@@ -1213,6 +1213,31 @@ def editar_producto(request, producto_id):
         'titulo': 'Editar Producto'
     })
 
+from registration .models import Producto, ProductoUnidad, DetalleLote, Lote
+
+def detalle_producto(request, producto_id):
+    producto = get_object_or_404(Producto, id=producto_id, activo=True)
+    unidades = producto.unidades.all()
+
+    detalle_stock = []
+    for unidad in unidades:
+        cantidad_total = (
+            unidad.detallelote_set.filter(lote__activo=True)
+            .aggregate(total_cantidad=Sum('cantidad'))['total_cantidad'] or 0
+        )
+
+        detalle_stock.append({
+            'unidad_medida': unidad.get_unidad_medida_display(),
+            'precio': unidad.precio,
+            'cantidad_total': cantidad_total,
+        })
+
+    context = {
+        'producto': producto,
+        'detalle_stock': detalle_stock,
+    }
+    return render(request, 'administrador/detalle_producto.html', context)
+
 def eliminar_producto(request, id):
     producto = get_object_or_404(Producto, id=id)
     producto.delete()

@@ -11,14 +11,6 @@
 
 {% block content %}
 
-{% if messages %}
-    <ul class="messages">
-        {% for message in messages %}
-            <li class="{{ message.tags }}">{{ message }}</li>
-        {% endfor %}
-    </ul>
-{% endif %}
-
 <div class="acciones-derecha ancho-contenido">
     <a class="boton-header" href="{% url 'dashboard_productos' %}">
         Dashboard
@@ -54,6 +46,13 @@
 
 <div class="contenedor-tabla ancho-contenido">
     <table class="tabla-usuarios tabla-productos">
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
         <thead>
             <tr>
                 <th><input disabled type="checkbox"/></th>
@@ -75,11 +74,11 @@
                             <i class="fa fa-pen"></i>
                         </a>
                         
-                        <a href="{% url 'toggle_estado_producto' producto.id %}" title="Bloquear">
+                        <a href="{% url 'toggle_estado_producto' producto.id %}" title="Bloquear" onclick="return confirm('¿Estás seguro de que deseas bloquear este producto?');">
                             <i class="fa fa-lock"></i>
                         </a>
                         
-                        <a href="{% url 'ver_lotes_producto' producto.id %}" title="Ver Lotes" target="_blank">
+                        <a href="{% url 'detalle_producto' producto.id %}" title="Ver Lotes">
                             <i class="fa fa-eye"></i>
                         </a>
 

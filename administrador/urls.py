@@ -70,6 +70,7 @@ urlpatterns = [
     path('ventas/dashboard/', views.dashboard_ventas, name='dashboard_ventas'),
     path('ventas/', views.listar_ventas, name='listar_ventas'),
     path('debug/', views.debug_url_test),
+    path('producto/<int:producto_id>/', views.detalle_producto, name='detalle_producto'),
 
 
     #REPORTERIA
