@@ -62,6 +62,14 @@ class Producto(models.Model):
             detalle.cantidad for detalle in self.unidades.all().prefetch_related('detallelote_set')
         ])
 
+    def obtener_cantidades_por_unidad(self):
+        cantidades = {}
+        for unidad in self.unidades.all():
+            total = sum(detalle.cantidad for detalle in unidad.detallelote_set.all())
+            if total > 0:
+                cantidades[unidad.get_unidad_medida_display()] = total
+        return cantidades
+
 
 class UnidadMedida(models.TextChoices):
     KILOGRAMO = 'kg', 'Kilogramo'
