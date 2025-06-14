@@ -4,6 +4,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.shortcuts import get_object_or_404, redirect
 from datetime import datetime, timezone
+from django.core.validators import MinValueValidator
+from uuid import uuid4
 
 
 class Profile(models.Model):
@@ -50,16 +52,45 @@ class Lote(models.Model):
 
     
 class Producto(models.Model):
-    nombre = models.CharField(max_length=100, unique=True)
-    lote = models.ForeignKey(Lote, on_delete=models.SET_NULL, null=True, blank=True)
-    cantidad = models.IntegerField()
-    tipo = models.CharField(max_length=50)
-    precio = models.DecimalField(max_digits=10, decimal_places=2)
-    fecha = models.DateField(auto_now_add=True) 
-    activo = models.BooleanField(default=True)
+    TIPO_CHOICES = [
+        ('Fruta', 'Fruta'),
+        ('Verdura', 'Verdura'),
+        ('Otros', 'Otros'),
+    ]
+    UNIDAD_CHOICES = [
+        ('kg', 'Kilogramo'),
+        ('unidad', 'Unidad'),
+        ('caja', 'Caja'),
+    ]
 
-    def __str__(self):
-        return self.nombre
+    nombre = models.CharField(max_length=100)
+    tipo = models.CharField(max_length=50, choices=TIPO_CHOICES)
+    unidad_medida = models.CharField(max_length=10, choices=UNIDAD_CHOICES)
+    precio_venta = models.DecimalField(max_digits=10, decimal_places=2)
+    precio_caja = models.DecimalField(max_digits=10, decimal_places=2)
+    contenido_por_caja = models.DecimalField(max_digits=10, decimal_places=2, default=1.0)
+    activo = models.BooleanField(default=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+    existencias = models.PositiveIntegerField(
+        default=0,
+        validators=[MinValueValidator(0)],
+        help_text="Las existencias no pueden ser negativas"
+    )
+
+    lote = models.ForeignKey('Lote', on_delete=models.SET_NULL, null=True, blank=True)
+
+    @property
+    def precio_por_unidad(self):
+        if self.unidad_medida == 'caja':
+            return self.precio_caja / self.contenido_por_caja
+        return self.precio_venta
+
+    def save(self, args, **kwargs):
+        self.existencias = max(0, self.existencias)
+        super().save(args, **kwargs)
+
+    def str(self):
+        return f"{self.nombre} ({self.unidad_medida})"
 
 
 class Compra(models.Model):
@@ -106,11 +137,12 @@ class Cliente(models.Model):
 
 class DetalleLote(models.Model):
     lote = models.ForeignKey(Lote, related_name="detalles", on_delete=models.CASCADE)
-    producto = models.CharField(max_length=100)
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name='detalles_lote')
+    venta = models.ForeignKey('Venta', on_delete=models.CASCADE, related_name='detalles_lote', null=True, blank=True)
     cantidad = models.IntegerField()
     precio = models.DecimalField(max_digits=10, decimal_places=2)
 
-    def __str__(self):
+    def str(self):
         return f"{self.producto} ({self.cantidad})"
 
 
@@ -131,9 +163,56 @@ class Merma(models.Model):
 
 
 class Venta(models.Model):
-    cliente = models.ForeignKey('Cliente', on_delete=models.CASCADE)
-    fecha = models.DateField(auto_now_add=True)
-    total = models.DecimalField(max_digits=10, decimal_places=2)
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='ventas', null=True, blank= True)
+    fecha = models.DateTimeField(auto_now_add=True)
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    metodo_pago = models.CharField(
+        max_length=50,
+        choices=[
+            ('Efectivo', 'Efectivo'),
+            ('Tarjeta', 'Tarjeta'),
+            ('Transferencia', 'Transferencia')
+        ],
+        default='Efectivo'
+    )
 
-    def __str__(self):
-        return f"Venta #{self.id} - Cliente: {self.cliente.nombre}"
+    def str(self):
+        return f"Venta #{self.id} - {self.fecha.strftime('%d/%m/%Y')}"
+    
+
+class DetalleVenta(models.Model):
+    venta = models.ForeignKey(Venta, related_name='detalles', on_delete=models.CASCADE)
+    producto = models.ForeignKey(Producto, related_name='detalles', on_delete=models.CASCADE)
+    cantidad = models.PositiveIntegerField()
+    precio = models.DecimalField(max_digits=10, decimal_places=2)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+
+    UNIDAD_CHOICES = [
+        ('unidad', 'Unidad/Kg'),
+        ('caja', 'Caja'),
+    ]
+    unidad = models.CharField(max_length=10, choices=UNIDAD_CHOICES, default='unidad') 
+
+    def save(self, args, **kwargs):
+        self.subtotal = self.precio = self.cantidad
+        super().save(*args, **kwargs)
+
+    def str(self):
+        return f"{self.producto.nombre} x {self.cantidad}"
+
+
+
+def generate_codigo():
+    return str(uuid4())[:8]
+
+class Cupon(models.Model):
+    codigo = models.CharField(max_length=100, default=generate_codigo, blank=True, null=True)
+    descuento = models.DecimalField(max_digits=5, decimal_places=2)
+    activo = models.BooleanField(default=True)  # ← Nuevo campo
+    usado = models.BooleanField(default=False)
+    valido_hasta = models.DateField()
+    cliente = models.ForeignKey('Cliente', on_delete=models.CASCADE, null=True, blank=True)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    def str(self):
+        return f"{self.codigo} ({self.descuento}%)"

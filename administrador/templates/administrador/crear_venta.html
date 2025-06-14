@@ -1,0 +1,504 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+{% load humanize %}
+
+
+{% block title %}Registrar Venta{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'administrador/css/productos.css' %}">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+    body {
+        background-color: #fef9f1;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 20px;
+    }
+
+    .venta-container {
+        background-color: transparent;
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 40px 50px;
+        border-radius: 20px;
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-title {
+        text-align: center;
+        font-size: 2em;
+        margin-bottom: 30px;
+        color: #333;
+        position: relative;
+        padding-bottom: 15px;
+    }
+
+    .page-title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 4px;
+        background-color: #4CAF50;
+        border-radius: 2px;
+    }
+
+    .product-form-container {
+        background-color: #fff;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .product-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        align-items: end;
+    }
+
+    .form-group {
+        margin-bottom: 0;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 15px 20px;
+        border: 2px solid #e0e0e0;
+        border-radius: 30px;
+        font-size: 16px;
+        outline: none;
+        transition: all 0.3s ease;
+        background-color: #fffef6;
+    }
+
+    .form-control:focus {
+        border-color: #4CAF50;
+        box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+    }
+
+    .btn {
+        padding: 15px 25px;
+        border-radius: 30px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: none;
+        font-size: 16px;
+    }
+
+    .btn-primary {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background-color: #45a049;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-danger {
+        background-color: #e74c3c;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background-color: #c0392b;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .sale-container {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .client-section {
+        padding: 25px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .table-container {
+        max-height: 400px;
+        overflow-y: auto;
+        margin: 0 25px;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: transparent;
+    }
+
+    .table th {
+        position: sticky;
+        top: 0;
+        background-color: #4CAF50;
+        color: white;
+        padding: 15px 20px;
+        text-align: left;
+        font-weight: bold;
+    }
+
+    .table td {
+        padding: 15px 20px;
+        border-bottom: 1px solid #e0e0e0;
+        vertical-align: middle;
+    }
+
+    .table tr:hover {
+        background-color: #f5f5f5;
+    }
+
+    .table-footer {
+        padding: 25px;
+        background: #f8f9fa;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        border-top: 1px solid #e0e0e0;
+    }
+
+    .total-amount {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    .payment-section {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .coupon-select, .unit-select, #id_metodo_pago {
+        min-width: 200px;
+        padding: 12px 20px;
+        border: 2px solid #e0e0e0;
+        border-radius: 30px;
+        font-size: 16px;
+        outline: none;
+        transition: all 0.3s ease;
+        background-color: #fffef6;
+    }
+
+    .coupon-select:focus, .unit-select:focus, #id_metodo_pago:focus {
+        border-color: #4CAF50;
+        box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+    }
+
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+        border: 1px solid #f5c6cb;
+    }
+
+    .price-detail {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+
+    @media (max-width: 768px) {
+        .product-form {
+            grid-template-columns: 1fr;
+        }
+        
+        .payment-section {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .venta-container {
+            padding: 25px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .venta-container {
+            padding: 20px;
+        }
+        
+        .page-title {
+            font-size: 1.5em;
+        }
+        
+        .table th, .table td {
+            padding: 12px 15px;
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            font-size: 14px;
+        }
+    }
+
+    .select2-container--default .select2-selection--single {
+        height: auto;
+        padding: 12px 20px;
+        border: 2px solid #e0e0e0;
+        border-radius: 30px;
+        background-color: #fffef6;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 100%;
+        right: 10px;
+    }
+    .total-section {
+    text-align: right;
+    }
+
+    .price-detail {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 5px;
+    }
+
+    .total-amount {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+    body {
+            margin: 0;
+            padding: 0;
+        }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="venta-container">
+    <h1 class="page-title">Registrar Venta</h1>
+    
+    <div class="product-form-container">
+        <form method="post" class="product-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <div class="input-icono">
+                    <input type="text" name="producto" class="form-control" 
+                           placeholder="Buscar producto..." autocomplete="off">
+                    <i class="fas fa-search icono-input"></i>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <input type="number" name="cantidad" class="form-control" 
+                       min="0.01" step="0.01" placeholder="Cantidad">
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" name="agregar" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Agregar producto
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <form method="post" class="sale-container">
+        {% csrf_token %}
+        <div class="client-section">
+            <div class="form-group">
+                <label for="id_cliente" class="form-label"><strong>Cliente:</strong></label>
+                {{ venta_form.cliente }}
+            </div>
+        </div>
+        
+        {% if productos %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Precio</th>
+                        <th>Tipo de compra</th>
+                        <th>Cantidad</th>
+                        <th>Subtotal</th>
+                        <th>AcciÃ³n</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in productos %}
+                    <tr>
+                        <td>{{ item.producto.nombre }}</td>
+                        <td>
+                            {% if item.unidad == 'caja' %}
+                                ${{ item.producto.precio_caja|floatformat:0 }} (caja)
+                            {% else %}
+                                ${{ item.producto.precio_venta|floatformat:0 }} ({{ item.producto.get_unidad_medida_display|slice:":3" }})
+                            {% endif %}
+                        </td>
+                        <td>
+                            <select class="form-control unit-select" onchange="cambiarUnidad({{ item.producto.id }}, this.value)">
+                                <option value="unidad" {% if item.unidad == 'unidad' %}selected{% endif %}>Unidad/Kg</option>
+                                <option value="caja" {% if item.unidad == 'caja' %}selected{% endif %}>Caja</option>
+                            </select>
+                        </td>                        
+                        <td style="text-align: center;">{{ item.cantidad|floatformat:0 }}</td>
+                        <td>${{ item.subtotal|floatformat:0 }}</td>
+                        <td>
+                            <button type="submit" name="eliminar_producto_id" value="{{ item.producto.id }}" 
+                                    class="btn btn-danger">
+                                <i class="fas fa-trash-alt"></i> Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+            
+        <div class="table-footer">
+            <div class="total-section">
+                <div class="price-detail" id="descuento-container" {% if not descuento_aplicado %}style="display: none;"{% endif %}>
+                    Subtotal: $<span id="subtotal">{{ total|floatformat:0 }}</span><br>
+                    Descuento: <span id="descuento-porcentaje">{% if descuento_aplicado %}{{ descuento_aplicado }}%{% else %}0%{% endif %}</span> 
+                    (-$<span id="descuento-monto">{% if monto_descuento %}{{ monto_descuento|floatformat:0 }}{% else %}0{% endif %}</span>)<br>
+                </div>
+                <div class="total-amount">
+                    Total: $<span id="total-con-descuento">{{ total_con_descuento|floatformat:0 }}</span>
+                </div>
+            </div>
+            
+            <div class="payment-section">
+                {% if cupones_disponibles %}
+                <div class="form-group">
+                    <label for="cupon_id" class="form-label"><strong>CupÃ³n:</strong></label>
+                    <select name="cupon_id" id="cupon_id" class="form-control coupon-select" onchange="aplicarDescuento(this.value)">
+                        <option value="">-- Seleccionar cupÃ³n --</option>
+                        {% for cupon in cupones_disponibles %}
+                            <option value="{{ cupon.descuento }}" data-cuponid="{{ cupon.id }}" {% if cupon.id == cupon_aplicado %}selected{% endif %}>
+                                {{ cupon.codigo }} ({{ cupon.descuento }}%)
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <input type="hidden" name="cupon_seleccionado" id="cupon_seleccionado" value="{{ cupon_aplicado }}">
+                </div>
+                {% endif %}
+            
+                <div class="form-group">
+                    <label for="id_metodo_pago" class="form-label"><strong>MÃ©todo de pago:</strong></label>
+                    {{ venta_form.metodo_pago }}
+                </div>
+            
+                {% if venta_form.errors %}
+                <div class="alert alert-danger">
+                    {{ venta_form.errors }}
+                </div>
+                {% endif %}
+                
+                <input type="hidden" name="finalizar" value="1">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-check-circle"></i> Finalizar Venta
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Inicializar select2 con estilos personalizados
+    $('select').select2({
+        width: '100%',
+        minimumResultsForSearch: 10,
+        dropdownParent: $('.venta-container')
+    });
+
+    // Manejar cambio de cliente
+    $('#id_cliente').on('change', function() {
+        const clienteId = $(this).val();
+        const baseUrl = window.location.href.split('?')[0];
+        if (clienteId) {
+            window.location.href = baseUrl + '?cliente=' + clienteId;
+        }
+    });
+});
+
+function cambiarUnidad(productoId, unidad) {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '';
+    
+    const csrf = document.querySelector('input[name="csrfmiddlewaretoken"]').cloneNode();
+    form.appendChild(csrf);
+
+    const inputProducto = document.createElement('input');
+    inputProducto.type = 'hidden';
+    inputProducto.name = 'producto_id';
+    inputProducto.value = productoId;
+    form.appendChild(inputProducto);
+
+    const inputUnidad = document.createElement('input');
+    inputUnidad.type = 'hidden';
+    inputUnidad.name = 'cambiar_unidad';
+    inputUnidad.value = unidad;
+    form.appendChild(inputUnidad);
+
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function aplicarDescuento(descuentoPorcentaje) {
+    const subtotal = parseFloat({{ total }});
+    const cuponSelect = document.getElementById('cupon_id');
+    const cuponId = cuponSelect.value;
+    
+    // Actualizar el campo oculto para el formulario
+    document.getElementById('cupon_seleccionado').value = cuponId || '';
+    
+    if (descuentoPorcentaje) {
+        const descuento = parseFloat(descuentoPorcentaje);
+        const montoDescuento = subtotal * (descuento / 100);
+        const totalConDescuento = subtotal - montoDescuento;
+        
+        // Mostrar el descuento aplicado
+        document.getElementById('descuento-container').style.display = 'block';
+        document.getElementById('descuento-porcentaje').textContent = descuento + '%';
+        document.getElementById('descuento-monto').textContent = montoDescuento.toFixed(0);
+        document.getElementById('total-con-descuento').textContent = totalConDescuento.toFixed(0);
+    } else {
+        // Ocultar descuento si no hay cupÃ³n seleccionado
+        document.getElementById('descuento-container').style.display = 'none';
+        document.getElementById('total-con-descuento').textContent = subtotal.toFixed(0);
+    }
+}
+
+// Inicializar el descuento si hay uno aplicado al cargar la pÃ¡gina
+{% if descuento_aplicado %}
+document.addEventListener('DOMContentLoaded', function() {
+    aplicarDescuento({{ descuento_aplicado }});
+});
+{% endif %}
+</script>
+
+{% endblock %}

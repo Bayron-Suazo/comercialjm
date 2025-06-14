@@ -1,23 +1,20 @@
 {% extends 'core/base_admin.html' %}
 {% load static %}
 
-{% block content %}
-<h2 style="text-align: center; font-size: 2em; margin-bottom: 30px;">Crear Producto</h2>
+{% block title %}Crear Producto{% endblock %}
 
-<div style="display: flex; justify-content: center;">
-    <form method="post" style="width: 100%; max-width: 900px;">
+{% block content %}
+<div class="editar-producto-container">
+    <h2 class="titulo-editar">Crear Producto</h2>
+
+    <form method="post" class="formulario-editar">
         {% csrf_token %}
 
-        <div style="display: flex; flex-wrap: wrap; gap: 30px; justify-content: center;">
+        <div class="form-grid">
             <div class="input-box-completo">
                 <label for="nombre">Nombre</label>
                 <input type="text" name="nombre" id="nombre" value="{{ form.nombre.value|default_if_none:'' }}">
-            </div>
-
-            <div class="input-box-completo">
-                <label for="cantidad">Cantidad</label>
-                <input type="text" name="cantidad" id="cantidad" value="{{ form.cantidad.value|default_if_none:'' }}">
-                {{ form.cantidad.errors }}
+                {{ form.nombre.errors }}
             </div>
 
             <div class="input-box-completo">
@@ -25,50 +22,115 @@
                 <input type="text" name="tipo" id="tipo" value="{{ form.tipo.value|default_if_none:'' }}">
                 {{ form.tipo.errors }}
             </div>
-
+            
             <div class="input-box-completo">
                 <label for="precio">Precio</label>
-                <input type="text" name="precio" id="precio" value="{{ form.precio.value|default_if_none:'' }}">
-                {{ form.precio.errors }}
+                <input type="number" step="0.01" name="precio_venta" id="precio_venta" value="{{ form.precio_venta.value|default_if_none:'' }}">
+                {{ form.precio_venta.errors }}
             </div>
         </div>
 
-        <div style="display: flex; justify-content: center; gap: 20px; margin-top: 30px;">
+        <div class="botones-formulario">
             <a href="{% url 'listar_productos' %}" class="btn-cancelar">Cancelar</a>
-            <button type="submit" class="btn-guardar">Guardar</button>
+            <button type="submit" class="btn-guardar">Guardar Producto</button>
         </div>
     </form>
 </div>
 
-{% if form.nombre.errors %}
+{% if form.errors %}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: '{{ form.nombre.errors.0|escapejs }}',
+        text: 'Revisa los campos del formulario antes de guardar.',
         confirmButtonColor: '#4CAF50'
     });
 </script>
 {% endif %}
 
-
 <style>
+body {
+    background-color: #fef9f1;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 20px;
+}
+
+.editar-producto-container {
+    background-color: #ffffff;
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 40px 50px;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.titulo-editar {
+    text-align: center;
+    font-size: 2em;
+    margin-bottom: 30px;
+    color: #333;
+    position: relative;
+    padding-bottom: 15px;
+}
+
+.titulo-editar::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background-color: #4CAF50;
+    border-radius: 2px;
+}
+
+.formulario-editar {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+}
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .input-box-completo {
     background-color: #4CAF50;
     border-radius: 30px;
-    margin-bottom: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
     overflow: hidden;
-    width: 45%;
+    box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.input-box-completo:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(76, 175, 80, 0.3);
 }
 
 .input-box-completo label {
     color: white;
     padding: 15px 20px;
     font-size: 16px;
+    font-weight: bold;
+    display: block;
+    background-color: #4CAF50;
 }
 
 .input-box-completo input {
@@ -76,27 +138,91 @@
     padding: 16px 20px;
     font-size: 16px;
     outline: none;
-    background-color: white;
-    border-radius: 0;
+    background-color: #fffef6;
     width: 100%;
+    box-sizing: border-box;
+    border-top: 1px solid #e0e0e0;
+    transition: background-color 0.3s;
+}
+
+.input-box-completo input:focus {
+    background-color: #fff;
+}
+
+.input-box-completo .errorlist {
+    color: #e74c3c;
+    background-color: #fff;
+    padding: 8px 15px;
+    margin: 0;
+    font-size: 14px;
+    list-style: none;
+    border-top: 1px solid #f8d7da;
+}
+
+.botones-formulario {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.btn-cancelar, .btn-guardar {
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    min-width: 180px;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .btn-cancelar {
     background-color: #c0392b;
     color: white;
-    padding: 10px 20px;
-    border-radius: 10px;
     text-decoration: none;
-    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-cancelar:hover {
+    background-color: #a93226;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
 }
 
 .btn-guardar {
     background-color: #4CAF50;
     color: white;
-    padding: 10px 20px;
-    border-radius: 10px;
-    border: none;
-    font-weight: bold;
+}
+
+.btn-guardar:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+@media (max-width: 576px) {
+    .editar-producto-container {
+        padding: 25px;
+    }
+    
+    .botones-formulario {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn-cancelar, .btn-guardar {
+        width: 100%;
+    }
+}
+
+body {
+    margin: 0;
+    padding: 0;
 }
 </style>
 {% endblock %}

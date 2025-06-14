@@ -1,0 +1,130 @@
+{% extends 'core/base_admin.html' %}
+
+{% block content %}
+<style>
+  body {
+    background-color: #f9f8e8 !important;
+  }
+
+  .fondo-pagina {
+    background-color: #f9f8e8;
+    width: 100%;
+    min-height: 100vh;
+    padding: 40px 0;
+  }
+
+  .contenedor {
+    padding: 40px;
+    max-width: 1000px;
+    margin: 0 auto;
+    background-color: #fdfdfd;
+    border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  .titulo {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 30px;
+    color: #2c3e50;
+    text-align: center;
+  }
+
+  .tabla-lotes {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .tabla-lotes thead {
+    background-color: #65b741;
+    color: white;
+  }
+
+  .tabla-lotes th, .tabla-lotes td {
+    padding: 14px 20px;
+    text-align: center;
+    font-size: 15px;
+  }
+
+  .tabla-lotes tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+
+  .tabla-lotes tbody tr:hover {
+    background-color: #f1f8f2;
+  }
+
+  .text-green {
+    color: #2e7d32;
+    font-weight: 600;
+  }
+
+  .text-red {
+    color: #c62828;
+    font-weight: 600;
+  }
+
+  .tabla-lotes td[colspan] {
+    padding: 25px;
+    font-size: 16px;
+    color: #777;
+  }
+
+  .volver-btn {
+    display: inline-block;
+    background-color: #777;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+    margin-top: 30px;
+    text-align: center;
+  }
+
+  .volver-btn:hover {
+    background-color: #5c5c5c;
+  }
+</style>
+
+<div class="fondo-pagina">
+  <div class="contenedor">
+    <h2 class="titulo">Cantidad disponible de {{ producto.nombre }}</h2>
+
+    <table class="tabla-lotes">
+      <thead>
+        <tr>
+          <th>Lote</th>
+          <th>Fecha</th>
+          <th>Ingresadas</th>
+          <th>Mermas</th>
+          <th>Disponibles</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in datos %}
+        <tr>
+          <td>{{ item.lote }}</td>
+          <td>{{ item.fecha }}</td>
+          <td>{{ item.cantidad_inicial }}</td>
+          <td class="text-red">{{ item.mermadas }}</td>
+          <td class="text-green">{{ item.disponibles }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5">No hay lotes para este producto.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div style="text-align: center;">
+      <a href="{% url 'listar_productos' %}" class="volver-btn">← Volver</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

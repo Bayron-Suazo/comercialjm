@@ -1,0 +1,119 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+
+{% block title %}
+Listado de Lotes Activos
+{% endblock %}
+
+{% if mensaje %}
+    <div class="alert alert-success">{{ mensaje }}</div>
+{% endif %}
+
+{% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+<head>
+    <link rel="stylesheet" href="{% static 'administrador/css/productos.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    {% block extra_head %}
+        <link href="{% static 'administrador/css/lista_usuarios.css' %}" rel="stylesheet"/>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+        <link rel="stylesheet" href="{% static 'administrador/css/productos.css' %}">
+    {% endblock %}
+</head>
+
+{% block content %}
+<div class="acciones-derecha ancho-contenido">
+    <a class="boton-header" href="#" id="carga-masiva-btn" onclick="activarCargaExcel();">
+        Carga masiva
+        <img src="{% static 'administrador/svg/carga-masiva.svg' %}">
+    </a>
+
+    <form id="form-carga-excel" method="POST" action="{% url 'carga_excel_lotes' %}" enctype="multipart/form-data" style="display: none;">
+        {% csrf_token %}
+        <input type="file" id="input-excel" name="archivo_excel" accept=".xlsx,.xls"
+               onchange="document.getElementById('form-carga-excel').submit();" />
+    </form>
+
+    <a class="boton-header" href="{% url 'dashboard_ventas' %}">
+        Dashboard
+        <img src="{% static 'administrador/svg/reporteria.svg' %}">
+    </a>
+</div>
+
+<h1 class="titulo-pagina">Listado de Ventas</h1>
+
+<div class="buscador-wrapper">
+    <form method="GET" action="">
+        <div class="contenedor-busqueda">
+            <div class="input-icono">
+                <input type="text" name="q" placeholder="Buscar Producto ........">
+                <i class="fa fa-search icono-input"></i>
+            </div>
+            <button type="submit" class="btn-filtrar">
+                Filtrar <i class="fa fa-filter"></i>
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="filtro-busqueda ancho-contenido">
+    <form class="formulario-busqueda" method="GET">
+        <!-- Puedes agregar filtros aquí -->
+    </form>
+</div>
+
+<div class="tabs ancho-contenido">
+    <!-- Contenido de tabs si aplica -->
+</div>
+
+<div class="contenedor-tabla ancho-contenido">
+    <table class="tabla-usuarios tabla-productos">
+        <thead>
+            <tr>
+                <th><input disabled type="checkbox"/></th>
+                <th>N° Venta</th>
+                <th>Cantidad Productos</th>
+                <th>Fecha</th>
+                <th>Total</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for venta in ventas %}
+            <tr>
+                <td><input disabled type="checkbox"/></td>
+                <td>{{ venta.id }}</td>
+                <td>{{ venta.cantidad_total }}</td>
+                <td>{{ venta.fecha|date:"d/m/Y H:i" }}</td>
+                <td>${{ venta.total }}</td>
+                <td class="acciones">
+                    <a href="{% url 'detalle_venta' venta.id %}" title="Ver Detalle">
+                        <i class="fa fa-eye"></i>
+                    </a>
+                
+                    <a href="{% url 'eliminar_venta' venta.id %}" title="Eliminar"
+                       onclick="return confirm('¿Estás seguro de que deseas eliminar esta venta?');">
+                        <i class="fa fa-trash"></i>
+                    </a>
+                </td>                
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">No hay ventas registradas.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+<script>
+    function activarCargaExcel() {
+        document.getElementById('input-excel').click();
+    }
+</script>
+
+{% endblock %}

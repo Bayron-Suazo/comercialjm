@@ -1,44 +1,43 @@
 {% extends 'core/base_admin.html' %}
 {% load static %}
 
-{% block title %}Agregar Merma{% endblock %}
+{% block title %}Editar Producto{% endblock %}
 
 {% block content %}
 <div class="editar-producto-container">
-    <h2 class="titulo-editar">Agregar Merma</h2>
+    <h2 class="titulo-editar">Editar Producto: {{ producto.nombre }}</h2>
 
     <form method="post" class="formulario-editar">
         {% csrf_token %}
 
         <div class="form-grid">
             <div class="input-box-completo">
-                <label for="producto">Producto</label>
-                {{ form.producto }}
-                {{ form.producto.errors }}
+                <label for="nombre">Nombre</label>
+                <input type="text" name="nombre" id="nombre" value="{{ form.nombre.value|default_if_none:'' }}">
+                {{ form.nombre.errors }}
             </div>
 
             <div class="input-box-completo">
-                <label for="cantidad">Cantidad</label>
-                {{ form.cantidad }}
-                {{ form.cantidad.errors }}
+                <label for="cantidad">Cantidad (no editable)</label>
+                <input type="text" name="cantidad" id="cantidad" value="{{ form.cantidad.value|default_if_none:'' }}" readonly>
             </div>
 
             <div class="input-box-completo">
-                <label for="lote">Lote</label>
-                {{ form.lote }}
-                {{ form.lote.errors }}
+                <label for="tipo">Tipo</label>
+                <input type="text" name="tipo" id="tipo" value="{{ form.tipo.value|default_if_none:'' }}">
+                {{ form.tipo.errors }}
             </div>
 
             <div class="input-box-completo">
-                <label for="precio">Precio</label>
-                {{ form.precio }}
-                {{ form.precio.errors }}
+                <label for="precio_venta">Precio</label>
+                {{ form.precio_venta }}
+                {{ form.precio_venta.errors }}
             </div>
         </div>
 
         <div class="botones-formulario">
-            <a href="{% url 'listar_mermas' %}" class="btn-cancelar">Cancelar</a>
-            <button type="submit" class="btn-guardar">Guardar Merma</button>
+            <a href="{% url 'listar_productos' %}" class="btn-cancelar">Cancelar</a>
+            <button type="submit" class="btn-guardar">Guardar Cambios</button>
         </div>
     </form>
 </div>
@@ -139,8 +138,7 @@ body {
     background-color: #4CAF50;
 }
 
-.input-box-completo input,
-.input-box-completo select {
+.input-box-completo input {
     border: none;
     padding: 16px 20px;
     font-size: 16px;
@@ -152,9 +150,13 @@ body {
     transition: background-color 0.3s;
 }
 
-.input-box-completo input:focus,
-.input-box-completo select:focus {
+.input-box-completo input:focus {
     background-color: #fff;
+}
+
+.input-box-completo input[readonly] {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
 }
 
 .input-box-completo .errorlist {

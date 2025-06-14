@@ -1119,17 +1119,66 @@ def dashboard_compras(request):
     return render(request, 'administrador/dashboard_compras.html', context)
 
 
-# ------------------------------------ GESTIÓN DE PRODUCTOS ------------------------------------
+from django.shortcuts import render, get_object_or_404, redirect
+from django.utils import timezone
+from django.contrib import messages
+from registration.models import Producto, DetalleLote, Merma, DetalleVenta, Lote
+from .forms import ProductoForm
+from django.db import models
+from django.db.models import Sum
+from registration.models import Producto
+from django.template.loader import render_to_string
+from django.http import JsonResponse
+from django.core.paginator import Paginator
+from . import views
 
+
+productos = Producto.objects.filter(activo=True).annotate(
+    total_cantidad=Sum('detalles_lote__cantidad')
+)
 
 
 def listar_productos(request):
-    productos = Producto.objects.filter(activo=True)
-    return render(request, 'administrador/listar_productos.html', {'productos': productos})
+    query = request.GET.get("q", "").strip()
+
+    productos_queryset = Producto.objects.filter(activo=True).annotate(
+        cantidad_sumada=Sum('detalles_lote__cantidad')  # <- usa este nombre
+    ).order_by('nombre')
+
+    if query:
+        productos_queryset = productos_queryset.filter(nombre__icontains=query)
+
+    paginator = Paginator(productos_queryset, 5)
+    page_number = request.GET.get("page")
+    productos = paginator.get_page(page_number)
+
+    return render(request, 'administrador/listar_productos.html', {
+        'productos': productos,
+        'query': query
+    })
+
+
+
 
 def productos_inactivos(request):
-    productos = Producto.objects.filter(activo=False)
-    return render(request, 'administrador/listar_productos_inactivos.html', {'productos': productos})
+    query = request.GET.get("q", "").strip()
+
+    productos_queryset = Producto.objects.filter(activo=False).annotate(
+        cantidad_sumada=Sum('detalles_lote__cantidad')
+    ).order_by('nombre')
+
+    if query:
+        productos_queryset = productos_queryset.filter(nombre__icontains=query)
+
+    paginator = Paginator(productos_queryset, 5)
+    page_number = request.GET.get("page")
+    productos = paginator.get_page(page_number)
+
+    return render(request, 'administrador/listar_productos_inactivos.html', {
+        'productos': productos,
+        'query': query
+    })
+
 
 def agregar_producto(request):
     if request.method == 'POST':
@@ -1137,33 +1186,57 @@ def agregar_producto(request):
         if form.is_valid():
             producto = form.save(commit=False)
             producto.activo = True
-            fecha_actual = timezone.now().date()
-            lote_actual, creado = Lote.objects.get_or_create(
-                fecha=fecha_actual,
-                defaults={'numero': fecha_actual.strftime('%Y%m%d'), 'activo': True}
-            )
-            producto.lote = lote_actual
+
+            # Campos que no se muestran en el HTML, asígnalos tú:
+            producto.unidad_medida = 'kg'  # o el valor por defecto
+            producto.precio_caja = 0.00
+            producto.contenido_por_caja = 1.0
+
             producto.save()
             return redirect('listar_productos')
+        else:
+            print("❌ Errores del formulario:", form.errors)
     else:
         form = ProductoForm()
     return render(request, 'administrador/form_producto.html', {'form': form, 'titulo': 'Agregar Producto'})
 
-def editar_producto(request, id):
-    producto = get_object_or_404(Producto, id=id)
+
+
+
+def editar_producto(request, producto_id):
+    producto = get_object_or_404(Producto, id=producto_id)
+    page = request.GET.get('page') or request.POST.get('page') or '1'
+
+
     if request.method == 'POST':
-        form = ProductoForm(request.POST, instance=producto)
+        data = request.POST.copy()
+
+        # Rellenar el precio con el valor actual si viene vacío
+        if not data.get('precio_venta'):
+            data['precio_venta'] = producto.precio_venta  
+
+        form = ProductoForm(data, instance=producto)
+
         if form.is_valid():
             form.save()
-            return redirect('listar_productos')
+            return redirect(f'{reverse("listar_productos")}?page={page}')
     else:
         form = ProductoForm(instance=producto)
-    return render(request, 'administrador/form_producto.html', {'form': form, 'titulo': 'Editar Producto'})
+
+    return render(request, 'administrador/editar_producto.html', {
+        'form': form,
+        'producto': producto,
+        'page': page,
+    })
+
+
 
 def eliminar_producto(request, id):
     producto = get_object_or_404(Producto, id=id)
+    page = request.GET.get("page", "1")
     producto.delete()
-    return redirect('listar_productos')
+    return redirect(f"{reverse('listar_productos')}?page={page}")
+
 
 def toggle_estado_producto(request, id):
     producto = get_object_or_404(Producto, id=id)
@@ -1178,38 +1251,177 @@ def toggle_estado_producto(request, id):
 
 def ver_lotes_producto(request, id):
     producto = get_object_or_404(Producto, id=id)
-    lotes = Lote.objects.filter(producto=producto)  # ajusta según tu modelo
+    lotes = Lote.objects.filter(producto=producto)  
     return render(request, 'administrador/lotes_por_producto.html', {
         'producto': producto,
         'lotes': lotes,
     })
 
-def eliminar_producto(request, id):
-    producto = get_object_or_404(Producto, id=id)
-    producto.delete()
-    return redirect('listar_productos')
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+from django.core.paginator import Paginator
+from django.db.models import Sum
+from registration.models import Producto
+
+def buscar_productos_ajax(request):
+    query = request.GET.get("q", "").strip()
+
+    productos_queryset = Producto.objects.filter(activo=True, nombre__icontains=query).annotate(
+        cantidad_sumada=Sum('detalles_lote__cantidad')  # <- mismo nombre aquí
+    ).order_by('nombre')
+
+    paginator = Paginator(productos_queryset, 5)
+    page_number = request.GET.get("page")
+    productos = paginator.get_page(page_number)
+
+    tabla_html = render_to_string('administrador/partials/tabla_productos.html', {
+        'productos': productos,
+        'query': query,
+    })
+
+    return JsonResponse({'tabla_html': tabla_html})
+
+
+def buscar_productos_inactivos_ajax(request):
+    query = request.GET.get("q", "").strip()
+
+    productos_queryset = Producto.objects.filter(
+        activo=False,
+        nombre__icontains=query
+    ).annotate(
+        cantidad_sumada=Sum('detalles_lote__cantidad')
+    ).order_by('nombre')
+
+    paginator = Paginator(productos_queryset, 5)
+    page_number = request.GET.get("page")
+    productos = paginator.get_page(page_number)
+
+    tabla_html = render_to_string('administrador/partials/tabla_productos.html', {
+        'productos': productos,
+        'query': query,
+    })
+
+    return JsonResponse({'tabla_html': tabla_html})
+
+
+
+
+from django.db.models import Sum  
+from collections import defaultdict
+from django.db.models import Sum
+from django.shortcuts import render, get_object_or_404
+from registration.models import Producto, DetalleLote, Merma
+
+def lotes_por_producto(request, producto_id):
+    producto = get_object_or_404(Producto, id=producto_id)
+    
+    lotes_dict = defaultdict(lambda: {
+        'cantidad_inicial': 0,
+        'mermadas': 0,
+        'disponibles': 0,
+        'fecha': None
+    })
+
+    detalles_lotes = DetalleLote.objects.filter(producto=producto)
+
+    for detalle in detalles_lotes:
+        lote = detalle.lote
+        lote_key = lote.numero  
+
+        lotes_dict[lote_key]['cantidad_inicial'] += detalle.cantidad
+        lotes_dict[lote_key]['fecha'] = lote.fecha
+
+    for lote_numero in lotes_dict:
+        mermadas = Merma.objects.filter(producto=producto, lote=lote_numero).aggregate(
+            total=Sum('cantidad')
+        )['total'] or 0
+
+        disponibles = lotes_dict[lote_numero]['cantidad_inicial'] - mermadas
+
+        lotes_dict[lote_numero]['mermadas'] = mermadas
+        lotes_dict[lote_numero]['disponibles'] = disponibles
+
+    datos = [
+        {
+            'lote': lote_numero,
+            'fecha': info['fecha'],
+            'cantidad_inicial': info['cantidad_inicial'],
+            'mermadas': info['mermadas'],
+            'disponibles': info['disponibles']
+        }
+        for lote_numero, info in lotes_dict.items()
+    ]
+
+    return render(request, 'administrador/lotes_por_producto.html', {
+        'producto': producto,
+        'datos': datos
+    })
+
+
+
 
 
 
 # ------------------------------------ GESTIÓN DE LOTES ------------------------------------
 
-
+from collections import defaultdict
+from django.shortcuts import render, get_object_or_404
+from registration.models import Lote, DetalleLote
 
 def listar_lotes(request):
-    lotes = Lote.objects.filter(activo=True).order_by('-fecha')
-    return render(request, 'administrador/listar_lotes.html', {'lotes': lotes})
+    lotes = Lote.objects.all().order_by('-fecha')
+    
+    # Aplicar filtros si existen en la URL
+    numero_lote = request.GET.get('numero')
+    fecha = request.GET.get('fecha')
+    
+    if numero_lote:
+        lotes = lotes.filter(numero__icontains=numero_lote)
+    
+    if fecha:
+        lotes = lotes.filter(fecha=fecha)
+    
+    # Paginación
+    paginator = Paginator(lotes, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'administrador/listar_lotes.html', {'lotes': page_obj})
 
 
 def ver_lote(request, id):
     lote = get_object_or_404(Lote, id=id)
-    detalles = DetalleLote.objects.filter(lote=lote)
+
+    detalles_crudos = DetalleLote.objects.select_related('producto').filter(lote=lote)
+
+    productos_agregados = {}
+
+    for detalle in detalles_crudos:
+        producto = detalle.producto
+        pid = producto.id
+
+        if pid not in productos_agregados:
+            productos_agregados[pid] = {
+                'producto': producto,
+                'cantidad': 0,
+                'precio': detalle.precio
+            }
+
+        productos_agregados[pid]['cantidad'] += detalle.cantidad
+
+    detalles = [
+        {
+            'producto': data['producto'],
+            'cantidad': data['cantidad'],
+            'precio': data['precio']
+        }
+        for data in productos_agregados.values()
+    ]
 
     return render(request, 'administrador/ver_lote.html', {
         'lote': lote,
         'detalles': detalles
     })
-
-
 
 def eliminar_lote(request, lote_id):
     lote = get_object_or_404(Lote, id=lote_id)
@@ -1218,82 +1430,118 @@ def eliminar_lote(request, lote_id):
     return redirect('listar_lotes')
 
 
-
 def carga_excel_lotes(request):
     if request.method == 'POST' and request.FILES.get('archivo_excel'):
+        print("→ Método POST recibido")
         archivo = request.FILES['archivo_excel']
-        df_raw = pd.read_excel(archivo, header=None)
 
-        columnas_esperadas = {'producto', 'cantidad', 'precio'}
-        indice_inicio = None
-
-        for i, fila in df_raw.iterrows():
-            columnas_actuales = set()
-            for celda in fila:
-                if pd.notna(celda):
-                    valor = str(celda).strip().lower()
-                    if valor.endswith('s'):
-                        valor = valor[:-1]
-                    columnas_actuales.add(valor)
-
-            if columnas_esperadas.issubset(columnas_actuales):
-                indice_inicio = i
-                break
-
-        if indice_inicio is None:
-            messages.error(request, 'No se encontraron columnas válidas: producto, cantidad, precio.')
+        try:
+            df_raw = pd.read_excel(archivo, header=None, engine='openpyxl')
+            print("→ Columnas detectadas:", df_raw.columns.tolist())
+            print("→ Primeras filas:")
+            print(df_raw.head())
+        except Exception as e:
+            messages.error(request, f'Error al leer el archivo: {e}')
             return redirect('listar_lotes')
 
-        df = pd.read_excel(archivo, header=indice_inicio)
-        df.columns = [str(c).strip().lower().rstrip('s') for c in df.columns]
+        columnas_esperadas = {'producto', 'cantidad', 'precio'}
+        indice_encabezado = None
+
+        for i, fila in df_raw.iterrows():
+            encabezados_normalizados = set()
+            for valor in fila:
+                if pd.notna(valor):
+                    nombre = str(valor).strip().lower().rstrip('s') 
+                    encabezados_normalizados.add(nombre)
+            if columnas_esperadas.issubset(encabezados_normalizados):
+                indice_encabezado = i
+                break
+
+        if indice_encabezado is None:
+            messages.error(request, 'No se encontraron columnas válidas: producto, cantidad, precio.')
+            return redirect('listar_lotes')
+        try:
+            df = pd.read_excel(archivo, header=indice_encabezado, engine='openpyxl')
+            df.columns = [str(c).strip().lower().rstrip('s') for c in df.columns]
+            df = df[['producto', 'cantidad', 'precio']]
+        except Exception as e:
+            messages.error(request, f'Error al procesar columnas: {e}')
+            return redirect('listar_lotes')
 
         fecha_actual = timezone.now().date()
-        lote_existente = Lote.objects.filter(fecha=fecha_actual).first()
+        lote, _ = Lote.objects.get_or_create(
+            fecha=fecha_actual,
+            defaults={'numero': f"L-{Lote.objects.count() + 1:03d}"}
+        )
 
-        if lote_existente:
-            lote = lote_existente
-        else:
-            # Contar cuántos días únicos hay registrados
-            dias_registrados = Lote.objects.values_list('fecha', flat=True).distinct().count()
-            numero_lote = f"L-{dias_registrados + 1:03d}"
-            
-            lote = Lote.objects.create(
-                numero=f"L-{numero_lote}",
-                fecha=fecha_actual
-            )
-
+        productos_cargados = 0
 
         for _, row in df.iterrows():
             try:
-                producto_nombre = str(row['producto']).strip()
+                nombre = str(row['producto']).strip().replace('\n', ' ').replace('\r', '')
                 cantidad = int(row['cantidad'])
                 precio = float(row['precio'])
 
-                producto = Producto.objects.filter(nombre__iexact=producto_nombre).first()
-                if not producto:
-                    producto = Producto.objects.create(
-                        nombre=producto_nombre,
-                        cantidad=cantidad,
-                        tipo='Automático',
-                        precio=precio
-                    )
+                producto, _ = Producto.objects.get_or_create(
+                    nombre__iexact=nombre,
+                    defaults={
+                        'nombre': nombre,
+                        'tipo': 'Otros',  # o lo que corresponda
+                        'unidad_medida': 'unidad',
+                        'precio_venta': precio,
+                        'precio_caja': precio,
+                        'contenido_por_caja': 1,
+                        'activo': True
+                    }
+)
 
-                producto, _ = Producto.objects.get_or_create(nombre=producto_nombre)
 
                 DetalleLote.objects.create(
                     lote=lote,
-                    producto=producto.nombre,  
+                    producto=producto,
                     cantidad=cantidad,
                     precio=precio
-)
+                )
 
-            except Exception:
-                continue  
+                productos_cargados += 1
 
-        messages.success(request, 'Lote cargado exitosamente.')
+            except Exception as e:
+                print(f"⛔ Error al procesar fila: {row} → {e}")
+                continue
+
+        if productos_cargados == 0:
+            messages.warning(request, 'No se cargaron productos. Revisa el contenido del archivo.')
+        else:
+            messages.success(request, f'Se cargaron {productos_cargados} productos correctamente.')
+
         return redirect('listar_lotes')
 
+    messages.error(request, 'No se proporcionó un archivo válido.')
     return redirect('listar_lotes')
+
+
+import openpyxl
+from django.http import HttpResponse
+from openpyxl.styles import Font
+
+def descargar_plantilla_excel(request):
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Plantilla Lotes"
+
+    # Encabezados
+    columnas = ['Producto', 'Cantidad', 'Precio']
+    for i, encabezado in enumerate(columnas, 1):
+        celda = ws.cell(row=1, column=i, value=encabezado)
+        celda.font = Font(bold=True)
+
+    # Respuesta
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=plantilla_lotes.xlsx'
+    wb.save(response)
+    return response
 
 
 
@@ -1336,12 +1584,14 @@ def crear_cliente(request):
             cliente = form.save(commit=False)
             cliente.activo = True
             cliente.save()
-
-            return redirect('listar_clientes_activos')  
+            return redirect('listar_clientes_activos')
+        else:
+            print("Errores del formulario:", form.errors) 
     else:
         form = ClienteForm()
-    
+
     return render(request, 'administrador/crear_cliente.html', {'form': form})
+
 
 def eliminar_cliente(request, pk):
     cliente = get_object_or_404(Cliente, pk=pk)
@@ -1358,8 +1608,32 @@ def toggle_estado_cliente(request, pk):
     else:
         return redirect('listar_clientes_activos')
     
+from django.shortcuts import render
+from django.db.models import Sum, Count, Q
+from registration.models import Cliente
+from registration.models import Venta
+
 def ranking_clientes(request):
-    return render(request, 'administrador/ranking_clientes.html') 
+    q = request.GET.get('q', '')
+
+    clientes = Cliente.objects.filter(activo=True)
+
+    if q:
+        clientes = clientes.filter(
+            Q(nombre__icontains=q) |
+            Q(rut__icontains=q) |
+            Q(categoria__icontains=q)
+        )
+
+    clientes = clientes.annotate(
+        total_ventas=Sum('ventas__total'),
+        cantidad_ventas=Count('ventas')
+    ).order_by('-cantidad_ventas')
+
+    return render(request, 'administrador/ranking_clientes.html', {
+        'clientes': clientes
+    })
+
 
 def dashboard_clientes(request):
     total_clientes = Cliente.objects.count()
@@ -1405,11 +1679,7 @@ def dashboard_productos(request):
     productos_con_merma = Merma.objects.values('producto').distinct().count()
     porcentaje_mermas = (productos_con_merma / total_productos * 100) if total_productos else 0
     tipos_data = Producto.objects.values('tipo').annotate(total=Count('id'))
-
-    try:
-        ultimo_producto = Producto.objects.latest('fecha')
-    except ObjectDoesNotExist:
-        ultimo_producto = None
+    ultimo_producto = Producto.objects.latest('fecha')
 
     context = {
         'total_productos': total_productos,
@@ -1428,21 +1698,79 @@ def debug_url_test(request):
         return HttpResponse(f"✅ URL encontrada: {url}")
     except Exception as e:
         return HttpResponse(f"❌ Error: {e}")
-    
+
+
+
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from registration.models import Cliente, Cupon
+
+
+def generar_cupon_ajax(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            cliente_id = data.get('cliente_id')
+            descuento = data.get('descuento')
+
+            if not cliente_id or not descuento:
+                return JsonResponse({'status': 'error', 'mensaje': 'Datos incompletos'}, status=400)
+
+            cliente = Cliente.objects.get(pk=cliente_id)
+            cupon = Cupon.objects.create(
+                cliente=cliente,
+                descuento=int(descuento),
+                usado=False
+            )
+
+            return JsonResponse({'status': 'ok', 'mensaje': f'Cupón del {descuento}% generado para {cliente.nombre}'})
+        
+        except Cliente.DoesNotExist:
+            return JsonResponse({'status': 'error', 'mensaje': 'Cliente no encontrado'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'mensaje': str(e)}, status=500)
+
+    return JsonResponse({'status': 'error', 'mensaje': 'Método no permitido'}, status=405)
+
 
 # ------------------------------------ GESTIÓN DE VENTAS ------------------------------------
 
+from django.shortcuts import render, redirect, get_object_or_404
+from registration.models import Producto, Venta, DetalleVenta
+from .forms import AgregarProductoVentaForm, VentaForm
+from django.db.models import Sum, Count, Q
+from django.contrib import messages
+from django.utils import timezone
+import json
+from registration.models import Cupon  
+from decimal import Decimal
 
 
 def dashboard_ventas(request):
-    total_ventas = Venta.objects.count()
-    ventas_dia = Venta.objects.filter(fecha=timezone.now().date()).count()
-    productos_vendidos = sum(v.cantidad_total for v in Venta.objects.all())
+    total_ventas = Venta.objects.aggregate(total=Sum('total'))['total'] or 0
+    ventas_dia = Venta.objects.filter(fecha__date=timezone.localdate()).aggregate(total=Sum('total'))['total'] or 0
+    productos_vendidos = DetalleVenta.objects.aggregate(total=Sum('cantidad'))['total'] or 0
 
-    categorias_ventas = ['Perfumes', 'Cremas', 'Accesorios']  # ejemplo
-    montos_ventas = [100000, 50000, 25000]  # ejemplo
-    medios_pago = ['Efectivo', 'Tarjeta', 'Transferencia']
-    pagos = [60, 25, 15]  # ejemplo
+    ventas_por_categoria = (
+        DetalleVenta.objects
+        .select_related('producto')
+        .values('producto__tipo')
+        .annotate(total=Sum('subtotal'))
+        .order_by('-total')
+    )
+
+    categorias_ventas = [item['producto__tipo'] for item in ventas_por_categoria]
+    montos_ventas = [float(item['total']) for item in ventas_por_categoria]
+
+    pagos_por_metodo = (
+        Venta.objects
+        .values('metodo_pago')
+        .annotate(total=Count('id'))
+    )
+
+    labels_pago = [item['metodo_pago'] for item in pagos_por_metodo]
+    valores_pago = [item['total'] for item in pagos_por_metodo]
 
     ultima_venta = Venta.objects.last()
 
@@ -1450,19 +1778,232 @@ def dashboard_ventas(request):
         'total_ventas': total_ventas,
         'ventas_dia': ventas_dia,
         'productos_vendidos': productos_vendidos,
-        'categorias_ventas': categorias_ventas,
-        'montos_ventas': montos_ventas,
-        'medios_pago': medios_pago,
-        'pagos': pagos,
+        'categorias_ventas': json.dumps(categorias_ventas),
+        'montos_ventas': json.dumps(montos_ventas),
+        'labels_pago': json.dumps(labels_pago),
+        'medios_pago': json.dumps(valores_pago),
         'ultima_venta': ultima_venta
     }
 
     return render(request, 'administrador/dashboard_ventas.html', context)
 
+from decimal import Decimal
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.utils import timezone
+from .forms import UnidadVentaForm
+from registration.models import Producto, Cliente, Cupon, DetalleVenta, Venta
+from .forms import VentaForm
+
+def crear_venta(request):
+    productos_disponibles = Producto.objects.filter(activo=True)
+    cupones_disponibles = []
+    venta_productos = request.session.get('venta_productos', [])
+    productos = []
+    total = 0
+    mensaje_error = None
+    descuento_aplicado = 0
+    monto_descuento = 0
+    total_con_descuento = total
+    cupon_aplicado = None
+
+    unidad_form = UnidadVentaForm(request.POST or None)
+
+    cliente_id_url = request.GET.get("cliente")
+    cliente_inicial = Cliente.objects.filter(id=cliente_id_url).first() if cliente_id_url else None
+
+    if 'cupon_id' in request.POST:
+        cupon_id = request.POST.get('cupon_id')
+        cupon_id_int = None
+        if cupon_id:
+            try:
+                cupon_id_clean = cupon_id.replace(',', '.')
+                cupon_id_int = int(float(cupon_id_clean))
+            except (ValueError, TypeError):
+                cupon_id_int = None
+
+        if cupon_id_int is not None:
+            try:
+                cupon = Cupon.objects.get(id=cupon_id_int, activo=True, usado=False)
+                if cupon.valido_hasta and cupon.valido_hasta < timezone.now().date():
+                    messages.error(request, "El cupón ha expirado")
+                else:
+                    descuento_aplicado = float(cupon.descuento)
+                    monto_descuento = total * (descuento_aplicado / 100)
+                    total_con_descuento = total - monto_descuento
+                    cupon_aplicado = cupon.id
+            except Cupon.DoesNotExist:
+                messages.error(request, "Cupón no válido, ya usado o inactivo")
+
+
+    if request.method == 'POST':
+        form = VentaForm(request.POST)
+    else:
+        form = VentaForm(initial={'cliente': cliente_inicial}) if cliente_inicial else VentaForm()
+
+    if form.is_valid():
+        cliente = form.cleaned_data.get('cliente')
+        if cliente:
+            cupones_disponibles = Cupon.objects.filter(cliente=cliente, usado=False)
+    elif cliente_inicial:
+        cupones_disponibles = Cupon.objects.filter(cliente=cliente_inicial, usado=False)
+
+    for item in venta_productos:
+        try:
+            producto = Producto.objects.get(id=item['producto_id'])
+            cantidad = Decimal(str(item['cantidad']))
+            unidad = item.get('unidad', 'unidad')  # default a unidad
+
+            if unidad == 'caja':
+                subtotal = producto.precio_caja * cantidad
+                precio = producto.precio_caja
+            else:
+                subtotal = producto.precio_venta * cantidad
+                precio = producto.precio_venta
+
+            productos.append({
+                'producto': producto,
+                'cantidad': cantidad,
+                'unidad': unidad,
+                'precio': precio,
+                'subtotal': subtotal,
+            })
+            total += subtotal
+        except Producto.DoesNotExist:
+            continue
+
+    if request.method == 'POST':
+        if 'agregar' in request.POST:
+            try:
+                nombre_producto = request.POST.get('producto', '').strip()
+                cantidad = Decimal(request.POST.get('cantidad', '0'))
+                unidad = request.POST.get('unidad', 'unidad')  
+                producto = Producto.objects.get(nombre__iexact=nombre_producto, activo=True)
+
+                if cantidad <= 0:
+                    mensaje_error = "La cantidad debe ser mayor que 0."
+                else:
+                    venta_productos.append({
+                        'producto_id': producto.id,
+                        'cantidad': float(cantidad),
+                        'unidad': unidad
+                    })
+                    request.session['venta_productos'] = venta_productos
+                    return redirect('crear_venta')
+            except (Producto.DoesNotExist, ValueError, TypeError):
+                mensaje_error = "No hay existencias de este producto."
+
+        elif 'eliminar_producto_id' in request.POST:
+            producto_id = int(request.POST.get('eliminar_producto_id'))
+            venta_productos = [p for p in venta_productos if p['producto_id'] != producto_id]
+            request.session['venta_productos'] = venta_productos
+            return redirect('crear_venta')
+        
+        elif 'cambiar_unidad' in request.POST:
+            producto_id = int(request.POST.get('producto_id'))
+            nueva_unidad = request.POST.get('cambiar_unidad')
+
+            for item in venta_productos:
+                if item['producto_id'] == producto_id:
+                    item['unidad'] = nueva_unidad
+                    break
+
+            request.session['venta_productos'] = venta_productos
+            return redirect('crear_venta')
+
+        elif 'finalizar' in request.POST:
+            cupon_id = request.POST.get('cupon_id')
+            cupon_id_int = None
+            if cupon_id:
+                try:
+                    cupon_id_clean = cupon_id.replace(',', '.')
+                    cupon_id_int = int(float(cupon_id_clean))
+                except (ValueError, TypeError, AttributeError):
+                    cupon_id_int = None
+
+            if form.is_valid() and productos:
+                venta = form.save(commit=False)
+                venta.total = total
+
+                if cupon_id_int:
+                    try:
+                        cupon = Cupon.objects.get(id=cupon_id_int, cliente=venta.cliente, usado=False)
+                        descuento = cupon.descuento
+                        venta.total = total - (total * descuento / 100)
+                        cupon.usado = True
+                        cupon.save()
+                    except Cupon.DoesNotExist:
+                        pass
+
+                venta.save()
+
+                for item in productos:
+                    DetalleVenta.objects.create(
+                        venta=venta,
+                        producto=item['producto'],
+                        cantidad=item['cantidad'],
+                        precio=item['precio'],
+                        subtotal=item['subtotal'],
+                        unidad=item['unidad']
+                    )
+
+                request.session['venta_productos'] = []
+                return redirect('listar_ventas')
+
+
+    context = {
+        'venta_form': form,
+        'unidad_form': unidad_form,
+        'productos': productos,
+        'total': total,
+        'productos_disponibles': productos_disponibles,
+        'mensaje_error': mensaje_error,
+        'cupones_disponibles': cupones_disponibles,
+        'descuento_aplicado': descuento_aplicado,
+        'monto_descuento': monto_descuento,
+        'total_con_descuento': total_con_descuento,
+        'cupon_aplicado': cupon_aplicado,
+    }
+    return render(request, 'administrador/crear_venta.html', context)
+
+
+
+def calcular_subtotal(producto, cantidad):
+    if producto.unidad_medida == 'kg':
+        return cantidad * producto.precio_kg
+    else:
+        return cantidad * producto.precio_unidad
+
 
 def listar_ventas(request):
-    ventas = Venta.objects.all()
-    return render(request, 'administrador/listar_ventas.html', {'ventas': ventas})
+    ventas = Venta.objects.all().order_by('-fecha')
+    return render(request, 'administrador/listar_ventas.html', {
+        'ventas': ventas
+    })
+
+def detalle_venta(request, venta_id):
+    venta = Venta.objects.get(id=venta_id)
+    return render(request, 'administrador/detalle_venta.html', {
+        'venta': venta
+    })
+
+def eliminar_venta(request, venta_id):
+    venta = get_object_or_404(Venta, id=venta_id)
+    venta.delete()
+    return redirect('listar_ventas')
+
+from django.shortcuts import render, get_object_or_404
+from registration.models import Cliente, Venta, DetalleVenta
+
+
+def detalle_compras_cliente(request, cliente_id):
+    cliente = get_object_or_404(Cliente, id=cliente_id)
+    ventas = Venta.objects.filter(cliente=cliente).prefetch_related('detalles', 'detalles__producto')
+
+    return render(request, 'administrador/detalle_compras_cliente.html', {
+        'cliente': cliente,
+        'ventas': ventas
+    })
 
 
 

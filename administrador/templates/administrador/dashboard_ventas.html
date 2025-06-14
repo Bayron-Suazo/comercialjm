@@ -10,7 +10,7 @@
 <div class="dashboard-container">
     <div class="top-bar-buttons">
         <a href="{% url 'listar_ventas' %}" class="btn btn-primary">Listado de Ventas</a>
-        <a href="#" class="btn btn-primary">Carga Masiva</a>
+        <a href="{% url 'crear_venta' %}" class="btn btn-primary">Venta</a>
     </div>
 
     <h1 class="dashboard-title">Gestión de Ventas</h1>
@@ -36,9 +36,9 @@
     <div class="charts-section">
         <div class="chart-card">
             <h2 class="chart-title">Ventas por Categoría</h2>
-            <canvas id="barChart"></canvas>
+            <canvas id="barChart" style="width: 100%; height: 300px;"></canvas>
         </div>
-        
+
         <div class="chart-card">
             <h2 class="chart-title">Distribución de Ventas</h2>
             <div class="pie-chart-container">
@@ -67,16 +67,33 @@
         data: {
             labels: {{ categorias_ventas|safe }},
             datasets: [{
-                label: 'Total $ por categoría',
+                label: 'Monto vendido ($)',
                 data: {{ montos_ventas|safe }},
-                backgroundColor: '#2196F3'
+                backgroundColor: '#4CAF50',
+                borderRadius: 6,
+                barThickness: 40
             }]
         },
         options: {
             responsive: true,
-            plugins: { legend: { display: false } },
+            plugins: {
+                legend: { display: false },
+                title: {
+                    display: true,
+                    text: 'Ventas por Categoría',
+                    font: {
+                        size: 18
+                    }
+                }
+            },
             scales: {
-                y: { beginAtZero: true }
+                x: {
+                    ticks: { font: { size: 14 } }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: { font: { size: 14 } }
+                }
             }
         }
     });
@@ -85,7 +102,7 @@
     new Chart(pieCtx, {
         type: 'doughnut',
         data: {
-            labels: ['Efectivo', 'Transferencia', 'Débito', 'Crédito'],
+            labels: {{ labels_pago|safe }},
             datasets: [{
                 data: {{ medios_pago|safe }},
                 backgroundColor: ['#4CAF50', '#2196F3', '#FFC107', '#9C27B0'],
@@ -97,9 +114,25 @@
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'bottom' }
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: {
+                            size: 14
+                        }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Distribución de Ventas por Método de Pago',
+                    font: {
+                        size: 16
+                    }
+                }
             }
         }
     });
+
+
 </script>
 {% endblock %}

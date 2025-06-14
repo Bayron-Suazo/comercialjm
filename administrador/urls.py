@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views import buscar_productos_inactivos_ajax
 
 urlpatterns = [
     
@@ -30,7 +31,6 @@ urlpatterns = [
     path('proveedores/carga-masiva/', views.carga_masiva_proveedores, name='carga_masiva_proveedores'),
 
 
-
     # COMPRAS
     path('lista_compras_activas/', views.lista_compras_activas, name='lista_compras_activas'),
     path('lista_compras_bloqueadas/', views.lista_compras_bloqueadas, name='lista_compras_bloqueadas'),
@@ -41,16 +41,9 @@ urlpatterns = [
     path('dashboard_compras/', views.dashboard_compras, name='dashboard_compras'),
 
 
-    # PRODUCTOS, LOTES, MERMAS Y CLIENTES
+    # PRODUCTOS
     path('lotes/carga_excel/', views.carga_excel_lotes, name='carga_excel_lotes'),
-    path('clientes/<int:pk>/desactivar/', views.toggle_estado_cliente, name='toggle_estado_cliente'),
-    path('clientes/crear/', views.crear_cliente, name='crear_cliente'),
-    path('clientes/eliminar/<int:pk>/', views.eliminar_cliente, name='eliminar_cliente'),
-    path('clientes/dashboard/', views.dashboard_clientes, name='dashboard_clientes'),
-    path('clientes/activos/', views.listar_clientes_activos, name='listar_clientes_activos'),
-    path('clientes/inactivos/', views.listar_clientes_inactivos, name='listar_clientes_inactivos'),
-    path('clientes/ranking/', views.ranking_clientes, name='ranking_clientes'),
-    path('clientes/editar/<int:cliente_id>/', views.editar_cliente, name='editar_clientes'),
+    path('lotes/descargar-plantilla/', views.descargar_plantilla_excel, name='descargar_plantilla_excel'),
     path('mermas/agregar/', views.agregar_merma, name='agregar_merma'),
     path('productos/dashboard/', views.dashboard_productos, name='dashboard_productos'),
     path('mermas/', views.listar_mermas, name='listar_mermas'),
@@ -59,9 +52,9 @@ urlpatterns = [
     path('productos/', views.listar_productos, name='listar_productos'),
     path('productos/agregar/', views.agregar_producto, name='agregar_producto'),
     path('productos/<int:id>/eliminar/', views.eliminar_producto, name='eliminar_producto'),
-    path('productos/<int:id>/lotes/', views.ver_lotes_producto, name='ver_lotes_producto'),
+    path('productos/<int:producto_id>/lotes/', views.lotes_por_producto, name='ver_lotes_producto'),
     path('productos/toggle/<int:id>/', views.toggle_estado_producto, name='toggle_estado_producto'),
-    path('productos/editar/<int:id>/', views.editar_producto, name='editar_producto'),
+    path('productos/editar/<int:producto_id>/', views.editar_producto, name='editar_producto'),
     path('productos/eliminar/<int:id>/', views.eliminar_producto, name='eliminar_producto'),
     path('lotes/', views.listar_lotes, name='listar_lotes'),
     path('lotes/carga_excel/', views.carga_excel_lotes, name='carga_excel_lotes'),
@@ -69,7 +62,29 @@ urlpatterns = [
     path('lotes/ver/<int:id>/', views.ver_lote, name='ver_lote'),
     path('ventas/dashboard/', views.dashboard_ventas, name='dashboard_ventas'),
     path('ventas/', views.listar_ventas, name='listar_ventas'),
+    path('productos/buscar/', views.buscar_productos_ajax, name='buscar_productos_ajax'),
+    path('productos/inactivos/buscar/', buscar_productos_inactivos_ajax, name='buscar_productos_inactivos_ajax'),
     path('debug/', views.debug_url_test),
+
+
+    #VENTAS
+    path('ventas/crear/', views.crear_venta, name='crear_venta'),
+    path('ventas/', views.listar_ventas, name='listar_ventas'),
+    path('ventas/<int:venta_id>/', views.detalle_venta, name='detalle_venta'),
+    path('ventas/eliminar/<int:venta_id>/', views.eliminar_venta, name='eliminar_venta'),
+
+
+    #CLIENTES
+    path('clientes/<int:pk>/desactivar/', views.toggle_estado_cliente, name='toggle_estado_cliente'),
+    path('clientes/crear/', views.crear_cliente, name='crear_cliente'),
+    path('clientes/eliminar/<int:pk>/', views.eliminar_cliente, name='eliminar_cliente'),
+    path('clientes/dashboard/', views.dashboard_clientes, name='dashboard_clientes'),
+    path('clientes/activos/', views.listar_clientes_activos, name='listar_clientes_activos'),
+    path('clientes/inactivos/', views.listar_clientes_inactivos, name='listar_clientes_inactivos'),
+    path('clientes/ranking/', views.ranking_clientes, name='ranking_clientes'),
+    path('clientes/editar/<int:cliente_id>/', views.editar_cliente, name='editar_clientes'),
+    path('clientes/<int:cliente_id>/compras/', views.detalle_compras_cliente, name='detalle_compras_cliente'),
+    path('cupones/generar/', views.generar_cupon_ajax, name='generar_cupon_ajax'),
 
 
     #REPORTERIA
