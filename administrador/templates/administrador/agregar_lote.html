@@ -89,6 +89,21 @@ document.addEventListener('DOMContentLoaded', function () {
   const form = document.querySelector('form');
   const template = document.getElementById('empty-form-template').content;
 
+  // Guardamos todas las opciones originales del select en un array (excepto la opción vacía)
+  let allOptions = [];
+
+  function initAllOptions() {
+    const firstSelect = tbody.querySelector('select');
+    if (!firstSelect) return;
+
+    allOptions = Array.from(firstSelect.options)
+      .filter(opt => opt.value !== "")
+      .map(opt => ({value: opt.value, text: opt.text}));
+    // Ordenamos alfabéticamente
+    allOptions.sort((a, b) => a.text.localeCompare(b.text));
+  }
+
+  // Función para actualizar atributos (name, id) al reordenar
   function updateAttributes(row, index) {
     row.querySelectorAll('input, select').forEach(input => {
       if (!input.name) return;
@@ -99,11 +114,52 @@ document.addEventListener('DOMContentLoaded', function () {
 
       input.name = newName;
       input.id = newId;
-
-      // NO limpiar valores aquí para no borrar datos existentes
+      // No tocamos el value para no perder datos existentes
     });
   }
 
+  // Función que actualiza los selects ocultando las opciones ya seleccionadas en otros selects
+  function updateSelectOptions() {
+    // Obtenemos todos los valores seleccionados, excepto el vacío
+    const selectedValues = Array.from(tbody.querySelectorAll('select'))
+      .map(s => s.value)
+      .filter(v => v !== '');
+
+    tbody.querySelectorAll('select').forEach(select => {
+      const currentValue = select.value;
+
+      // Primero limpiamos todas las opciones
+      while (select.options.length > 0) {
+        select.remove(0);
+      }
+
+      // Agregamos siempre la opción vacía al principio
+      const emptyOption = document.createElement('option');
+      emptyOption.value = "";
+      emptyOption.text = "---------";
+      select.add(emptyOption);
+
+      // Agregamos las opciones que NO están seleccionadas en otros selects
+      allOptions.forEach(opt => {
+        // Si la opción no está seleccionada o es la opción actual del select, la añadimos
+        if (!selectedValues.includes(opt.value) || opt.value === currentValue) {
+          const option = document.createElement('option');
+          option.value = opt.value;
+          option.text = opt.text;
+          select.add(option);
+        }
+      });
+
+      // Restauramos el valor actual (si fue removido por error, se pondrá vacío)
+      if ([...select.options].some(o => o.value === currentValue)) {
+        select.value = currentValue;
+      } else {
+        select.value = "";
+      }
+    });
+  }
+
+  // Agregar nueva fila
   addButton.addEventListener('click', function () {
     const formCount = parseInt(totalForms.value);
     const newRow = template.cloneNode(true).querySelector('tr');
@@ -121,8 +177,11 @@ document.addEventListener('DOMContentLoaded', function () {
     updateAttributes(newRow, formCount);
     tbody.appendChild(newRow);
     totalForms.value = formCount + 1;
+
+    updateSelectOptions();
   });
 
+  // Eliminar fila
   tbody.addEventListener('click', function (e) {
     if (e.target.closest('.boton-eliminar')) {
       const row = e.target.closest('tr');
@@ -133,12 +192,15 @@ document.addEventListener('DOMContentLoaded', function () {
         const updatedRows = tbody.querySelectorAll('.formset-row');
         updatedRows.forEach((r, i) => updateAttributes(r, i));
         totalForms.value = updatedRows.length;
+
+        updateSelectOptions();
       } else {
         alert('Debe haber al menos una fila.');
       }
     }
   });
 
+  // Validación formulario
   form.addEventListener('submit', function (e) {
     let valid = true;
     const rows = tbody.querySelectorAll('.formset-row');
@@ -160,6 +222,17 @@ document.addEventListener('DOMContentLoaded', function () {
       alert('Completa todos los campos y asegúrate que la cantidad sea mayor a cero.');
     }
   });
+
+  // Escuchar cambios en selects para actualizar opciones
+  tbody.addEventListener('change', function (e) {
+    if (e.target.tagName === 'SELECT') {
+      updateSelectOptions();
+    }
+  });
+
+  // Inicializar
+  initAllOptions();
+  updateSelectOptions();
 });
 </script>
 {% endblock %}
