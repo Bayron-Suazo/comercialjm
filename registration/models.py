@@ -40,7 +40,6 @@ class Proveedor(models.Model):
     
 
 class Lote(models.Model):
-    numero = models.CharField(max_length=50)
     fecha = models.DateField(auto_now_add=True)
     activo = models.BooleanField(default=True)
 

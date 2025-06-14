@@ -530,10 +530,11 @@ ProductoUnidadFormSet = inlineformset_factory(
 class LoteForm(forms.ModelForm):
     class Meta:
         model = Lote
-        fields = ['numero']
-        widgets = {
-            'numero': forms.TextInput(attrs={'class': 'form-control'})
-        }
+        fields = []
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
 
 class DetalleLoteForm(forms.ModelForm):
     class Meta:
@@ -544,8 +545,44 @@ class DetalleLoteForm(forms.ModelForm):
             'cantidad': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
         }
 
+    def clean_cantidad(self):
+        cantidad = self.cleaned_data.get('cantidad')
+        if cantidad is not None and cantidad <= 0:
+            raise forms.ValidationError("La cantidad debe ser mayor a 0.")
+        return cantidad
 
+from django.forms import BaseModelFormSet, ValidationError
 
+class BaseDetalleLoteFormSet(BaseModelFormSet):
+    def clean(self):
+        super().clean()
+        productos_unidad = []
+
+        for form in self.forms:
+            if self.can_delete and self._should_delete_form(form):
+                continue
+            if not form.cleaned_data:
+                raise ValidationError("Por favor, completa todos los campos.")
+
+            producto_unidad = form.cleaned_data.get('producto_unidad')
+            cantidad = form.cleaned_data.get('cantidad')
+
+            if producto_unidad is None:
+                raise ValidationError("Selecciona un producto con unidad.")
+            if cantidad is None or cantidad <= 0:
+                raise ValidationError("La cantidad debe ser mayor que cero.")
+
+            if producto_unidad in productos_unidad:
+                raise ValidationError("No se pueden repetir productos con la misma unidad en el detalle del lote.")
+            productos_unidad.append(producto_unidad)
+
+DetalleLoteFormSet = modelformset_factory(
+    DetalleLote,
+    form=DetalleLoteForm,
+    formset=BaseDetalleLoteFormSet,
+    extra=1,
+    can_delete=True,
+)
 
  
 

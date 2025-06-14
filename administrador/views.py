@@ -14,7 +14,9 @@ from registration.models import Profile, Proveedor, Compra, Producto, DetalleCom
 from datetime import datetime, date
 from django.core.exceptions import ValidationError
 from django.contrib import messages
-from administrador.forms import EditUserProfileForm, CrearProveedorForm, EditarProveedorForm, CompraForm, DetalleCompraForm, CargaMasivaProveedorForm, CargaMasivaUsuariosForm, AprobarCompraForm, ProductoForm, ProductoUnidadFormSet, ProductoUnidadForm, EditarProductoForm, LoteForm, DetalleLoteFormSet
+from administrador.forms import EditUserProfileForm, CrearProveedorForm, EditarProveedorForm, CompraForm, DetalleCompraForm, CargaMasivaProveedorForm 
+from administrador.forms import CargaMasivaUsuariosForm, AprobarCompraForm, ProductoForm, ProductoUnidadFormSet, ProductoUnidadForm, EditarProductoForm, LoteForm
+from administrador.forms import DetalleLoteForm, BaseDetalleLoteFormSet
 from django.views.decorators.http import require_POST
 from .forms import PerfilForm
 from django.db.models import Count, Avg, Max, Min
@@ -46,6 +48,7 @@ from django.core.validators import validate_email
 from django.template.loader import get_template
 from weasyprint import HTML
 from io import BytesIO
+from django.forms import modelformset_factory
 
 
 # ------------------------------------ GESTIÓN DE USUARIOS ------------------------------------
@@ -1338,12 +1341,22 @@ def eliminar_producto(request, id):
 
 @login_required
 def agregar_lote(request):
+    DetalleLoteFormSet = modelformset_factory(
+        DetalleLote,
+        form=DetalleLoteForm,
+        formset=BaseDetalleLoteFormSet,
+        extra=1,
+        can_delete=True,
+    )
+
     lote_form = LoteForm(request.POST or None)
     formset = DetalleLoteFormSet(request.POST or None, queryset=DetalleLote.objects.none())
 
     if request.method == 'POST':
         if lote_form.is_valid() and formset.is_valid():
-            lote = lote_form.save()
+            lote = lote_form.save(commit=False)
+            lote.save()
+
             for form in formset:
                 if form.cleaned_data and not form.cleaned_data.get('DELETE'):
                     detalle = form.save(commit=False)

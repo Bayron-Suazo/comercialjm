@@ -12,18 +12,13 @@
 <form method="post" novalidate>
   {% csrf_token %}
   {{ lote_form.non_field_errors }}
-
-  <div class="form-container">
-    <div class="form-column">
-      <div class="form-group">
-        <label for="id_numero">Número de lote</label>
-        {{ lote_form.numero }}
-        {{ lote_form.numero.errors }}
-      </div>
-    </div>
+  {% if formset.non_form_errors %}
+  <div class="errorlist nonfield-errors">
+    {% for error in formset.non_form_errors %}
+      <p>{{ error }}</p>
+    {% endfor %}
   </div>
-
-  <h3 class="subtitulo">Detalle del lote</h3>
+{% endif %}
 
   {{ formset.management_form }}
 
@@ -91,18 +86,30 @@ document.addEventListener('DOMContentLoaded', function () {
   const tbody = document.getElementById('formset-body');
   const addButton = document.getElementById('add-formset-row');
   const totalForms = document.getElementById('id_form-TOTAL_FORMS');
+  const form = document.querySelector('form');
   const template = document.getElementById('empty-form-template').content;
 
   function updateAttributes(row, index) {
     row.querySelectorAll('input, select').forEach(input => {
       if (!input.name) return;
 
-      const name = input.name.replace(/form-(\d+|__prefix__)-/, `form-${index}-`);
-      const id = 'id_' + name;
+      const oldName = input.name;
+      const newName = oldName.replace(/form-(\d+|__prefix__)-/, `form-${index}-`);
+      const newId = 'id_' + newName;
 
-      input.name = name;
-      input.id = id;
+      input.name = newName;
+      input.id = newId;
 
+      // NO limpiar valores aquí para no borrar datos existentes
+    });
+  }
+
+  addButton.addEventListener('click', function () {
+    const formCount = parseInt(totalForms.value);
+    const newRow = template.cloneNode(true).querySelector('tr');
+
+    // Limpiar valores en la fila nueva
+    newRow.querySelectorAll('input, select').forEach(input => {
       if (input.tagName === 'INPUT' && input.type !== 'hidden') {
         input.value = '';
       }
@@ -110,11 +117,7 @@ document.addEventListener('DOMContentLoaded', function () {
         input.selectedIndex = 0;
       }
     });
-  }
 
-  addButton.addEventListener('click', function () {
-    const formCount = parseInt(totalForms.value);
-    const newRow = template.cloneNode(true).querySelector('tr');
     updateAttributes(newRow, formCount);
     tbody.appendChild(newRow);
     totalForms.value = formCount + 1;
@@ -123,15 +126,38 @@ document.addEventListener('DOMContentLoaded', function () {
   tbody.addEventListener('click', function (e) {
     if (e.target.closest('.boton-eliminar')) {
       const row = e.target.closest('tr');
-      if (tbody.querySelectorAll('.formset-row').length > 1) {
+      const rows = tbody.querySelectorAll('.formset-row');
+
+      if (rows.length > 1) {
         row.remove();
-        // Reindexar
-        const rows = tbody.querySelectorAll('.formset-row');
-        rows.forEach((r, i) => updateAttributes(r, i));
-        totalForms.value = rows.length;
+        const updatedRows = tbody.querySelectorAll('.formset-row');
+        updatedRows.forEach((r, i) => updateAttributes(r, i));
+        totalForms.value = updatedRows.length;
       } else {
         alert('Debe haber al menos una fila.');
       }
+    }
+  });
+
+  form.addEventListener('submit', function (e) {
+    let valid = true;
+    const rows = tbody.querySelectorAll('.formset-row');
+
+    rows.forEach(row => {
+      const select = row.querySelector('select');
+      const input = row.querySelector('input[type="number"]');
+
+      if (!select.value || select.value === "" || !input.value || Number(input.value) <= 0) {
+        valid = false;
+        row.style.backgroundColor = '#ffe6e6';
+      } else {
+        row.style.backgroundColor = '';
+      }
+    });
+
+    if (!valid) {
+      e.preventDefault();
+      alert('Completa todos los campos y asegúrate que la cantidad sea mayor a cero.');
     }
   });
 });
