@@ -6,6 +6,13 @@
 {% block extra_head %}
   <link rel="stylesheet" href="{% static 'administrador/css/registrar_venta.css' %}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    /* Ocultar el checkbox DELETE del formset */
+    input[type=checkbox][name$="-DELETE"] {
+      display: none;
+    }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -47,25 +54,28 @@
       </thead>
       <tbody id="formset-body">
         {% for form in formset %}
-        <tr class="form-detalle">
-          <td>
-            {{ form.producto_unidad }}
-            {% for error in form.producto_unidad.errors %}
-              <div class="errorlist">{{ error }}</div>
-            {% endfor %}
-          </td>
-          <td>
-            {{ form.cantidad }}
-            {% for error in form.cantidad.errors %}
-              <div class="errorlist">{{ error }}</div>
-            {% endfor %}
-          </td>
-          <td>
-            <button type="button" class="boton-eliminar" title="Eliminar producto">
-              <i class="fas fa-trash-alt"></i>
-            </button>
-          </td>
-        </tr>
+          {% with form.DELETE.value as delete_value %}
+          <tr class="form-detalle" {% if delete_value %} style="display:none;" {% endif %}>
+            <td>
+              {{ form.producto_unidad }}
+              {% for error in form.producto_unidad.errors %}
+                <div class="errorlist">{{ error }}</div>
+              {% endfor %}
+            </td>
+            <td>
+              {{ form.cantidad }}
+              {% for error in form.cantidad.errors %}
+                <div class="errorlist">{{ error }}</div>
+              {% endfor %}
+            </td>
+            <td>
+              <button type="button" class="boton-eliminar" title="Eliminar producto">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+              {{ form.DELETE }}
+            </td>
+          </tr>
+          {% endwith %}
         {% endfor %}
       </tbody>
     </table>
@@ -91,7 +101,7 @@
 const stockMap = {{ stock_map_json|safe }};
 const priceMap = {{ price_map_json|safe }};
 
-document.addEventListener('DOMContentLoaded', () => {
+function inicializarFormularioVenta() {
   const prefix = '{{ formset.prefix }}';
   const formsetBody = document.getElementById("formset-body");
   const totalFormsInput = document.querySelector(`input[name="${prefix}-TOTAL_FORMS"]`);
@@ -115,89 +125,119 @@ document.addEventListener('DOMContentLoaded', () => {
     totalSpan.textContent = total.toFixed(2);
   }
 
+  function actualizarOpcionesProductos() {
+    const selects = [...formsetBody.querySelectorAll(`select[name$="producto_unidad"]`)].filter(
+      s => s.closest('.form-detalle')?.style.display !== 'none'
+    );
+
+    const seleccionados = selects.map(s => s.value).filter(v => v);
+
+    selects.forEach(select => {
+      const valorActual = select.value;
+
+      Array.from(select.options).forEach(option => {
+        if (option.value === "" || option.value === valorActual) {
+          option.hidden = false;
+        } else {
+          option.hidden = seleccionados.includes(option.value);
+        }
+      });
+    });
+  }
+
   function actualizarEventosFila(row) {
     const select = row.querySelector(`select[name$="producto_unidad"]`);
     const input = row.querySelector(`input[name$="cantidad"]`);
     const deleteBtn = row.querySelector(".boton-eliminar");
 
-    [select, input].forEach(el => {
-      el?.addEventListener('change', recalcularTotal);
-      el?.addEventListener('input', recalcularTotal);
-    });
+    if (select) {
+      select.addEventListener('change', () => {
+        recalcularTotal();
+        actualizarOpcionesProductos();
+      });
 
-    Array.from(select?.options || []).forEach(opt => {
-      if (stockMap[opt.value] === 0) opt.remove();
-    });
+      Array.from(select.options || []).forEach(opt => {
+        if (stockMap[opt.value] === 0) opt.remove();
+      });
+    }
 
-    deleteBtn.addEventListener("click", () => {
+    if (input) {
+      input.addEventListener('input', recalcularTotal);
+    }
+
+    if (deleteBtn) {
+      deleteBtn.addEventListener("click", () => {
+        const filasVisibles = [...formsetBody.querySelectorAll('.form-detalle')].filter(
+          r => r.style.display !== 'none'
+        );
+
+        if (filasVisibles.length <= 1) {
+          alert("Debe haber al menos un producto en la venta.");
+          return;
+        }
+
+        const deleteInput = row.querySelector(`input[name$="-DELETE"]`);
+        if (deleteInput) {
+          deleteInput.checked = true;
+          row.style.display = "none";
+        }
+        recalcularTotal();
+        actualizarOpcionesProductos();
+      });
+    }
+  }
+
+  // Inicializar filas existentes
+  formsetBody.querySelectorAll('.form-detalle').forEach(actualizarEventosFila);
+
+  // Agregar fila nueva
+  if (addButton) {
+    addButton.addEventListener('click', () => {
+      let count = parseInt(totalFormsInput.value, 10);
       const filasVisibles = [...formsetBody.querySelectorAll('.form-detalle')].filter(
         r => r.style.display !== 'none'
       );
+      const lastRow = filasVisibles.at(-1) || formsetBody.querySelector('.form-detalle:last-child');
 
-      if (filasVisibles.length <= 1) {
-        alert("Debe haber al menos un producto en la venta.");
-        return;
-      }
+      const newRow = lastRow.cloneNode(true);
 
-      const deleteInput = row.querySelector(`input[name$="-DELETE"]`);
-      if (deleteInput) {
-        deleteInput.checked = true;
-        row.style.display = "none";
-      } else {
-        row.remove();
-      }
+      newRow.querySelectorAll('input, select').forEach(el => {
+        const newName = el.name.replace(/-\d+-/, `-${count}-`);
+        const newId = el.id.replace(/-\d+-/, `-${count}-`);
+        el.name = newName;
+        el.id = newId;
+
+        if (el.type === 'checkbox') {
+          el.checked = false;
+        } else {
+          el.value = '';
+        }
+      });
+
+      const deleteCell = newRow.querySelector('td:last-child');
+      deleteCell.innerHTML = `
+        <button type="button" class="boton-eliminar" title="Eliminar producto">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+        <input type="checkbox" name="${prefix}-${count}-DELETE" id="id_${prefix}-${count}-DELETE" style="display: none;">
+      `;
+
+      newRow.style.display = '';
+      formsetBody.appendChild(newRow);
+      totalFormsInput.value = count + 1;
+
+      actualizarEventosFila(newRow);
       recalcularTotal();
+      actualizarOpcionesProductos();
     });
   }
 
-  formsetBody.querySelectorAll('.form-detalle').forEach(actualizarEventosFila);
-
-  addButton.addEventListener('click', () => {
-    let count = parseInt(totalFormsInput.value, 10);
-    const filasVisibles = [...formsetBody.querySelectorAll('.form-detalle')].filter(
-      r => r.style.display !== 'none'
-    );
-
-    // Si no hay ninguna fila visible, usar la última como base (aunque esté oculta)
-    let lastRow = filasVisibles.at(-1) || formsetBody.querySelector('.form-detalle:last-child');
-
-    // Si no hay filas en absoluto (extremo improbable pero seguro), mostrar error
-    if (!lastRow) {
-      alert("Error: no se puede agregar una fila porque no hay ninguna base válida.");
-      return;
-    }
-
-    const newRow = lastRow.cloneNode(true);
-
-    newRow.querySelectorAll('input, select').forEach(el => {
-      const name = el.name.replace(/-\d+-/, `-${count}-`);
-      const id = el.id.replace(/-\d+-/, `-${count}-`);
-      el.name = name;
-      el.id = id;
-
-      if (el.type === 'checkbox') {
-        el.checked = false;
-      } else {
-        el.value = '';
-      }
-    });
-
-    const deleteCell = newRow.querySelector('td:last-child');
-    deleteCell.innerHTML = `
-      <button type="button" class="boton-eliminar" title="Eliminar producto">
-        <i class="fas fa-trash-alt"></i>
-      </button>
-      <input type="checkbox" name="${prefix}-${count}-DELETE" id="id_${prefix}-${count}-DELETE" style="display: none;">
-    `;
-
-    newRow.style.display = ''; // asegurarse que se muestre
-    formsetBody.appendChild(newRow);
-    totalFormsInput.value = count + 1;
-    actualizarEventosFila(newRow);
-    recalcularTotal();
-  });
-
   recalcularTotal();
-});
+  actualizarOpcionesProductos();
+}
+
+// Ejecutar al cargar el DOM
+document.addEventListener('DOMContentLoaded', inicializarFormularioVenta);
 </script>
+
 {% endblock %}

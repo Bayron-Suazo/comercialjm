@@ -1693,16 +1693,37 @@ def listar_ventas(request):
 
 @login_required
 def registrar_venta(request):
+    unidades = ProductoUnidad.objects.all()
+    stock_map = {}
+    price_map = {}
+    for pu in unidades:
+        total_stock = DetalleLote.objects.filter(
+            producto_unidad=pu, cantidad__gt=0, lote__activo=True
+        ).aggregate(total=Sum('cantidad'))['total'] or 0
+        stock_map[pu.id] = total_stock
+        price_map[pu.id] = float(pu.precio)
+
     if request.method == 'POST':
         venta_form = VentaForm(request.POST)
         if venta_form.is_valid():
             venta = venta_form.save(commit=False)
             venta.usuario = request.user
-
             formset = DetalleVentaFormSet(request.POST, instance=venta)
 
             if formset.is_valid():
                 detalles = formset.save(commit=False)
+                detalles_validos = [
+                    d for d in detalles
+                    if d.cantidad > 0 and not getattr(d, 'DELETE', False)
+                ]
+                if not detalles_validos:
+                    messages.error(request, "Debe agregar al menos un producto válido a la venta.")
+                    return render(request, 'administrador/registrar_venta.html', {
+                        'venta_form': venta_form,
+                        'formset': formset,
+                        'stock_map_json': json.dumps(stock_map),
+                        'price_map_json': json.dumps(price_map),
+                    })
 
                 for detalle in detalles:
                     prod = detalle.producto_unidad
@@ -1721,6 +1742,8 @@ def registrar_venta(request):
                         return render(request, 'administrador/registrar_venta.html', {
                             'venta_form': venta_form,
                             'formset': formset,
+                            'stock_map_json': json.dumps(stock_map),
+                            'price_map_json': json.dumps(price_map),
                         })
 
                 with transaction.atomic():
@@ -1729,7 +1752,6 @@ def registrar_venta(request):
 
                     for detalle in detalles:
                         cantidad_rest = detalle.cantidad
-
                         for det_lote in (
                             DetalleLote.objects
                             .filter(producto_unidad=detalle.producto_unidad,
@@ -1756,29 +1778,31 @@ def registrar_venta(request):
 
                 return redirect('listar_ventas')
 
+            else:
+                return render(request, 'administrador/registrar_venta.html', {
+                    'venta_form': venta_form,
+                    'formset': formset,
+                    'stock_map_json': json.dumps(stock_map),
+                    'price_map_json': json.dumps(price_map),
+                })
         else:
             formset = DetalleVentaFormSet(instance=Venta())
+            return render(request, 'administrador/registrar_venta.html', {
+                'venta_form': venta_form,
+                'formset': formset,
+                'stock_map_json': json.dumps(stock_map),
+                'price_map_json': json.dumps(price_map),
+            })
 
     else:
         venta_form = VentaForm()
         formset = DetalleVentaFormSet(instance=Venta())
-
-    unidades = ProductoUnidad.objects.all()
-    stock_map = {}
-    price_map = {}
-    for pu in unidades:
-        total_stock = DetalleLote.objects.filter(
-            producto_unidad=pu, cantidad__gt=0, lote__activo=True
-        ).aggregate(total=Sum('cantidad'))['total'] or 0
-        stock_map[pu.id] = total_stock
-        price_map[pu.id] = float(pu.precio)
-
-    return render(request, 'administrador/registrar_venta.html', {
-        'venta_form': venta_form,
-        'formset': formset,
-        'stock_map_json': json.dumps(stock_map),
-        'price_map_json': json.dumps(price_map),
-    })
+        return render(request, 'administrador/registrar_venta.html', {
+            'venta_form': venta_form,
+            'formset': formset,
+            'stock_map_json': json.dumps(stock_map),
+            'price_map_json': json.dumps(price_map),
+        })
 
 
 @login_required
