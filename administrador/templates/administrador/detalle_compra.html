@@ -32,7 +32,7 @@
                 <tbody>
                     {% for detalle in compra.detalles.all %}
                     <tr>
-                        <td>{{ detalle.producto.nombre }}</td>
+                        <td>{{ detalle.producto_unidad }}</td>
                         <td style="text-align: center;">{{ detalle.cantidad }}</td>
                         <td>{{ detalle.observaciones|default:"" }}</td>
                     </tr>

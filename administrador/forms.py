@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User, Group
-from registration.models import Profile, Proveedor, Producto, Cliente, Merma, Compra, Lote, DetalleLote
+from registration.models import Profile, Proveedor, Producto, Cliente, Merma, Compra, Lote, DetalleLote, ProductoUnidad
 import random
 import string
 import re
@@ -452,9 +452,9 @@ class CompraForm(forms.Form):
     )
 
 class DetalleCompraForm(forms.Form):
-    producto = forms.ModelChoiceField(
-        queryset=Producto.objects.none(),
-        label="Producto"
+    producto_unidad = forms.ModelChoiceField(
+        queryset=ProductoUnidad.objects.none(),  # Se actualizará dinámicamente
+        label="Producto con Unidad"
     )
     cantidad = forms.IntegerField(min_value=1, label="Cantidad")
     observaciones = forms.CharField(

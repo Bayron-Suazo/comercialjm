@@ -116,7 +116,7 @@ class Compra(models.Model):
 
 class DetalleCompra(models.Model):
     compra = models.ForeignKey(Compra, on_delete=models.CASCADE, related_name='detalles')
-    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+    producto_unidad = models.ForeignKey(ProductoUnidad, on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField()
     observaciones = models.TextField(blank=True, null=True)
 

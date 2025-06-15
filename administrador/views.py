@@ -880,38 +880,46 @@ def registrar_compra_view(request):
                 'proveedor_seleccionado': proveedor,
             })
 
-
+        # Actualizar queryset para producto_unidad filtrando por productos del proveedor activos
         for form in detalle_formset:
-            form.fields['producto'].queryset = proveedor.productos.filter(activo=True) if proveedor else Producto.objects.none()
+            form.fields['producto_unidad'].queryset = ProductoUnidad.objects.filter(
+                producto__proveedores=proveedor,
+                producto__activo=True
+            )
 
         if compra_form.is_valid() and detalle_formset.is_valid():
-            productos_vistos = set()
+            unidades_vistas = set()
             error_repetido = False
 
             formularios_validos = []
 
             for form in detalle_formset:
                 if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
-                    producto = form.cleaned_data['producto']
+                    producto_unidad = form.cleaned_data['producto_unidad']
 
-                    if producto in productos_vistos:
-                        form.add_error('producto', 'Este producto ya fue ingresado.')
+                    if producto_unidad in unidades_vistas:
+                        form.add_error('producto_unidad', 'Esta unidad de producto ya fue ingresada.')
                         error_repetido = True
                     else:
-                        productos_vistos.add(producto)
+                        unidades_vistas.add(producto_unidad)
                         formularios_validos.append(form)
+            
             if not formularios_validos:
-                detalle_formset.non_form_errors = lambda: ['Debe agregar al menos un producto para registrar la compra.']
+                detalle_formset.non_form_errors = lambda: ['Debe agregar al menos una unidad de producto para registrar la compra.']
                 return render(request, 'administrador/registrar_compra.html', {
                     'compra_form': compra_form,
                     'detalle_formset': detalle_formset,
                     'proveedor_seleccionado': proveedor,
                 })
 
-            productos_disponibles = proveedor.productos.filter(activo=True).count()
-            if len(formularios_validos) > productos_disponibles:
+            unidades_disponibles = ProductoUnidad.objects.filter(
+                producto__proveedores=proveedor,
+                producto__activo=True
+            ).count()
+
+            if len(formularios_validos) > unidades_disponibles:
                 for form in detalle_formset:
-                    form.add_error(None, "Se han ingresado más productos de los disponibles para este proveedor.")
+                    form.add_error(None, "Se han ingresado más unidades de producto de las disponibles para este proveedor.")
                 return render(request, 'administrador/registrar_compra.html', {
                     'compra_form': compra_form,
                     'detalle_formset': detalle_formset,
@@ -934,32 +942,32 @@ def registrar_compra_view(request):
             productos_solicitados = []
 
             for form in formularios_validos:
-                producto = form.cleaned_data['producto']
+                producto_unidad = form.cleaned_data['producto_unidad']
                 cantidad = form.cleaned_data['cantidad']
                 observaciones = form.cleaned_data.get('observaciones', '')
 
                 DetalleCompra.objects.create(
                     compra=compra,
-                    producto=producto,
+                    producto_unidad=producto_unidad,
                     cantidad=cantidad,
                     observaciones=observaciones
                 )
 
-                texto = f"- {producto.nombre}: {cantidad} unidades"
+                texto = f"- {producto_unidad.producto.nombre} ({producto_unidad.get_unidad_medida_display()}): {cantidad} unidades"
                 if observaciones:
                     texto += f" Nota: {observaciones}"
 
                 productos_solicitados.append(texto)
 
             mensaje = f"""
-                Estimado/a {proveedor.nombre},
+Estimado/a {proveedor.nombre},
 
-                Le informamos que se ha registrado una nueva solicitud de compra con los siguientes productos:
+Le informamos que se ha registrado una nueva solicitud de compra con los siguientes productos:
 
-                {chr(10).join(productos_solicitados)}
+{chr(10).join(productos_solicitados)}
 
-                Atentamente,
-                ComercialJM
+Atentamente,
+ComercialJM
             """
 
             send_mail(
@@ -977,7 +985,10 @@ def registrar_compra_view(request):
         detalle_formset = DetalleFormSet()
 
         for form in detalle_formset:
-            form.fields['producto'].queryset = proveedor.productos.filter(activo=True) if proveedor else Producto.objects.none()
+            form.fields['producto_unidad'].queryset = ProductoUnidad.objects.filter(
+                producto__proveedores=proveedor,
+                producto__activo=True
+            ) if proveedor else ProductoUnidad.objects.none()
 
     return render(request, 'administrador/registrar_compra.html', {
         'compra_form': compra_form,
@@ -990,56 +1001,48 @@ def registrar_compra_view(request):
 
 @csrf_exempt
 def aprobar_compra(request):
-    if request.method == 'POST':
-        compra_id = request.POST.get('compra_id')
-        compra = get_object_or_404(Compra, id=compra_id)
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido.'})
 
-        if compra.estado != 'Pendiente':
-            return JsonResponse({
-                'success': False,
-                'message': 'La compra ya fue procesada.'
-            })
+    compra_id = request.POST.get('compra_id')
+    compra = get_object_or_404(Compra, id=compra_id)
 
-        # Usar el formulario para validar el total
-        form = AprobarCompraForm(request.POST, instance=compra)
-        if form.is_valid():
-            form.save()  # Guarda el total
+    if compra.estado != 'Pendiente':
+        return JsonResponse({'success': False, 'message': 'La compra ya fue procesada.'})
 
-            compra.estado = 'Lista'
-            compra.activo = False
-            compra.save()
+    form = AprobarCompraForm(request.POST, instance=compra)
+    if not form.is_valid():
+        return JsonResponse({
+            'success': False,
+            'message': 'Formulario inválido: asegúrate de ingresar un total válido.'
+        })
 
-            numero_lote = str(uuid.uuid4())[:8]
-            lote = Lote.objects.create(numero=numero_lote)
+    # Guardamos el total
+    form.save()
 
-            for detalle in compra.detalles.all():
-                producto = detalle.producto
-                cantidad = detalle.cantidad
+    # Cambiamos estado
+    compra.estado = 'Lista'
+    compra.activo = False
+    compra.save()
 
-                DetalleLote.objects.create(
-                    lote=lote,
-                    producto=producto.nombre,
-                    cantidad=cantidad,
-                    precio=producto.precio
-                )
+    # Creamos Lote (solo con auto_now_add)
+    lote = Lote.objects.create()
 
-                producto.cantidad += cantidad
-                producto.lote = lote
-                producto.save()
+    # Para cada detalle de compra, creamos detalle de lote
+    for detalle in compra.detalles.all():
+        producto_unidad = detalle.producto_unidad
+        cantidad = detalle.cantidad
 
-            return JsonResponse({
-                'success': True,
-                'message': 'Compra aprobada y lote creado correctamente.'
-            })
-        else:
-            return JsonResponse({
-                'success': False,
-                'message': 'Formulario inválido: asegúrate de ingresar un total válido.'
-            })
+        DetalleLote.objects.create(
+            lote=lote,
+            producto_unidad=producto_unidad,
+            cantidad=cantidad
+        )
+        # No hacemos producto_unidad.cantidad += … ni producto_unidad.lote = …
 
     return JsonResponse({
-        'success': False,
-        'message': 'Método no permitido.'
+        'success': True,
+        'message': 'Compra aprobada, lote creado y stock actualizado correctamente.'
     })
 
 
@@ -1107,8 +1110,8 @@ def dashboard_compras(request):
     # Top productos
     top_productos = (
         DetalleCompra.objects
-        .values('producto__nombre')
-        .annotate(total_cantidad=Count('producto'))
+        .values('producto_unidad__producto__nombre')
+        .annotate(total_cantidad=Count('id'))
         .order_by('-total_cantidad')[:3]
     )
 

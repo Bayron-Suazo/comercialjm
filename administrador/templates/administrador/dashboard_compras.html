@@ -49,7 +49,7 @@
             <h2 class="chart-title">Top 3 Productos Más Comprados</h2>
             <ul class="top-productos-list">
                 {% for producto in top_productos %}
-                    <li>{{ forloop.counter }}. {{ producto.producto__nombre }} <span>({{ producto.total_cantidad }})</span></li>
+                    <li>{{ forloop.counter }}. {{ producto.producto_unidad__producto__nombre }} <span>({{ producto.total_cantidad }})</span></li>
                 {% empty %}
                     <li>No hay datos disponibles.</li>
                 {% endfor %}

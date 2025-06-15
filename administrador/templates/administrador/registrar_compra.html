@@ -57,8 +57,8 @@
       {% for form in detalle_formset %}
       <tr class="form-detalle">
         <td>
-          {{ form.producto }}
-          {% for error in form.producto.errors %}
+          {{ form.producto_unidad }}
+          {% for error in form.producto_unidad.errors %}
             <div class="errorlist">{{ error }}</div>
           {% endfor %}
         </td>
@@ -170,7 +170,46 @@ document.addEventListener("DOMContentLoaded", function () {
             
         }
     });
-});
+    function actualizarOpcionesProductoUnidad() {
+      const selects = document.querySelectorAll('select[name$="producto_unidad"]');
+
+      // Obtener los valores seleccionados actuales
+      const valoresSeleccionados = Array.from(selects)
+        .map(s => s.value)
+        .filter(val => val !== "");
+
+      selects.forEach(select => {
+        const valorActual = select.value;
+
+        Array.from(select.options).forEach(option => {
+          // Mostrar todas las opciones antes de filtrar
+          option.hidden = false;
+
+          if (
+            valoresSeleccionados.includes(option.value) &&
+            option.value !== valorActual
+          ) {
+            option.hidden = true;
+          }
+        });
+      });
+    }
+
+    // Ejecutar al cargar la página
+    actualizarOpcionesProductoUnidad();
+
+    // Ejecutar cada vez que cambie un select
+    document.getElementById("formset-body").addEventListener("change", function (e) {
+      if (e.target.matches('select[name$="producto_unidad"]')) {
+        actualizarOpcionesProductoUnidad();
+      }
+    });
+
+    // También ejecutar después de agregar un nuevo formulario
+    document.getElementById("add-form").addEventListener("click", function () {
+      setTimeout(actualizarOpcionesProductoUnidad, 100);  // pequeño delay para asegurar que se renderice
+    });
+  });
 
 
 </script>
