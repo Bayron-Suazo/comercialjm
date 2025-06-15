@@ -532,10 +532,12 @@ ProductoUnidadFormSet = inlineformset_factory(
     Producto,
     ProductoUnidad,
     form=ProductoUnidadForm,
-    extra=1,
+    extra=0,
     can_delete=True,
     min_num=1,
     validate_min=True,
+    max_num=3,
+    validate_max=True,
 )
 
 class LoteForm(forms.ModelForm):

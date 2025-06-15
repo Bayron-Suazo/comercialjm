@@ -1164,38 +1164,21 @@ def productos_inactivos(request):
 
 
 
-# importar el inlineformset_factory fuera de la vista, para no redeclararlo en cada request
-from django.forms import inlineformset_factory
-
-# al inicio del archivo
-ProductoUnidadFormSet = inlineformset_factory(
-    Producto,
-    ProductoUnidad,
-    form=ProductoUnidadForm,
-    extra=0,
-    can_delete=True,
-    min_num=1,
-    validate_min=True,
-    max_num=3,
-    validate_max=True,
-)
-
-
 def agregar_producto(request):
     if request.method == 'POST':
         form = ProductoForm(request.POST)
-        formset = ProductoUnidadFormSet(request.POST)
-        if form.is_valid() and formset.is_valid():
-            producto = form.save(commit=False)
-            producto.activo = True
-            producto.fecha = timezone.now().date()
-            producto.save()
+        if form.is_valid():
+            producto_obj = form.save(commit=False)
 
-            # Guardar unidades de medida
-            formset.instance = producto
-            formset.save()
-
-            return redirect('listar_productos')
+            formset = ProductoUnidadFormSet(request.POST, instance=producto_obj)
+            if formset.is_valid():
+              
+                producto_obj.save()
+                formset.save()
+                return redirect('listar_productos') 
+        else:
+            
+            formset = ProductoUnidadFormSet(request.POST)
     else:
         form = ProductoForm()
         formset = ProductoUnidadFormSet()
@@ -1203,7 +1186,6 @@ def agregar_producto(request):
     return render(request, 'administrador/form_producto.html', {
         'form': form,
         'formset': formset,
-        'titulo': 'Agregar Producto'
     })
 
 

@@ -4,8 +4,7 @@
 {% block extra_head %}
   <link rel="stylesheet" href="{% static 'administrador/css/agregar_usuario.css' %}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-  {% endblock %}
+{% endblock %}
 
 {% block content %}
 <h2 class="titulo">Agregar Producto</h2>
@@ -17,14 +16,14 @@
   <div class="form-container">
     <div class="form-column">
       <div class="form-group">
-        <label for="id_nombre">Nombre</label>
+        <label for="{{ form.nombre.id_for_label }}">Nombre</label>
         {{ form.nombre }}
         {{ form.nombre.errors }}
       </div>
     </div>
     <div class="form-column">
       <div class="form-group">
-        <label for="id_tipo">Tipo</label>
+        <label for="{{ form.tipo.id_for_label }}">Tipo</label>
         {{ form.tipo }}
         {{ form.tipo.errors }}
       </div>
@@ -45,31 +44,34 @@
         </tr>
       </thead>
       <tbody id="formset-body">
-        {% for form in formset %}
+        {% for subform in formset %}
         <tr class="formset-row">
           <td>
-            {{ form.unidad_medida }}
-            {% for error in form.unidad_medida.errors %}
-              <div class="errorlist">{{ error }}</div>
+            {{ subform.unidad_medida }}
+            {% for err in subform.unidad_medida.errors %}
+              <div class="errorlist">{{ err }}</div>
             {% endfor %}
           </td>
           <td>
-            {{ form.precio }}
-            {% for error in form.precio.errors %}
-              <div class="errorlist">{{ error }}</div>
+            {{ subform.precio }}
+            {% for err in subform.precio.errors %}
+              <div class="errorlist">{{ err }}</div>
             {% endfor %}
           </td>
           <td>
-            <button type="button" class="boton-eliminar" title="Eliminar fila">
-              <i class="fas fa-trash-alt"></i>
-            </button>
+            {% if formset.can_delete %}
+              {{ subform.DELETE }}  {# campo oculto checkbox #}
+              <button type="button" class="boton-eliminar" title="Eliminar fila">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            {% endif %}
           </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
 
-    <!-- Template oculto -->
+    {# Fila oculta para clonar #}
     <template id="empty-form-template">
       <tr class="formset-row">
         <td>
@@ -79,15 +81,20 @@
           {{ formset.empty_form.precio.as_widget }}
         </td>
         <td>
-          <button type="button" class="boton-eliminar" title="Eliminar fila">
-            <i class="fas fa-trash-alt"></i>
-          </button>
+          {% if formset.can_delete %}
+            {{ formset.empty_form.DELETE.as_widget }}
+            <button type="button" class="boton-eliminar" title="Eliminar fila">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          {% endif %}
         </td>
       </tr>
     </template>
 
     <div class="button-group" style="margin-top: 10px;">
-      <button type="button" id="add-formset-row" class="boton-agregar">+</button>
+      <button type="button" id="add-formset-row" class="boton-agregar">
+        <i class="fas fa-plus"></i>
+      </button>
     </div>
   </div>
 
@@ -101,52 +108,52 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  const tbody = document.getElementById('formset-body');
-  const addButton = document.getElementById('add-formset-row');
-  const totalForms = document.getElementById('id_{{ formset.prefix }}-TOTAL_FORMS');
-  const template = document.getElementById('empty-form-template').content;
+  const tbody       = document.getElementById('formset-body');
+  const addButton   = document.getElementById('add-formset-row');
+  const totalForms  = document.getElementById('id_{{ formset.prefix }}-TOTAL_FORMS');
+  const maxForms    = document.getElementById('id_{{ formset.prefix }}-MAX_NUM_FORMS');
+  const emptyTpl    = document.getElementById('empty-form-template').content;
 
-  function updateAttributes(row, index) {
+  function updateAttributes(row, index, clearValues) {
     row.querySelectorAll('input, select').forEach(input => {
       if (!input.name) return;
-
-      const name = input.name.replace(/form-(\d+|__prefix__)-/, `form-${index}-`);
-      const id = 'id_' + name;
-
+      const name = input.name.replace(/{{ formset.prefix }}-(\d+|__prefix__)-/, `{{ formset.prefix }}-${index}-`);
+      const id   = 'id_' + name;
       input.name = name;
-      input.id = id;
-
-      if (input.tagName === 'INPUT' && input.type !== 'hidden') {
-        input.value = '';
-      }
-      if (input.tagName === 'SELECT') {
-        input.selectedIndex = 0;
+      input.id   = id;
+      if (clearValues) {
+        if (input.tagName === 'INPUT' && input.type !== 'hidden') input.value = '';
+        if (input.tagName === 'SELECT') input.selectedIndex = 0;
       }
     });
   }
 
+  // Agregar nueva fila
   addButton.addEventListener('click', function () {
-    const formCount = parseInt(totalForms.value);
-    if (formCount >= 3) {
-      alert('No se pueden agregar más de 3 unidades de medida.');
+    let formCount = parseInt(totalForms.value, 10);
+    const maxCount = parseInt(maxForms.value, 10);
+    if (formCount >= maxCount) {
+      alert('No se pueden agregar más de ' + maxCount + ' unidades.');
       return;
     }
 
-    const newRow = template.cloneNode(true).querySelector('tr');
-    updateAttributes(newRow, formCount);
-    tbody.appendChild(newRow);
-    totalForms.value = formCount + 1;
+    const newNode = emptyTpl.cloneNode(true).querySelector('tr');
+    updateAttributes(newNode, formCount, true);
+    tbody.appendChild(newNode);
+    totalForms.value = ++formCount;
   });
 
+  // Manejar eliminación de fila
   tbody.addEventListener('click', function (e) {
     if (e.target.closest('.boton-eliminar')) {
       const row = e.target.closest('tr');
-      if (tbody.querySelectorAll('.formset-row').length > 1) {
+      const rows = tbody.querySelectorAll('.formset-row');
+      if (rows.length > 1) {
         row.remove();
-        // Reindexar
-        const rows = tbody.querySelectorAll('.formset-row');
-        rows.forEach((r, i) => updateAttributes(r, i));
-        totalForms.value = rows.length;
+        // Reindexar filas restantes
+        const remaining = tbody.querySelectorAll('.formset-row');
+        remaining.forEach((r,i) => updateAttributes(r, i, false));
+        totalForms.value = remaining.length;
       } else {
         alert('Debe haber al menos una unidad de medida.');
       }
