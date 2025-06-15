@@ -31,24 +31,24 @@
 </head>
 <body>
 
-  <h1>Factura Electrónica</h1>
+<h1>Factura Electrónica</h1>
+
+<div class="seccion">
+    <p><strong>Emisor:</strong> {{ emisor }}</p>
+    <p><strong>RUT:</strong> {{ rut_emisor }}</p>
+    <p><strong>Dirección:</strong> {{ direccion_emisor }}</p>
+    <p><strong>Giro:</strong> {{ giro_emisor }}</p>
+</div>
 
   <div class="seccion">
-    <p><strong>Emisor:</strong> Comercial JM</p>
-    <p><strong>RUT:</strong></p>
-    <p><strong>Dirección:</strong></p>
-    <p><strong>Giro:</strong></p>
-  </div>
-
-  <div class="seccion">
-    <p><strong>Cliente:</strong> {{ venta.cliente.nombre }}</p>
-    <p><strong>RUT Cliente:</strong> {{ venta.cliente.rut }}</p>
-    <p><strong>Dirección Cliente:</strong> {{ venta.cliente.direccion }}</p>
-    <p><strong>Giro Cliente:</strong> {{ venta.cliente.giro }}</p>
+    <p><strong>Cliente:</strong> {{ nombre_cliente }}</p>
+    <p><strong>RUT Cliente:</strong> {{ rut_cliente }}</p>
+    <p><strong>Dirección Cliente:</strong> {{ direccion_cliente }}</p>
+    <p><strong>Giro Cliente:</strong> {{ giro_cliente }}</p>
     <p><strong>Fecha:</strong> {{ venta.fecha|date:"d/m/Y H:i" }}</p>
     <p><strong>N° Factura:</strong> {{ venta.id }}</p>
     <p><strong>Método de pago:</strong> {{ venta.metodo_pago }}</p>
-  </div>
+    </div>
 
   <table class="tabla">
     <thead>

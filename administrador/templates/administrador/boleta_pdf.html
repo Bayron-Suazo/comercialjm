@@ -41,7 +41,15 @@
   <div class="info">
     <p><strong>Fecha:</strong> {{ venta.fecha|date:"d/m/Y H:i" }}</p>
     <p><strong>N° Venta:</strong> {{ venta.id }}</p>
-    <p><strong>Cliente:</strong> {{ venta.cliente.nombre|default:"Sin cliente" }}</p>
+    {% if venta.cliente %}
+    <p><strong>Cliente:</strong> {{ venta.cliente.nombre }}</p>
+    <p><strong>RUT:</strong> {{ venta.cliente.rut }}</p>
+    <p><strong>Dirección:</strong> {{ venta.cliente.direccion }}</p>
+    {% else %}
+    <p><strong>Cliente:</strong> {{ nombre_cliente_manual|default:"Sin cliente" }}</p>
+    <p><strong>RUT:</strong> {{ rut_cliente_manual|default:"-" }}</p>
+    <p><strong>Dirección:</strong> {{ direccion_cliente_manual|default:"-" }}</p>
+    {% endif %}
     <p><strong>Método de pago:</strong> {{ venta.metodo_pago }}</p>
   </div>
 

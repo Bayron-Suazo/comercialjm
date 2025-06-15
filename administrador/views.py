@@ -1659,7 +1659,7 @@ def listar_ventas(request):
             ventas = ventas_activos.order_by('id')
         elif order_by == 'cliente':
             ventas = ventas_activos.order_by('cliente')
-        elif order_by == 'ususario':
+        elif order_by == 'usuario':
             ventas = ventas_activos.order_by('usuario')
         else:
             ventas = ventas_activos.order_by('-id')
@@ -1789,13 +1789,26 @@ def registrar_venta(request):
             'price_map_json': json.dumps(price_map),
         })
 
+from urllib.parse import unquote
+
 def generar_boleta_pdf(request, venta_id):
     venta = get_object_or_404(Venta, pk=venta_id)
     detalles = venta.detalles.select_related('producto_unidad', 'producto_unidad__producto')
-    
+
+    nombre_cliente = request.GET.get('nombre_cliente')
+    rut_cliente = request.GET.get('rut_cliente')
+    direccion_cliente = request.GET.get('direccion_cliente')
+
+    if nombre_cliente: nombre_cliente = unquote(nombre_cliente)
+    if rut_cliente: rut_cliente = unquote(rut_cliente)
+    if direccion_cliente: direccion_cliente = unquote(direccion_cliente)
+
     html_string = render_to_string('administrador/boleta_pdf.html', {
         'venta': venta,
         'detalles': detalles,
+        'nombre_cliente_manual': nombre_cliente,
+        'rut_cliente_manual': rut_cliente,
+        'direccion_cliente_manual': direccion_cliente,
     })
 
     html = HTML(string=html_string, base_url=request.build_absolute_uri())
@@ -1812,12 +1825,30 @@ def generar_factura_pdf(request, venta_id):
     iva = (subtotal * Decimal('0.19')).quantize(Decimal('1.'))
     total = subtotal + iva
 
+    if venta.cliente is None:
+        nombre_cliente = request.GET.get('nombre_cliente', 'Cliente no registrado')
+        rut_cliente = request.GET.get('rut_cliente', 'Sin RUT')
+        direccion_cliente = request.GET.get('direccion_cliente', 'Sin dirección')
+        giro_cliente = 'Particular'
+    else:
+        nombre_cliente = venta.cliente.nombre
+        rut_cliente = venta.cliente.rut
+        direccion_cliente = venta.cliente.direccion
+        giro_cliente = venta.cliente.giro if venta.cliente.giro else 'No informado'
+
     html_string = render_to_string('administrador/factura_pdf.html', {
         'venta': venta,
         'detalles': detalles,
         'subtotal': subtotal,
         'iva': iva,
         'total': total,
+        'nombre_cliente': nombre_cliente,
+        'rut_cliente': rut_cliente,
+        'direccion_cliente': direccion_cliente,
+        'emisor': settings.EMPRESA_EMISOR,
+        'rut_emisor': settings.EMPRESA_RUT,
+        'direccion_emisor': settings.EMPRESA_DIRECCION,
+        'giro_emisor': settings.EMPRESA_GIRO,
     })
 
     html = HTML(string=html_string, base_url=request.build_absolute_uri())

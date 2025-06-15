@@ -148,3 +148,9 @@ EMAIL_HOST_USER = 'comercialjm116@gmail.com'
 EMAIL_HOST_PASSWORD = 'kacw xuxc hsen jlju'
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# Datos de la empresa para boletas y facturas
+EMPRESA_EMISOR = "Comercial JM"
+EMPRESA_RUT = "XX.XXX.XXX-X"
+EMPRESA_DIRECCION = "Dirección de ejemplo 123"
+EMPRESA_GIRO = "Venta de frutas y verduras"
