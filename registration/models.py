@@ -155,13 +155,37 @@ class Merma(models.Model):
     class Meta:
         ordering = ['-fecha']
 
-
-
-
 class Venta(models.Model):
-    cliente = models.ForeignKey('Cliente', on_delete=models.CASCADE)
-    fecha = models.DateField(auto_now_add=True)
-    total = models.DecimalField(max_digits=10, decimal_places=2)
+    cliente = models.ForeignKey(Cliente, on_delete=models.SET_NULL, null=True, blank=True, related_name='ventas')
+    usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='ventas')
+    fecha = models.DateTimeField(auto_now_add=True)
+    total = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
+    estado = models.CharField(max_length=20, choices=[
+        ('Pendiente', 'Pendiente'),
+        ('Pagada', 'Pagada'),
+        ('Cancelada', 'Cancelada'),
+    ], default='Pendiente')
+
+    metodo_pago = models.CharField(max_length=20, choices=[
+        ('Efectivo', 'Efectivo'),
+        ('Tarjeta', 'Tarjeta'),
+        ('Transferencia', 'Transferencia'),
+    ], default='Efectivo')
+
+    activo = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"Venta #{self.id} - Cliente: {self.cliente.nombre}"
+        return f"Venta #{self.id} - {self.cliente.nombre}"
+
+
+class DetalleVenta(models.Model):
+    venta = models.ForeignKey('Venta', on_delete=models.CASCADE, related_name='detalles')
+    producto_unidad = models.ForeignKey(ProductoUnidad, on_delete=models.CASCADE)
+    cantidad = models.PositiveIntegerField()
+
+    def subtotal(self):
+        return self.cantidad * self.producto_unidad.precio
+
+    def __str__(self):
+        return f"{self.cantidad} x {self.producto_unidad} (Venta #{self.venta.id})"
