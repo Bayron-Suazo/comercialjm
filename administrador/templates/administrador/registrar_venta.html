@@ -81,7 +81,7 @@
     </table>
 
     <div class="total-venta">
-      Total: <span id="total-venta">0.00</span>
+      Total: $<span id="total-venta">0</span>
     </div>
 
     <div class="acciones-fila">
@@ -122,7 +122,7 @@ function inicializarFormularioVenta() {
         total += priceMap[id] * cantidad;
       }
     });
-    totalSpan.textContent = total.toFixed(2);
+    totalSpan.textContent = Math.round(total);
   }
 
   function actualizarOpcionesProductos() {
