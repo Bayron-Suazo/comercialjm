@@ -10,16 +10,13 @@
         <button type="button" class="boton-header" onclick="descargarPDF()">📄 Descargar Reporte PDF</button>
     </div>
 
-
     <h2 class="mb-4">Reportería General</h2>
 
     <!-- Gráfico de Barras - Productos -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    Cantidad de productos activos
-                </div>
+                <div class="card-header">Cantidad de productos activos</div>
                 <div class="card-body">
                     <canvas id="productosChart"></canvas>
                 </div>
@@ -51,22 +48,19 @@
     <div class="row mt-4">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    Cantidad de compras por usuario activo
-                </div>
+                <div class="card-header">Cantidad de compras por usuario activo</div>
                 <div class="card-body">
                     <canvas id="comprasUsuarioChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
+
     <!-- Gráfico de Barras - Ventas por Usuario -->
     <div class="row mt-4">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    Cantidad de ventas por usuario activo
-                </div>
+                <div class="card-header">Cantidad de ventas por usuario activo</div>
                 <div class="card-body">
                     <canvas id="ventasUsuarioChart"></canvas>
                 </div>
@@ -78,6 +72,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+document.addEventListener('DOMContentLoaded', function () {
     const productos = {{ productos|safe }};
     const nombres = productos.map(p => p.nombre);
     const cantidades = productos.map(p => p.cantidad);
@@ -98,30 +93,11 @@
         options: {
             indexAxis: 'y',
             scales: {
-                x: {
-                    beginAtZero: true,
-                    ticks: {
-                        font: {
-                            size: 20
-                        }
-                    }
-                },
-                y: {
-                    ticks: {
-                        font: {
-                            size: 20
-                        }
-                    }
-                }
+                x: { beginAtZero: true, ticks: { font: { size: 20 } } },
+                y: { ticks: { font: { size: 20 } } }
             },
             plugins: {
-                legend: {
-                    labels: {
-                        font: {
-                            size: 20
-                        }
-                    }
-                }
+                legend: { labels: { font: { size: 20 } } }
             }
         }
     });
@@ -133,7 +109,6 @@
         data: {
             labels: ['Compras', 'Ventas', 'Mermas'],
             datasets: [{
-                label: 'Cantidad de registros',
                 data: [dataCantidad.compras, dataCantidad.ventas, dataCantidad.mermas],
                 backgroundColor: [
                     'rgba(75, 192, 192, 0.7)',
@@ -157,7 +132,6 @@
         data: {
             labels: ['Compras ($)', 'Ventas ($)', 'Mermas ($)'],
             datasets: [{
-                label: 'Totales en dinero',
                 data: [dataTotal.compras, dataTotal.ventas, dataTotal.mermas],
                 backgroundColor: [
                     'rgba(75, 192, 192, 0.7)',
@@ -194,75 +168,82 @@
         options: {
             indexAxis: 'y',
             scales: {
-                x: {
-                    beginAtZero: true,
-                    precision: 0,
-                    ticks: {
-                        font: {
-                            size: 20
-                        }
-                    }
-                },
-                y: {
-                    ticks: {
-                        font: {
-                            size: 20
-                        }
-                    }
-                }
+                x: { beginAtZero: true, precision: 0, ticks: { font: { size: 20 } } },
+                y: { ticks: { font: { size: 20 } } }
             },
             responsive: true,
             plugins: {
-                legend: {
-                    display: true,
-                    labels: {
-                        font: {
-                            size: 20
-                        }
-                    }
-                },
-                tooltip: {
-                    enabled: true
-                }
+                legend: { display: true, labels: { font: { size: 20 } } },
+                tooltip: { enabled: true }
             }
         }
     });
 
-    // Mostrar/ocultar el menú desplegable
-    document.getElementById("dropdownMenuButton").addEventListener("click", function (e) {
-        e.preventDefault();
-        var menu = document.getElementById("filterOptions");
-        menu.style.display = menu.style.display === "none" ? "block" : "none";
-    });
+    const ventasPorUsuario = {{ ventas_por_usuario|safe }};
+    const usuariosVentas = ventasPorUsuario.map(u => u.username);
+    const ventasUsuario = ventasPorUsuario.map(u => u.ventas);
 
-    function applyDateFilter(filtro) {
+    const ctxVentasUsuario = document.getElementById('ventasUsuarioChart');
+    if (ctxVentasUsuario) {
+        new Chart(ctxVentasUsuario.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: usuariosVentas,
+                datasets: [{
+                    label: 'Cantidad de Ventas',
+                    data: ventasUsuario,
+                    backgroundColor: 'rgba(255, 159, 64, 0.7)',
+                    borderColor: 'rgba(255, 159, 64, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                scales: {
+                    x: { beginAtZero: true, precision: 0, ticks: { font: { size: 20 } } },
+                    y: { ticks: { font: { size: 20 } } }
+                },
+                responsive: true,
+                plugins: {
+                    legend: { display: true, labels: { font: { size: 20 } } },
+                    tooltip: { enabled: true }
+                }
+            }
+        });
+    }
+
+    // Dropdown y descarga PDF
+    const dropdownBtn = document.getElementById("dropdownMenuButton");
+    if (dropdownBtn) {
+        dropdownBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+            var menu = document.getElementById("filterOptions");
+            if (menu) {
+                menu.style.display = menu.style.display === "none" ? "block" : "none";
+            }
+        });
+    }
+
+    window.applyDateFilter = function (filtro) {
         const url = new URL(window.location.href);
         url.searchParams.set('filtro', filtro);
         window.location.href = url.toString();
-    }
+    };
 
-    function descargarPDF() {
-        const canvasProductos = document.getElementById('productosChart');
-        const canvasTortaCantidad = document.getElementById('tortaCantidadChart');
-        const canvasTortaTotal = document.getElementById('tortaTotalChart');
-        const canvasComprasUsuario = document.getElementById('comprasUsuarioChart');
-        const canvasVentasUsuario = document.getElementById('ventasUsuarioChart');  // <- Añadido
-
+    window.descargarPDF = function () {
         const data = {
-            img_productos: canvasProductos.toDataURL('image/png'),
-            img_torta_cantidad: canvasTortaCantidad.toDataURL('image/png'),
-            img_torta_total: canvasTortaTotal.toDataURL('image/png'),
-            img_compras_usuario: canvasComprasUsuario.toDataURL('image/png'),
-            img_ventas_usuario: canvasVentasUsuario.toDataURL('image/png'),  // <- Añadido
+            img_productos: document.getElementById('productosChart').toDataURL('image/png'),
+            img_torta_cantidad: document.getElementById('tortaCantidadChart').toDataURL('image/png'),
+            img_torta_total: document.getElementById('tortaTotalChart').toDataURL('image/png'),
+            img_compras_usuario: document.getElementById('comprasUsuarioChart').toDataURL('image/png'),
+            img_ventas_usuario: document.getElementById('ventasUsuarioChart').toDataURL('image/png'),
         };
 
-        // Crear formulario dinámico
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = "{% url 'reporteria_pdf' %}";
         form.target = '_blank';
 
-        // CSRF token
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
         const csrfInput = document.createElement('input');
         csrfInput.type = 'hidden';
@@ -270,7 +251,6 @@
         csrfInput.value = csrfToken;
         form.appendChild(csrfInput);
 
-        // Añadir imágenes base64 como inputs ocultos
         for (const key in data) {
             const input = document.createElement('input');
             input.type = 'hidden';
@@ -282,59 +262,7 @@
         document.body.appendChild(form);
         form.submit();
         document.body.removeChild(form);
-    }
-    const ventasPorUsuario = {{ ventas_por_usuario|safe }};
-    const usuariosVentas = ventasPorUsuario.map(u => u.username);
-    const ventasUsuario = ventasPorUsuario.map(u => u.ventas);
-
-    const ctxVentasUsuario = document.getElementById('ventasUsuarioChart').getContext('2d');
-    new Chart(ctxVentasUsuario, {
-        type: 'bar',
-        data: {
-            labels: usuariosVentas,
-            datasets: [{
-                label: 'Cantidad de Ventas',
-                data: ventasUsuario,
-                backgroundColor: 'rgba(255, 159, 64, 0.7)',
-                borderColor: 'rgba(255, 159, 64, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            scales: {
-                x: {
-                    beginAtZero: true,
-                    precision: 0,
-                    ticks: {
-                        font: {
-                            size: 20
-                        }
-                    }
-                },
-                y: {
-                    ticks: {
-                        font: {
-                            size: 20
-                        }
-                    }
-                }
-            },
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: true,
-                    labels: {
-                        font: {
-                            size: 20
-                        }
-                    }
-                },
-                tooltip: {
-                    enabled: true
-                }
-            }
-        }
-    });
+    };
+});
 </script>
 {% endblock %}

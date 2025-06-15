@@ -1834,28 +1834,10 @@ def ver_venta(request, venta_id):
 # ------------------------------------ REPORTERIA ------------------------------------
 
 def reporteria_view(request):
-    filtro = request.GET.get('filtro', 'general')
-    hoy = now().date()
 
-    if filtro == 'diario':
-        fecha_inicio = hoy
-    elif filtro == 'semanal':
-        fecha_inicio = hoy - timedelta(days=hoy.weekday())
-    elif filtro == 'mensual':
-        fecha_inicio = hoy.replace(day=1)
-    elif filtro == 'anual':
-        fecha_inicio = hoy.replace(month=1, day=1)
-    else:
-        fecha_inicio = None
-
-    filtro_fecha = {}
-    if fecha_inicio:
-        filtro_fecha['lote__fecha__gte'] = fecha_inicio
+    usuarios = User.objects.filter(is_active=True)
 
     productos_unidad_totales = ProductoUnidad.objects.filter(producto__activo=True)
-
-    if fecha_inicio:
-        productos_unidad_totales = productos_unidad_totales.filter(detallelote__lote__fecha__gte=fecha_inicio)
 
     productos_unidad_totales = productos_unidad_totales.annotate(
         cantidad_total=Sum('detallelote__cantidad')
@@ -1868,9 +1850,9 @@ def reporteria_view(request):
             'cantidad': pu.cantidad_total or 0
         })
 
-    compras_qs = Compra.objects.filter(activo=False, estado='Lista', **filtro_fecha)
-    ventas_qs = Venta.objects.filter(**filtro_fecha)
-    mermas_qs = Merma.objects.filter(**filtro_fecha)
+    compras_qs = Compra.objects.filter(activo=False, estado='Lista')
+    ventas_qs = Venta.objects.all()
+    mermas_qs = Merma.objects.all()
 
     compras_cantidad = compras_qs.count()
     ventas_cantidad = ventas_qs.count()
@@ -1911,7 +1893,6 @@ def reporteria_view(request):
         },
         'compras_por_usuario': compras_por_usuario,
         'ventas_por_usuario': ventas_por_usuario,
-        'filtro': filtro,
     }
 
     return render(request, 'administrador/reporteria.html', context)
