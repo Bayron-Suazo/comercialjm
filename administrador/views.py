@@ -1848,26 +1848,24 @@ def reporteria_view(request):
     else:
         fecha_inicio = None
 
-    # Filtros condicionales
     filtro_fecha = {}
     if fecha_inicio:
-        filtro_fecha['fecha__gte'] = fecha_inicio
+        filtro_fecha['lote__fecha__gte'] = fecha_inicio
 
-    productos_activos = Producto.objects.filter(activo=True)
-    detalles_lote = DetalleLote.objects.all()
+    productos_unidad_totales = ProductoUnidad.objects.filter(producto__activo=True)
 
     if fecha_inicio:
-        detalles_lote = detalles_lote.filter(lote__fecha__gte=fecha_inicio)
+        productos_unidad_totales = productos_unidad_totales.filter(detallelote__lote__fecha__gte=fecha_inicio)
+
+    productos_unidad_totales = productos_unidad_totales.annotate(
+        cantidad_total=Sum('detallelote__cantidad')
+    ).order_by('producto__nombre', 'unidad_medida')
 
     productos = []
-    for producto in productos_activos:
-        cantidad_total = detalles_lote.filter(producto_unidad__producto=producto).aggregate(
-            total=Sum('cantidad')
-        )['total'] or 0
-
+    for pu in productos_unidad_totales:
         productos.append({
-            'nombre': producto.nombre,
-            'cantidad': cantidad_total
+            'nombre': f"{pu.producto.nombre} ({pu.unidad_medida})",
+            'cantidad': pu.cantidad_total or 0
         })
 
     compras_qs = Compra.objects.filter(activo=False, estado='Lista', **filtro_fecha)
@@ -1890,7 +1888,7 @@ def reporteria_view(request):
             'username': usuario.username,
             'compras': user_compras
         })
-        
+
     ventas_por_usuario = []
     for usuario in usuarios_activos:
         user_ventas = ventas_qs.filter(usuario=usuario).count()
@@ -1900,7 +1898,7 @@ def reporteria_view(request):
         })
 
     context = {
-        'productos': list(productos),
+        'productos': productos,
         'data_cantidad': {
             'compras': compras_cantidad,
             'ventas': ventas_cantidad,
@@ -1915,6 +1913,7 @@ def reporteria_view(request):
         'ventas_por_usuario': ventas_por_usuario,
         'filtro': filtro,
     }
+
     return render(request, 'administrador/reporteria.html', context)
 
 
