@@ -1,0 +1,115 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+
+{% block title %}Registrar Mermas{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'administrador/css/registrar_merma.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<h2 class="titulo">Registrar Mermas</h2>
+
+<form method="post" novalidate>
+  {% csrf_token %}
+  {{ formset.management_form }}
+
+  {% if formset.non_form_errors %}
+    <div class="errorlist nonfield-errors">
+      {% for error in formset.non_form_errors %}
+        <p>{{ error }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+
+  <div class="contenedor-formulario">
+    <table class="tabla-usuarios">
+      <thead>
+        <tr>
+          <th>Producto y Unidad</th>
+          <th>Lote</th>
+          <th>Cantidad</th>
+          <th>Precio Total</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for form in formset %}
+        {# Errores generales del formulario individual (non_field_errors) #}
+        {% if form.non_field_errors %}
+          <tr>
+            <td colspan="4">
+              <ul class="errorlist">
+                {% for error in form.non_field_errors %}
+                  <li>{{ error }}</li>
+                {% endfor %}
+              </ul>
+            </td>
+          </tr>
+        {% endif %}
+        <tr>
+          <td>
+            {{ form.producto_unidad }}
+            {% if form.producto_unidad.errors %}
+              <ul class="errorlist">
+                {% for error in form.producto_unidad.errors %}
+                  <li>{{ error }}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </td>
+          <td>
+            {{ form.lote }}
+            {% if form.lote.errors %}
+              <ul class="errorlist">
+                {% for error in form.lote.errors %}
+                  <li>{{ error }}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </td>
+          <td>
+            {{ form.cantidad }}
+            {% if form.cantidad.errors %}
+              <ul class="errorlist">
+                {% for error in form.cantidad.errors %}
+                  <li>{{ error }}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </td>
+          <td>
+            {{ form.precio }}
+            {% if form.precio.errors %}
+              <ul class="errorlist">
+                {% for error in form.precio.errors %}
+                  <li>{{ error }}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+    </table>
+
+    <div class="motivo-container">
+      <label for="id_motivo">Motivo</label>
+      {{ motivo_form.motivo }}
+      {% if motivo_form.motivo.errors %}
+        <div class="errorlist">
+          {% for error in motivo_form.motivo.errors %}
+            <p>{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="button-group">
+    <button type="button" class="cancelar" onclick="history.back()">Cancelar</button>
+    <button type="submit" class="añadir">Confirmar</button>
+  </div>
+</form>
+{% endblock %}

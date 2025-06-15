@@ -20,7 +20,7 @@
     <a class="boton-header" href="{% url 'listar_lotes' %}" >Lotes</a>
     <a class="boton-header" href="{% url 'listar_productos' %}" >Productos</a>
 
-    <a class="boton-header" href="{% url 'agregar_merma' %}">
+    <a class="boton-header" href="{% url 'registrar_merma' %}">
         Registrar Merma
         <img src="{% static 'administrador/svg/plus.svg' %}">
     </a>
@@ -62,10 +62,10 @@
     <thead>
         <tr>
             <th><input type="checkbox" id="select-all-mermas"></th>
-            <th>Nombre</th>
+            <th>Merma</th>
+            <th>Fecha</th>
             <th>Cantidad</th>
             <th>Lote</th>
-            <th>Fecha de Ingreso</th>
             <th>Precio</th>
             <th>Acciones</th>
         </tr>
@@ -74,17 +74,17 @@
         {% for merma in mermas %}
         <tr>
             <td><input type="checkbox" class="select-merma" data-merma-id="{{ merma.id }}"></td>
-            <td>{{ merma.producto }}</td>
-            <td>{{ merma.cantidad }}</td>
-            <td>{{ merma.lote }}</td>
+            <td>{{ merma.id }}</td>
             <td>{{ merma.fecha }}</td>
+            <td>{{ merma.cantidad }}</td>
+            <td>{{ merma.lote.id }}</td>
             <td>${{ merma.precio|floatformat:0 }}</td>
             <td class="acciones">
-                <a href="#" title="Editar">
-                    <img src="{% static 'administrador/svg/lapiz.svg' %}" alt="Editar">
+                <a href="#" title="Mostrar">
+                    <img src="{% static 'administrador/svg/reporteria.svg' %}" alt="Mostrar" class="svg-compra">
                 </a>
-                <button title="Bloquear" class="btn-bloquear" data-merma-id="{{ merma.id }}">
-                    <img src="{% static 'core/svg/lock-open-solid.svg' %}" alt="Bloquear">
+                <button title="Bloquear" class="btn-bloquear">
+                    <img src="{% static 'administrador/svg/circle-xmark-solid.svg' %}" alt="Bloquear">
                 </button>
             </td>
         </tr>
@@ -128,5 +128,37 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const dropdownBtn = document.getElementById('dropdownMenuButton');
+    const dropdownMenu = document.getElementById('filterOptions');
+
+    if (dropdownBtn && dropdownMenu) {
+      dropdownBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        dropdownMenu.style.display = dropdownMenu.style.display === 'none' || dropdownMenu.style.display === '' ? 'block' : 'none';
+      });
+
+      // Cierra el dropdown si se hace clic fuera
+      document.addEventListener('click', function (event) {
+        if (!dropdownBtn.contains(event.target) && !dropdownMenu.contains(event.target)) {
+          dropdownMenu.style.display = 'none';
+        }
+      });
+    }
+  });
+
+  function applyFilter(filter) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('order_by', filter);
+    window.location.href = url.toString();
+  }
+
+  function clearOrderFilter() {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('order_by');
+    window.location.href = url.toString();
+  }
+</script>
 <script src="{% static 'administrador/js/busca_usuarios.js' %}"></script>
 {% endblock %}

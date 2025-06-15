@@ -1509,9 +1509,9 @@ def listar_mermas(request):
         elif order_by == 'lote':
             mermas = mermas_activos.order_by('lote')
         else:
-            mermas = mermas_activos
+            mermas = mermas_activos.order_by('-id')
     else:
-        mermas = mermas_activos
+        mermas = mermas_activos.order_by('-id')
 
     paginator = Paginator(mermas, 10)
     page_number = request.GET.get('page')
@@ -1522,10 +1522,37 @@ def listar_mermas(request):
         'order_by': order_by
     })
 
+from .forms import MermaForm, MotivoMermaForm
 
+@login_required
+def registrar_merma(request):
+    MermaFormSet = modelformset_factory(Merma, form=MermaForm, extra=1, can_delete=False)
+    formset = MermaFormSet(request.POST or None, queryset=Merma.objects.none())
+    motivo_form = MotivoMermaForm(request.POST or None)
 
-def agregar_merma(request):
-    pass
+    if request.method == 'POST':
+        if formset.is_valid() and motivo_form.is_valid():
+            motivo = motivo_form.cleaned_data['motivo']
+            for form in formset:
+                merma = form.save(commit=False)
+                merma.motivo = motivo
+                merma.save()
+
+                # Descontar stock del lote correspondiente
+                detalle = DetalleLote.objects.get(
+                    producto_unidad=merma.producto_unidad,
+                    lote=merma.lote
+                )
+                detalle.cantidad -= merma.cantidad
+                detalle.save()
+
+            return redirect('listar_mermas')
+
+    return render(request, 'administrador/registrar_merma.html', {
+        'formset': formset,
+        'motivo_form': motivo_form
+    })
+
 
 
 

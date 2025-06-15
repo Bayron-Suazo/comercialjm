@@ -44,7 +44,7 @@ class Lote(models.Model):
     activo = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.numero} - {self.fecha}"
+        return f"{self.id} - {self.fecha}"
     
 
 class Producto(models.Model):
@@ -71,7 +71,7 @@ class Producto(models.Model):
 
 
 class UnidadMedida(models.TextChoices):
-    KILOGRAMO = 'kg', 'Kilogramo'
+    KILOGRAMO = 'kg', 'Kg'
     UNIDAD = 'unidad', 'Unidad'
     CAJA = 'caja', 'Caja'
 

@@ -585,8 +585,62 @@ DetalleLoteFormSet = modelformset_factory(
 )
 
  
+class MermaForm(forms.ModelForm):
+    class Meta:
+        model = Merma
+        fields = ['producto_unidad', 'lote', 'cantidad', 'precio']
 
-# MERMAFORM
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['producto_unidad'].queryset = ProductoUnidad.objects.filter(
+            detallelote__cantidad__gt=0
+        ).distinct()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        producto_unidad = cleaned_data.get('producto_unidad')
+        lote = cleaned_data.get('lote')
+        cantidad = cleaned_data.get('cantidad')
+
+        if producto_unidad and lote:
+            # Buscar los lotes asociados con este producto_unidad (stock > 0)
+            lotes_disponibles = DetalleLote.objects.filter(
+                producto_unidad=producto_unidad,
+                cantidad__gt=0
+            ).values_list('lote__id', 'lote__fecha')
+
+            try:
+                detalle = DetalleLote.objects.get(
+                    producto_unidad=producto_unidad,
+                    lote=lote
+                )
+            except DetalleLote.DoesNotExist:
+                # Construir mensaje con lotes disponibles
+                if lotes_disponibles.exists():
+                    lotes_str = ", ".join(
+                        [f"ID {lote_id} (fecha {fecha})" for lote_id, fecha in lotes_disponibles]
+                    )
+                    raise forms.ValidationError(
+                        f"El lote seleccionado no corresponde al producto y unidad elegidos. "
+                        f"Lotes disponibles para el producto/unidad seleccionado: {lotes_str}."
+                    )
+                else:
+                    raise forms.ValidationError(
+                        "El lote seleccionado no corresponde al producto y unidad elegidos. "
+                        "No hay lotes disponibles para el producto/unidad seleccionado."
+                    )
+
+            if cantidad is not None and cantidad > detalle.cantidad:
+                raise forms.ValidationError(
+                    f"La cantidad ingresada ({cantidad}) supera el stock disponible del lote ({detalle.cantidad})."
+                )
+
+class MotivoMermaForm(forms.Form):
+    motivo = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Motivo de la merma'}),
+        label='Motivo',
+        required=True
+    )
 
 def validar_rut_chileno(rut):
     try:

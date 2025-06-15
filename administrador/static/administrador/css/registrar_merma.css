@@ -1,0 +1,148 @@
+body {
+  background-color: #f9f7dc;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* Contenedor principal */
+.contenedor-formulario {
+    width: 80%;
+    margin: 2rem auto;
+    padding: 30px;
+}
+
+/* Título centrado (ya lo tienes, pero para asegurar) */
+.titulo {
+    text-align: center;
+    font-size: 48px;
+    margin-bottom: 1.5rem;
+    font-weight: normal;
+    color: #111;
+}
+
+/* Tabla con estilos similares */
+.tabla-usuarios {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.tabla-usuarios thead tr {
+    background-color: #57b363;
+}
+
+.tabla-usuarios th,
+.tabla-usuarios td {
+    padding: 12px;
+    text-align: center;
+    font-size: 18px;
+    color: #111;
+}
+
+.tabla-usuarios thead th {
+    color: white;
+    font-weight: normal;
+    font-size: 20px;
+}
+
+.tabla-usuarios tbody td {
+    background-color: #fbfbfb;
+    border-bottom: 1px solid #e0e0e0;
+    vertical-align: middle;
+}
+
+/* Inputs dentro de la tabla */
+.tabla-usuarios td input,
+.tabla-usuarios td select,
+.tabla-usuarios td textarea {
+    width: 100%;
+    padding: 8px;
+    font-size: 18px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #fff;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+    transition: border-color 0.3s ease;
+}
+
+.tabla-usuarios td input:focus,
+.tabla-usuarios td select:focus,
+.tabla-usuarios td textarea:focus {
+    border-color: #57b363;
+    outline: none;
+}
+
+/* Motivo debajo de la tabla */
+.motivo-container {
+    margin-top: 30px;
+    text-align: left;
+}
+
+.motivo-container label {
+    font-weight: bold;
+    font-size: 20px;
+    margin-bottom: 8px;
+    display: block;
+    color: #111;
+    width: 50%;
+}
+
+.motivo-container textarea {
+    width: 50%;
+    min-height: 100px;
+    resize: none;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 18px;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+    transition: border-color 0.3s ease;
+}
+
+.motivo-container textarea:focus {
+    border-color: #57b363;
+    outline: none;
+}
+
+/* Errores */
+.errorlist {
+    color: red;
+    font-size: 18px;
+    margin-top: 5px;
+}
+
+/* Botones estilo similar */
+.button-group {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.button-group button {
+    height: 48px;
+    padding: 0 30px;
+    font-size: 20px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-weight: normal;
+    color: white;
+}
+
+/* Botón cancelar estilo similar a .boton-volver */
+.button-group .cancelar {
+    background-color: #b7291f;
+}
+
+
+/* Botón registrar estilo similar a .boton-agregar */
+.button-group .añadir {
+    background-color: #57b363;
+}
