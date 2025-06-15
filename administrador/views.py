@@ -1613,7 +1613,53 @@ def dashboard_productos(request):
 
 
 def dashboard_ventas(request):
-    pass
+    total_ventas = Venta.objects.filter(activo=True).aggregate(total=Sum('total'))['total'] or 0
+
+    hoy = now().date()
+    ventas_dia = Venta.objects.filter(fecha__date=hoy, activo=True).aggregate(total=Sum('total'))['total'] or 0
+
+    productos_vendidos = DetalleVenta.objects.filter(venta__activo=True).aggregate(total=Sum('cantidad'))['total'] or 0
+
+    ventas_por_categoria_qs = DetalleVenta.objects.filter(
+        venta__activo=True
+    ).select_related('producto_unidad__producto').values(
+        'producto_unidad__producto__tipo'
+    ).annotate(
+        total_vendido=Sum(F('cantidad') * F('producto_unidad__precio'))
+    ).order_by('producto_unidad__producto__tipo')
+
+    categorias_ventas = [item['producto_unidad__producto__tipo'] for item in ventas_por_categoria_qs]
+    montos_ventas = [float(item['total_vendido'] or 0) for item in ventas_por_categoria_qs]
+
+    medios_pago_qs = Venta.objects.filter(activo=True).values('metodo_pago').annotate(
+        cantidad=Count('id')
+    )
+    labels_pago = [item['metodo_pago'] for item in medios_pago_qs]
+    medios_pago = [item['cantidad'] for item in medios_pago_qs]
+
+    ultima_venta_obj = Venta.objects.filter(activo=True).order_by('-fecha').first()
+    if ultima_venta_obj:
+        ultima_venta = {
+            'cliente_nombre': ultima_venta_obj.cliente.nombre if ultima_venta_obj.cliente else "Sin cliente",
+            'fecha': ultima_venta_obj.fecha
+        }
+    else:
+        ultima_venta = {
+            'cliente_nombre': 'N/A',
+            'fecha': None
+        }
+
+    context = {
+        'total_ventas': total_ventas,
+        'ventas_dia': ventas_dia,
+        'productos_vendidos': productos_vendidos,
+        'categorias_ventas': categorias_ventas,
+        'montos_ventas': montos_ventas,
+        'labels_pago': labels_pago,
+        'medios_pago': medios_pago,
+        'ultima_venta': ultima_venta,
+    }
+    return render(request, 'administrador/dashboard_ventas.html', context)
 
 
 @login_required

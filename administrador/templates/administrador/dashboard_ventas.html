@@ -10,7 +10,6 @@
 <div class="dashboard-container">
     <div class="top-bar-buttons">
         <a href="{% url 'listar_ventas' %}" class="btn btn-primary">Listado de Ventas</a>
-        <a href="{% url 'crear_venta' %}" class="btn btn-primary">Venta</a>
     </div>
 
     <h1 class="dashboard-title">Gestión de Ventas</h1>
@@ -19,12 +18,12 @@
         <div class="card">
             <div class="card-icon">💰</div>
             <div class="card-label">Total Ventas</div>
-            <div class="card-value">${{ total_ventas }}</div>
+            <div class="card-value">${{ total_ventas|floatformat:0 }}</div>
         </div>
         <div class="card">
             <div class="card-icon">🛒</div>
             <div class="card-label">Ventas del Día</div>
-            <div class="card-value">${{ ventas_dia }}</div>
+            <div class="card-value">${{ ventas_dia|floatformat:0 }}</div>
         </div>
         <div class="card">
             <div class="card-icon">📦</div>
