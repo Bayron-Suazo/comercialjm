@@ -1241,7 +1241,7 @@ def editar_producto(request, producto_id):
 
 
 def detalle_producto(request, producto_id):
-    producto = get_object_or_404(Producto, id=producto_id, activo=True)
+    producto = get_object_or_404(Producto, id=producto_id)
     unidades = producto.unidades.all()
 
     detalle_stock = []
@@ -1552,6 +1552,33 @@ def registrar_merma(request):
         'formset': formset,
         'motivo_form': motivo_form
     })
+
+@login_required
+def detalle_merma(request, merma_id):
+    merma = get_object_or_404(Merma, id=merma_id)
+
+    contexto = {
+        'merma': merma
+    }
+
+    return render(request, 'administrador/detalle_merma.html', contexto)
+
+@login_required
+def deshacer_merma(request, merma_id):
+    merma = get_object_or_404(Merma, id=merma_id)
+
+    if merma.lote and merma.producto_unidad:
+        try:
+            detalle = DetalleLote.objects.get(lote=merma.lote, producto_unidad=merma.producto_unidad)
+            detalle.cantidad += merma.cantidad
+            detalle.save()
+        except DetalleLote.DoesNotExist:
+            messages.error(request, "No se pudo encontrar el stock para restaurar.")
+            return redirect('listar_mermas')
+
+    merma.delete()
+    messages.success(request, "La merma fue deshecha correctamente.")
+    return redirect('listar_mermas')
 
 
 

@@ -1,0 +1,45 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'administrador/css/detalle_compra.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <h2 class="titulo">Detalle de la Merma #{{ merma.id }}</h2>
+
+    <div class="detalle-compra">
+        <p><strong>Fecha de registro:</strong> {{ merma.fecha }}</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Unidad</th>
+                    <th>Lote</th>
+                    <th>Precio</th>
+                    <th>Cantidad</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ merma.producto_unidad.producto.nombre }}</td>
+                    <td>{{ merma.producto_unidad.get_unidad_medida_display }}</td>
+                    <td>{{ merma.lote.id }}</td>
+                    <td>${{ merma.precio }}</td>
+                    <td>{{ merma.cantidad }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        {% if merma.motivo %}
+        <p><strong>Motivo:</strong> {{ merma.motivo }}</p>
+        {% endif %}
+    </div>
+
+    <div class="boton-header">
+        <a href="{% url 'listar_mermas' %}">Volver</a>
+    </div>
+</div>
+{% endblock %}

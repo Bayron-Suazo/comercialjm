@@ -64,6 +64,7 @@
             <th><input type="checkbox" id="select-all-mermas"></th>
             <th>Merma</th>
             <th>Fecha</th>
+            <th>Producto</th>
             <th>Cantidad</th>
             <th>Lote</th>
             <th>Precio</th>
@@ -76,15 +77,16 @@
             <td><input type="checkbox" class="select-merma" data-merma-id="{{ merma.id }}"></td>
             <td>{{ merma.id }}</td>
             <td>{{ merma.fecha }}</td>
+            <td>{{ merma.producto_unidad }}</td>
             <td>{{ merma.cantidad }}</td>
             <td>{{ merma.lote.id }}</td>
             <td>${{ merma.precio|floatformat:0 }}</td>
             <td class="acciones">
-                <a href="#" title="Mostrar">
+                <a href="{% url 'detalle_merma' merma.id %}" title="Mostrar">
                     <img src="{% static 'administrador/svg/reporteria.svg' %}" alt="Mostrar" class="svg-compra">
                 </a>
-                <button title="Bloquear" class="btn-bloquear">
-                    <img src="{% static 'administrador/svg/circle-xmark-solid.svg' %}" alt="Bloquear">
+                <button class="btn-deshacer" data-merma-id="{{ merma.id }}">
+                    <img src="{% static 'administrador/svg/deshacer.svg' %}" alt="Deshacer" title="Deshacer Merma">
                 </button>
             </td>
         </tr>
@@ -94,6 +96,20 @@
 {% else %}
 <p style="text-align: center; font-size: 24px; margin-top: 40px;">No hay mermas registradas.</p>
 {% endif %}
+
+<div id="modalDeshacer" class="modal hidden">
+  <div class="modal-content">
+    <h3>¿Deshacer Merma?</h3>
+    <p>Esta acción devolverá la cantidad al lote original.</p>
+    <form id="formDeshacer" method="post">
+      {% csrf_token %}
+      <div class="modal-actions">
+        <button type="button" id="confirmNo">Cancelar</button>
+        <button type="submit" id="confirmYes">Confirmar</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <div class="custom-pagination">
     {% if mermas.has_previous %}
@@ -115,16 +131,6 @@
     {% endif %}
 </div>
 
-<div id="confirmModal" class="modal hidden">
-  <div class="modal-content">
-    <h3>¿Bloquear Merma?</h3>
-    <p>Las mermas bloqueadas ya no aparecerán en los listados principales.</p>
-    <div class="modal-actions">
-      <button type="button" id="confirmNo">Cancelar</button>
-      <button type="button" id="confirmYes">Confirmar</button>
-    </div>
-  </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -159,6 +165,37 @@
     url.searchParams.delete('order_by');
     window.location.href = url.toString();
   }
+  document.addEventListener("DOMContentLoaded", function() {
+    const deshacerBtns = document.querySelectorAll(".btn-deshacer");
+    const modal = document.getElementById("modalDeshacer");
+    const formDeshacer = document.getElementById("formDeshacer");
+    const confirmYes = document.getElementById("confirmYes");
+    const confirmNo = document.getElementById("confirmNo");
+
+    let selectedMermaId = null;
+
+    // Mostrar modal al hacer clic en botón deshacer
+    deshacerBtns.forEach(btn => {
+      btn.addEventListener("click", function() {
+        selectedMermaId = this.getAttribute("data-merma-id");
+        modal.classList.remove("hidden");
+      });
+    });
+
+    // Confirmar deshacer
+    confirmYes.addEventListener("click", function () {
+      if (selectedMermaId) {
+        formDeshacer.action = `/administrador/mermas/${selectedMermaId}/deshacer/`;
+        formDeshacer.submit();
+      }
+    });
+
+    // Cancelar acción
+    confirmNo.addEventListener("click", function () {
+      modal.classList.add("hidden");
+      selectedMermaId = null;
+    });
+  });
 </script>
 <script src="{% static 'administrador/js/busca_usuarios.js' %}"></script>
 {% endblock %}
