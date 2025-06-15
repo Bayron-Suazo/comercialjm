@@ -739,11 +739,6 @@ class VentaForm(forms.ModelForm):
         fields = ['cliente', 'metodo_pago']
 
 class DetalleVentaForm(forms.ModelForm):
-    producto_unidad = forms.ModelChoiceField(
-        queryset=ProductoUnidad.objects.none(),
-        label="Producto"
-    )
-
     class Meta:
         model = DetalleVenta
         fields = ['producto_unidad', 'cantidad']
@@ -751,40 +746,18 @@ class DetalleVentaForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Ordenar por producto__nombre y unidad_medida según orden personalizado
-        # Primero obtenemos todos los ProductoUnidad ordenados por producto__nombre
-        # y luego ordenamos en Python según unidad_medida.
+        unidades = ProductoUnidad.objects.annotate(
+            stock_total=Sum('detallelote__cantidad')
+        ).order_by('producto__nombre', 'unidad_medida')
 
-        unidades = ProductoUnidad.objects.select_related('producto').all()
+        # Mostrar nombre + unidad + stock entre paréntesis
+        def get_label(pu):
+            stock = pu.stock_total or 0
+            return f"{pu.producto.nombre} - {pu.unidad_medida} ({int(stock)})"
 
-        # Diccionario para asignar prioridad al orden de unidad
-        orden_unidad = {'caja': 1, 'kg': 2, 'unidad': 3}
+        self.fields['producto_unidad'].queryset = unidades
+        self.fields['producto_unidad'].label_from_instance = get_label
 
-        # Calcular stock para cada producto_unidad (sumar cantidad en DetalleLote)
-        stock_map = {}
-        for pu in unidades:
-            total_stock = DetalleLote.objects.filter(
-                producto_unidad=pu, cantidad__gt=0, lote__activo=True
-            ).aggregate(total=Sum('cantidad'))['total'] or 0
-            stock_map[pu.id] = total_stock
-
-        # Ordenar la lista de objetos ProductoUnidad
-        unidades = sorted(
-            unidades,
-            key=lambda pu: (
-                pu.producto.nombre.lower(),
-                orden_unidad.get(pu.unidad_medida.lower(), 99)
-            )
-        )
-
-        # Construir lista de tuples para las opciones con stock en el label
-        opciones = []
-        for pu in unidades:
-            nombre_opcion = f"{pu.producto.nombre} ({pu.unidad_medida}) - Stock: {stock_map.get(pu.id, 0)}"
-            opciones.append((pu.id, nombre_opcion))
-
-        # Finalmente asignar el queryset vacío y opciones personalizadas al campo
-        self.fields['producto_unidad'].choices = opciones
 
 DetalleVentaFormSet = inlineformset_factory(
     Venta, DetalleVenta, form=DetalleVentaForm,
