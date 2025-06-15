@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User, Group
-from registration.models import Profile, Proveedor, Producto, Cliente, Merma, Compra, Lote, DetalleLote, ProductoUnidad
+from registration.models import Profile, Proveedor, Producto, Cliente, Merma, Compra, Lote, DetalleLote, ProductoUnidad, Venta, DetalleVenta
 import random
 import string
 import re
@@ -731,4 +731,17 @@ class ClienteForm(forms.ModelForm):
 class CargaMasivaProveedorForm(forms.Form):
     archivo = forms.FileField(label="Archivo Excel", required=True)
 
-    
+class VentaForm(forms.ModelForm):
+    class Meta:
+        model = Venta
+        fields = ['cliente', 'metodo_pago']
+
+class DetalleVentaForm(forms.ModelForm):
+    class Meta:
+        model = DetalleVenta
+        fields = ['producto_unidad', 'cantidad']
+
+DetalleVentaFormSet = inlineformset_factory(
+    Venta, DetalleVenta, form=DetalleVentaForm,
+    extra=1, can_delete=True
+)

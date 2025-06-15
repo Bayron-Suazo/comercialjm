@@ -30,7 +30,6 @@ urlpatterns = [
     path('proveedores/carga-masiva/', views.carga_masiva_proveedores, name='carga_masiva_proveedores'),
 
 
-
     # COMPRAS
     path('lista_compras_activas/', views.lista_compras_activas, name='lista_compras_activas'),
     path('lista_compras_bloqueadas/', views.lista_compras_bloqueadas, name='lista_compras_bloqueadas'),
@@ -41,7 +40,7 @@ urlpatterns = [
     path('dashboard_compras/', views.dashboard_compras, name='dashboard_compras'),
 
 
-    # PRODUCTOS, LOTES, MERMAS Y CLIENTES
+    # CLIENTES
     path('clientes/<int:pk>/desactivar/', views.toggle_estado_cliente, name='toggle_estado_cliente'),
     path('clientes/crear/', views.crear_cliente, name='crear_cliente'),
     path('clientes/eliminar/<int:pk>/', views.eliminar_cliente, name='eliminar_cliente'),
@@ -50,24 +49,31 @@ urlpatterns = [
     path('clientes/inactivos/', views.listar_clientes_inactivos, name='listar_clientes_inactivos'),
     path('clientes/ranking/', views.ranking_clientes, name='ranking_clientes'),
     path('clientes/editar/<int:cliente_id>/', views.editar_cliente, name='editar_clientes'),
+
+
+    # PRODUCTOS
     path('mermas/registrar/', views.registrar_merma, name='registrar_merma'),
     path('mermas/<int:merma_id>/', views.detalle_merma, name='detalle_merma'),
     path('mermas/<int:merma_id>/deshacer/', views.deshacer_merma, name='deshacer_merma'),
-    path('productos/dashboard/', views.dashboard_productos, name='dashboard_productos'),
     path('mermas/', views.listar_mermas, name='listar_mermas'),
+    path('productos/dashboard/', views.dashboard_productos, name='dashboard_productos'),
     path('productos/dashboard/', views.dashboard_productos, name='dashboard_productos'),
     path('productos/inactivos/', views.listar_productos_bloqueados, name='productos_inactivos'),
     path('productos/', views.listar_productos, name='listar_productos'),
     path('productos/agregar/', views.agregar_producto, name='agregar_producto'),
     path('productos/editar/<int:producto_id>/', views.editar_producto, name='editar_producto'),
-    path('lotes/', views.listar_lotes, name='listar_lotes'),
-    path('lotes/ver/<int:lote_id>/', views.ver_lote, name='ver_lote'),
-    path('ventas/dashboard/', views.dashboard_ventas, name='dashboard_ventas'),
-    path('ventas/', views.listar_ventas, name='listar_ventas'),
     path('producto/<int:producto_id>/', views.detalle_producto, name='detalle_producto'),
     path('productos/bloquear/', views.bloquear_productos, name='bloquear_productos'),
     path('productos/activar/', views.activar_productos, name='activar_productos'),
+    path('lotes/', views.listar_lotes, name='listar_lotes'),
+    path('lotes/ver/<int:lote_id>/', views.ver_lote, name='ver_lote'),
     path('lotes/agregar/', views.agregar_lote, name='agregar_lote'),
+
+
+    #VENTAS
+    path('ventas/dashboard/', views.dashboard_ventas, name='dashboard_ventas'),
+    path('ventas/', views.listar_ventas, name='listar_ventas'),
+    path('ventas/registrar/', views.registrar_venta, name='registrar_venta'),
 
 
     #REPORTERIA

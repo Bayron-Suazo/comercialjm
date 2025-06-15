@@ -1,6 +1,5 @@
 {% extends 'core/base_admin.html' %}
 {% load static %}
-
 {% block extra_head %}
   <link rel="stylesheet" href="{% static 'administrador/css/registrar_venta.css' %}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -13,9 +12,24 @@
   <form method="post" class="formulario-venta">
     {% csrf_token %}
 
+    {% if messages %}
+      <ul class="alertas">
+        {% for message in messages %}
+          <li class="alert {{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
     <div class="campo-formulario">
-      <label for="cliente">Cliente:</label>
+      {{ venta_form.cliente.label_tag }}
       {{ venta_form.cliente }}
+      {% for err in venta_form.cliente.errors %}<p class="errorlist">{{ err }}</p>{% endfor %}
+    </div>
+
+    <div class="campo-formulario">
+      {{ venta_form.metodo_pago.label_tag }}
+      {{ venta_form.metodo_pago }}
+      {% for err in venta_form.metodo_pago.errors %}<p class="errorlist">{{ err }}</p>{% endfor %}
     </div>
 
     {{ formset.management_form }}
@@ -25,32 +39,143 @@
         <tr>
           <th>Producto</th>
           <th>Cantidad</th>
-          <th>Acción</th>
+          <th>Eliminar</th>
         </tr>
       </thead>
       <tbody>
         {% for form in formset %}
           <tr>
-            <td>{{ form.producto_unidad }}</td>
-            <td>{{ form.cantidad }}</td>
+            <td class="campo-formulario">
+              {{ form.producto_unidad.label_tag }}
+              {{ form.producto_unidad }}
+              {% for err in form.producto_unidad.errors %}<p class="errorlist">{{ err }}</p>{% endfor %}
+            </td>
+            <td class="campo-formulario">
+              {{ form.cantidad.label_tag }}
+              {{ form.cantidad }}
+              {% for err in form.cantidad.errors %}<p class="errorlist">{{ err }}</p>{% endfor %}
+            </td>
             <td>
-              {% if form.instance.pk %}
-                <button type="button" class="boton-eliminar">
-                  <i class="fa fa-trash"></i> Eliminar
-                </button>
-                {{ form.DELETE }}
-              {% endif %}
+              <button type="button" class="boton-eliminar-row">
+                <i class="fa fa-trash"></i>
+              </button>
+              {{ form.DELETE }}
             </td>
           </tr>
         {% endfor %}
       </tbody>
     </table>
 
+    <div class="total-venta">
+      Total: <span id="total-venta">0.00</span>
+    </div>
+
     <div class="acciones-fila">
+      <button type="button" id="add-row" class="boton-agregar">
+        <i class="fa fa-plus-circle"></i> Agregar Producto
+      </button>
       <button type="submit" class="boton-guardar">
         <i class="fa fa-check-circle"></i> Finalizar Venta
       </button>
     </div>
   </form>
 </div>
+
+<script>
+  const stockMap = {{ stock_map_json|safe }};
+  const priceMap = {{ price_map_json|safe }};
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const prefix = '{{ formset.prefix }}';
+    const totalFormsInput = document.getElementById(`id_${prefix}-TOTAL_FORMS`);
+    const tbody = document.querySelector('.tabla-detalle tbody');
+    const addBtn = document.getElementById('add-row');
+    const totalSpan = document.getElementById('total-venta');
+
+    function recalcularTotal() {
+      let total = 0;
+      tbody.querySelectorAll('tr').forEach(row => {
+
+        const del = row.querySelector(`input[name$="-DELETE"]`);
+        if (del && del.checked) return;
+
+        const sel = row.querySelector(`select[name$="producto_unidad"]`);
+        const qty = row.querySelector(`input[name$="cantidad"]`);
+        const prodId = sel?.value;
+        const cantidad = parseFloat(qty?.value) || 0;
+        if (prodId && priceMap[prodId]) {
+          total += priceMap[prodId] * cantidad;
+        }
+      });
+      totalSpan.textContent = total.toFixed(2);
+    }
+
+    function bindRecalculo(el) {
+      el.addEventListener('change', recalcularTotal);
+      el.addEventListener('input', recalcularTotal);
+    }
+
+    tbody.querySelectorAll('tr').forEach(row => {
+      const sel = row.querySelector(`select[name$="producto_unidad"]`);
+      Array.from(sel.options).forEach(opt => {
+        if (stockMap[opt.value] === 0) opt.remove();
+      });
+      bindRecalculo(sel);
+      const qty = row.querySelector(`input[name$="cantidad"]`);
+      bindRecalculo(qty);
+      const btnDel = row.querySelector('.boton-eliminar-row');
+      btnDel.addEventListener('click', () => {
+        row.querySelector(`input[name$="-DELETE"]`).checked = true;
+        row.style.display = 'none';
+        recalcularTotal();
+      });
+    });
+
+    addBtn.addEventListener('click', () => {
+      const formCount = parseInt(totalFormsInput.value, 10);
+      const newRow = tbody.querySelector('tr:last-child').cloneNode(true);
+
+      newRow.querySelectorAll('input, select').forEach(el => {
+        const name = el.name.replace(
+          new RegExp(`${prefix}-\\d+-`),
+          `${prefix}-${formCount}-`
+        );
+        el.name = name;
+        el.id = `id_${name}`;
+        if (el.type === 'checkbox') el.checked = false;
+        else el.value = '';
+      });
+
+      const selNew = newRow.querySelector(`select[name$="producto_unidad"]`);
+      Array.from(selNew.options).forEach(opt => {
+        if (stockMap[opt.value] === 0) opt.remove();
+      });
+      bindRecalculo(selNew);
+
+      const qtyNew = newRow.querySelector(`input[name$="cantidad"]`);
+      bindRecalculo(qtyNew);
+
+      const tdDel = newRow.querySelector('td:last-child');
+      tdDel.innerHTML = `
+        <button type="button" class="boton-eliminar-row">
+          <i class="fa fa-trash"></i>
+        </button>
+        <input type="checkbox" name="${prefix}-${formCount}-DELETE"
+               id="id_${prefix}-${formCount}-DELETE" style="display:none;">
+      `;
+      const btnDelNew = tdDel.querySelector('.boton-eliminar-row');
+      btnDelNew.addEventListener('click', () => {
+        newRow.querySelector(`input[name$="-DELETE"]`).checked = true;
+        newRow.style.display = 'none';
+        recalcularTotal();
+      });
+
+      tbody.appendChild(newRow);
+      totalFormsInput.value = formCount + 1;
+      recalcularTotal();
+    });
+
+    recalcularTotal();
+  });
+</script>
 {% endblock %}

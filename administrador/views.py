@@ -10,13 +10,13 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .forms import CargaMasivaUsuariosForm
-from registration.models import Profile, Proveedor, Compra, Producto, DetalleCompra, DetalleLote, Lote, Cliente, ProductoUnidad, Merma
+from registration.models import Profile, Proveedor, Compra, Producto, DetalleCompra, DetalleLote, Lote, Cliente, ProductoUnidad, Merma, DetalleVenta
 from datetime import datetime, date
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 from administrador.forms import EditUserProfileForm, CrearProveedorForm, EditarProveedorForm, CompraForm, DetalleCompraForm, CargaMasivaProveedorForm 
 from administrador.forms import CargaMasivaUsuariosForm, AprobarCompraForm, ProductoForm, ProductoUnidadFormSet, ProductoUnidadForm, EditarProductoForm, LoteForm
-from administrador.forms import DetalleLoteForm, BaseDetalleLoteFormSet
+from administrador.forms import DetalleLoteForm, BaseDetalleLoteFormSet, VentaForm, DetalleVentaFormSet, DetalleVentaForm
 from django.views.decorators.http import require_POST
 from .forms import PerfilForm
 from django.db.models import Count, Avg, Max, Min
@@ -49,6 +49,7 @@ from django.template.loader import get_template
 from weasyprint import HTML
 from io import BytesIO
 from django.forms import modelformset_factory
+from decimal import Decimal
 
 
 # ------------------------------------ GESTIÓN DE USUARIOS ------------------------------------
@@ -1612,34 +1613,124 @@ def dashboard_productos(request):
 
 
 def dashboard_ventas(request):
-    total_ventas = Venta.objects.count()
-    ventas_dia = Venta.objects.filter(fecha=timezone.now().date()).count()
-    productos_vendidos = sum(v.cantidad_total for v in Venta.objects.all())
-
-    categorias_ventas = ['Perfumes', 'Cremas', 'Accesorios']  # ejemplo
-    montos_ventas = [100000, 50000, 25000]  # ejemplo
-    medios_pago = ['Efectivo', 'Tarjeta', 'Transferencia']
-    pagos = [60, 25, 15]  # ejemplo
-
-    ultima_venta = Venta.objects.last()
-
-    context = {
-        'total_ventas': total_ventas,
-        'ventas_dia': ventas_dia,
-        'productos_vendidos': productos_vendidos,
-        'categorias_ventas': categorias_ventas,
-        'montos_ventas': montos_ventas,
-        'medios_pago': medios_pago,
-        'pagos': pagos,
-        'ultima_venta': ultima_venta
-    }
-
-    return render(request, 'administrador/dashboard_ventas.html', context)
+    pass
 
 
+@login_required
 def listar_ventas(request):
-    ventas = Venta.objects.all()
-    return render(request, 'administrador/listar_ventas.html', {'ventas': ventas})
+    order_by = request.GET.get('order_by', '-id')
+    ventas_activos = Venta.objects.all()
+
+    if order_by:
+        if order_by == 'id':
+            ventas = ventas_activos.order_by('id')
+        elif order_by == 'cliente':
+            ventas = ventas_activos.order_by('cliente')
+        elif order_by == 'user':
+            ventas = ventas_activos.order_by('user')
+        else:
+            ventas = ventas_activos.order_by('-id')
+    else:
+        ventas = ventas_activos.order_by('-id')
+
+    paginator = Paginator(ventas, 10)
+    page_number = request.GET.get('page')
+    ventas = paginator.get_page(page_number)
+
+    return render(request, 'administrador/listar_ventas.html', {
+        'ventas': ventas,
+        'order_by': order_by
+    })
+
+
+@login_required
+def registrar_venta(request):
+    if request.method == 'POST':
+        venta_form = VentaForm(request.POST)
+        if venta_form.is_valid():
+            venta = venta_form.save(commit=False)
+            venta.usuario = request.user
+
+            formset = DetalleVentaFormSet(request.POST, instance=venta)
+
+            if formset.is_valid():
+                detalles = formset.save(commit=False)
+
+                for detalle in detalles:
+                    prod = detalle.producto_unidad
+                    stock_total = (
+                        DetalleLote.objects
+                        .filter(producto_unidad=prod, cantidad__gt=0, lote__activo=True)
+                        .aggregate(total=Sum('cantidad'))['total']
+                        or 0
+                    )
+                    if detalle.cantidad > stock_total:
+                        messages.error(
+                            request,
+                            f"No hay suficiente stock para {prod}. "
+                            f"Disponible: {stock_total}, solicitado: {detalle.cantidad}"
+                        )
+                        return render(request, 'administrador/registrar_venta.html', {
+                            'venta_form': venta_form,
+                            'formset': formset,
+                        })
+
+                with transaction.atomic():
+                    venta.save()
+                    total = 0
+
+                    for detalle in detalles:
+                        cantidad_rest = detalle.cantidad
+
+                        for det_lote in (
+                            DetalleLote.objects
+                            .filter(producto_unidad=detalle.producto_unidad,
+                                    cantidad__gt=0, lote__activo=True)
+                            .order_by('lote__fecha')
+                        ):
+                            if cantidad_rest == 0:
+                                break
+                            if det_lote.cantidad >= cantidad_rest:
+                                det_lote.cantidad -= cantidad_rest
+                                det_lote.save()
+                                cantidad_rest = 0
+                            else:
+                                cantidad_rest -= det_lote.cantidad
+                                det_lote.cantidad = 0
+                                det_lote.save()
+
+                        detalle.venta = venta
+                        detalle.save()
+                        total += detalle.subtotal()
+
+                    venta.total = total
+                    venta.save()
+
+                return redirect('listar_ventas')
+
+        else:
+            formset = DetalleVentaFormSet(instance=Venta())
+
+    else:
+        venta_form = VentaForm()
+        formset = DetalleVentaFormSet(instance=Venta())
+
+    unidades = ProductoUnidad.objects.all()
+    stock_map = {}
+    price_map = {}
+    for pu in unidades:
+        total_stock = DetalleLote.objects.filter(
+            producto_unidad=pu, cantidad__gt=0, lote__activo=True
+        ).aggregate(total=Sum('cantidad'))['total'] or 0
+        stock_map[pu.id] = total_stock
+        price_map[pu.id] = float(pu.precio)
+
+    return render(request, 'administrador/registrar_venta.html', {
+        'venta_form': venta_form,
+        'formset': formset,
+        'stock_map_json': json.dumps(stock_map),
+        'price_map_json': json.dumps(price_map),
+    })
 
 
 
