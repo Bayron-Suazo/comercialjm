@@ -1674,8 +1674,8 @@ def listar_ventas(request):
             ventas = ventas_activos.order_by('id')
         elif order_by == 'cliente':
             ventas = ventas_activos.order_by('cliente')
-        elif order_by == 'user':
-            ventas = ventas_activos.order_by('user')
+        elif order_by == 'ususario':
+            ventas = ventas_activos.order_by('usuario')
         else:
             ventas = ventas_activos.order_by('-id')
     else:

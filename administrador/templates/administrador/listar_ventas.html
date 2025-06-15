@@ -166,6 +166,31 @@ document.addEventListener('DOMContentLoaded', () => {
     redirectUrl = null;
   });
 });
+document.addEventListener('DOMContentLoaded', () => {
+    const dropdownBtn = document.getElementById('dropdownMenuButton');
+    const filterOptions = document.getElementById('filterOptions');
+
+    if (dropdownBtn && filterOptions) {
+        dropdownBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            filterOptions.style.display = filterOptions.style.display === 'none' ? 'block' : 'none';
+        });
+    }
+
+    window.applyFilter = function (filter) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('order_by', filter);
+        url.searchParams.set('page', 1); // Reiniciar a primera página
+        window.location.href = url.toString();
+    };
+
+    window.clearOrderFilter = function () {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('order_by');
+        url.searchParams.set('page', 1);
+        window.location.href = url.toString();
+    };
+});
 </script>
 <script src="{% static 'administrador/js/busca_usuarios.js' %}"></script>
 {% endblock %}
