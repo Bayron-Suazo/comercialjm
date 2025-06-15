@@ -117,7 +117,7 @@
                 <td data-label="ID Compra">{{ compra.id }}</td>
                 <td data-label="Proveedor">{{ compra.proveedor.nombre }}</td>
                 <td data-label="Encargado">{{ compra.usuario }}</td>
-                <td data-label="Fecha Compra">{{ compra.fecha }}</td>
+                <td data-label="Fecha Compra">{{ compra.fecha|date:"d/m/Y"}}</td>
                 <td data-label="Estado">{{ compra.estado}}</td>
                 <td data-label="Acciones">           
                     <a href="{% url 'detalle_compra' compra.id %}" title="Mostrar">

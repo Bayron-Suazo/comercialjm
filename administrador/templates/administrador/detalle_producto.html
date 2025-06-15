@@ -11,7 +11,7 @@
 
     <div class="detalle-compra">
         <p><strong>Tipo:</strong> {{ producto.tipo }}</p>
-        <p><strong>Fecha de creación:</strong> {{ producto.fecha }}</p>
+        <p><strong>Fecha de creación:</strong> {{ producto.fecha|date:"d/m/Y" }}</p>
 
         <table>
             <thead>

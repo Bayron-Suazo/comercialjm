@@ -1,0 +1,56 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'administrador/css/registrar_venta.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+  <h2 class="titulo">Registrar Venta</h2>
+
+  <form method="post" class="formulario-venta">
+    {% csrf_token %}
+
+    <div class="campo-formulario">
+      <label for="cliente">Cliente:</label>
+      {{ venta_form.cliente }}
+    </div>
+
+    {{ formset.management_form }}
+
+    <table class="tabla-detalle">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Cantidad</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for form in formset %}
+          <tr>
+            <td>{{ form.producto_unidad }}</td>
+            <td>{{ form.cantidad }}</td>
+            <td>
+              {% if form.instance.pk %}
+                <button type="button" class="boton-eliminar">
+                  <i class="fa fa-trash"></i> Eliminar
+                </button>
+                {{ form.DELETE }}
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="acciones-fila">
+      <button type="submit" class="boton-guardar">
+        <i class="fa fa-check-circle"></i> Finalizar Venta
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

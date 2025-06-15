@@ -10,7 +10,7 @@
     <h2 class="titulo">Detalle del Lote #{{ lote.id }}</h2>
 
     <div class="detalle-compra">
-        <p><strong>Fecha de creación:</strong> {{ lote.fecha }}</p>
+        <p><strong>Fecha de creación:</strong> {{ lote.fecha|date:"d/m/Y" }}</p>
 
         <table>
             <thead>

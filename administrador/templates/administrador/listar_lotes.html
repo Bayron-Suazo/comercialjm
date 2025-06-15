@@ -74,7 +74,7 @@
             <td><input type="checkbox" style="visibility: hidden;" /></td>
             <td>{{ lote.id }}</td>
             <td>{{ lote.detalles.count }}</td>
-            <td>{{ lote.fecha }}</td>
+            <td>{{ lote.fecha|date:"d/m/Y" }}</td>
             <td class="acciones">
                 <a href="{% url 'ver_lote' lote.id %}" title="Mostrar">
                 <img src="{% static 'administrador/svg/reporteria.svg' %}" alt="Mostrar" class="svg-compra">

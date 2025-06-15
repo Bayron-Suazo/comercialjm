@@ -1,0 +1,125 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+
+{% block title %}Listado de Lotes Activos{% endblock %}
+
+{% block extra_head %}
+  
+    <link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+{% endblock %}
+
+{% block content %}
+
+<div class="acciones-derecha ancho-contenido">
+    <a class="boton-header" href="{% url 'dashboard_ventas' %}">
+        Dashboard
+        <img src="{% static 'administrador/svg/reporteria.svg' %}">
+    </a>
+
+    <a class="boton-header" href="{% url 'registrar_venta' %}">
+        Registrar Venta
+        <img src="{% static 'administrador/svg/plus.svg' %}">
+    </a>
+</div>
+
+
+
+<h2 class="titulo">Listado de Ventas</h2>
+
+
+<div class="busqueda-agregar">
+    <input type="text" placeholder="Buscar Venta .........." class="input-busqueda">
+
+
+    <div class="dropdown">
+        <a href="#" class="boton-header" id="dropdownMenuButton">
+            Filtrar
+            <img src="{% static 'administrador/svg/filter-solid.svg' %}">
+        </a>
+        <ul id="filterOptions" class="dropdown-content" style="display:none;">
+            <li><a href="#" onclick="applyFilter('id')" data-filter="id" class="{% if order_by == 'id' %}filtro-activo{% endif %}">N° Venta</a></li>
+            <li><a href="#" onclick="applyFilter('cliente')" data-filter="cliente" class="{% if order_by == 'cliente' %}filtro-activo{% endif %}">Cliente</a></li>
+            <li><a href="#" onclick="applyFilter('user')" data-filter="user" class="{% if order_by == 'user' %}filtro-activo{% endif %}">Encargado</a></li>
+            <li><a href="#" onclick="clearOrderFilter()">Limpiar filtro</a></li>
+        </ul>
+    </div>
+</div>
+
+<div class="barra-acciones-usuarios ancho-contenido" style="visibility: hidden;">
+    <div class="boton-bloquear-seleccionados">
+        <button id="bloquearBtn" disabled>Bloquear</button>
+    </div>
+
+    <div class="toggle-estado-usuarios">
+        <a href="#" class="estado-btn activo">Activos</a>
+        <a href="#" class="estado-btn">Bloqueados</a>
+    </div>
+</div>
+
+
+{% if ventas %}
+<table class="tabla-usuarios tabla-productos">
+    <thead>
+        <tr>
+            <th><input type="checkbox" id="select-all-ventas"></th>
+            <th>N° Venta</th>
+            <th>Fecha</th>
+            <th>Total</th>
+            <th>Cliente</th>
+            <th>Encargado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for venta in ventas %}
+        <tr>
+            <td data-label="Seleccionar">
+                <input type="checkbox" class="select-venta" data-venta-id="{{ venta.id }}">
+            </td>
+            <td data-label="N° Venta">{{ venta.id }}</td>
+            <td data-label="Fecha">{{ venta.fecha|date:"d/m/Y" }}</td>
+            <td data-label="Total">${{ venta.total }}</td>
+            <td data-label="Cliente">{{ venta.cliente }}</td>
+            <td data-label="Encargado">{{ venta.usuario }}</td>
+            <td data-label="Acciones" class="acciones">
+                <a href="#" title="Mostrar">
+                    <img src="{% static 'administrador/svg/reporteria.svg' %}" alt="Mostrar" class="svg-compra">
+                </a>
+                <button class="btn-deshacer" data-venta-id="{{ venta.id }}" title="Deshacer venta">
+                    <img src="{% static 'administrador/svg/deshacer.svg' %}" alt="Deshacer">
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="custom-pagination">
+    {% if ventas.has_previous %}
+    <a href="?page=1" class="page-btn">&laquo;</a>
+    <a href="?page={{ ventas.previous_page_number }}" class="page-btn">&lsaquo;</a>
+    {% else %}
+    <span class="page-btn disabled">&laquo;</span>
+    <span class="page-btn disabled">&lsaquo;</span>
+    {% endif %}
+
+    <span class="page-btn current">{{ ventas.number }}</span>
+
+    {% if ventas.has_next %}
+    <a href="?page={{ ventas.next_page_number }}" class="page-btn">&rsaquo;</a>
+    <a href="?page={{ ventas.paginator.num_pages }}" class="page-btn">&raquo;</a>
+    {% else %}
+    <span class="page-btn disabled">&rsaquo;</span>
+    <span class="page-btn disabled">&raquo;</span>
+    {% endif %}
+</div>
+{% else %}
+<p style="text-align: center; font-size: 24px; margin-top: 40px;">No hay ventas registradas.</p>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'administrador/js/busca_usuarios.js' %}"></script>
+{% endblock %}

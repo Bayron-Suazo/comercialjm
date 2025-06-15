@@ -86,7 +86,7 @@
                 <td>{{ compra.id }}</td>
                 <td>{{ compra.proveedor.nombre }}</td>
                 <td>{{ compra.usuario }}</td>
-                <td>{{ compra.fecha }}</td>
+                <td>{{ compra.fecha|date:"d/m/Y" }}</td>
                 <td>{{ compra.total|default:"-" }}</td>
                 <td>{{ compra.estado }}</td>
                 

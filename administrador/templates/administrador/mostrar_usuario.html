@@ -43,7 +43,7 @@
             <p><strong>Rut:</strong><br> <span>{{ user.profile.rut }}</span></p>
             <p><strong>Nombre:</strong><br><span>{{user.first_name}}</span></p>
             <p><strong>Apellido:</strong><br> <span>{{ user.last_name }}</span></p>
-            <p><strong>Fecha de Nacimiento:</strong><br> <span>{{ user.profile.fecha_nacimiento }}</span></p>
+            <p><strong>Fecha de Nacimiento:</strong><br> <span>{{ user.profile.fecha_nacimiento|date:"d/m/Y" }}</span></p>
             <p><strong>Sexo:</strong><br> <span>{{ user.profile.sexo }}</span></p>
 
         </div>

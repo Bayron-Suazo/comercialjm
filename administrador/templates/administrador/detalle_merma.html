@@ -10,7 +10,7 @@
     <h2 class="titulo">Detalle de la Merma #{{ merma.id }}</h2>
 
     <div class="detalle-compra">
-        <p><strong>Fecha de registro:</strong> {{ merma.fecha }}</p>
+        <p><strong>Fecha de registro:</strong> {{ merma.fecha|date:"d/m/Y" }}</p>
 
         <table>
             <thead>

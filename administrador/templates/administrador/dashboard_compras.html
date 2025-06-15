@@ -21,7 +21,7 @@
             <div class="card-label">Última Compra</div>
             <div class="card-value">
                 {% if ultima_compra %}
-                    {{ ultima_compra.fecha|date:"d/m/Y H:i" }}
+                    {{ ultima_compra.fecha|date:"d/m/Y" }}
                 {% else %}
                     Sin registros
                 {% endif %}

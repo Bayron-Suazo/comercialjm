@@ -16,7 +16,7 @@
     <div class="detalle-compra">
         <p><strong>Proveedor:</strong> {{ compra.proveedor.nombre }}</p>
         <p><strong>Encargado:</strong> {{ compra.usuario }}</p>
-        <p><strong>Fecha de Compra:</strong> {{ compra.fecha }}</p>
+        <p><strong>Fecha de Compra:</strong> {{ compra.fecha|date:"d/m/Y" }}</p>
         <p><strong>Estado:</strong> {{ compra.estado }}</p>
 
         {% if compra.detalles.all %}

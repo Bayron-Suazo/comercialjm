@@ -83,7 +83,7 @@
         <tr>
             <td><input type="checkbox" class="select-merma" data-merma-id="{{ merma.id }}"></td>
             <td>{{ merma.id }}</td>
-            <td>{{ merma.fecha }}</td>
+            <td>{{ merma.fecha|date:"d/m/Y" }}</td>
             <td>{{ merma.producto_unidad }}</td>
             <td>{{ merma.cantidad }}</td>
             <td>{{ merma.lote.id }}</td>
