@@ -1907,6 +1907,7 @@ def reporteria_view(request):
     return render(request, 'administrador/reporteria.html', context)
 
 
+
 def reporteria_pdf_view(request):
     # Recolección de datos
     cantidad_compras = Compra.objects.filter(estado='Lista').count()
@@ -1927,20 +1928,15 @@ def reporteria_pdf_view(request):
         )
     ).select_related('producto').order_by('producto__nombre', 'unidad_medida')
 
-    compras_por_usuario = User.objects.annotate(
-        total_compras=Count('compras')
-    )
-
-    ventas_por_usuario = User.objects.annotate(
-        total_ventas=Count('ventas')
-    )
+    compras_por_usuario = User.objects.annotate(total_compras=Count('compras'))
+    ventas_por_usuario  = User.objects.annotate(total_ventas=Count('ventas'))
 
     # Obtener imágenes base64 del POST
-    img_productos = request.POST.get('img_productos')
-    img_torta_cantidad = request.POST.get('img_torta_cantidad')
-    img_torta_total = request.POST.get('img_torta_total')
-    img_compras_usuario = request.POST.get('img_compras_usuario')
-    img_ventas_usuario = request.POST.get('img_ventas_usuario')
+    img_productos        = request.POST.get('img_productos')
+    img_torta_cantidad   = request.POST.get('img_torta_cantidad')
+    img_torta_total      = request.POST.get('img_torta_total')
+    img_compras_usuario  = request.POST.get('img_compras_usuario')
+    img_ventas_usuario   = request.POST.get('img_ventas_usuario')
 
     context = {
         'cantidad_compras': cantidad_compras,
@@ -1952,8 +1948,6 @@ def reporteria_pdf_view(request):
         'productos_con_lotes': productos_con_lotes,
         'compras_por_usuario': compras_por_usuario,
         'ventas_por_usuario': ventas_por_usuario,
-
-        # Las imágenes
         'img_productos': img_productos,
         'img_torta_cantidad': img_torta_cantidad,
         'img_torta_total': img_torta_total,
@@ -1962,9 +1956,24 @@ def reporteria_pdf_view(request):
     }
 
     template = get_template('administrador/reporteria_pdf.html')
-    html_string = template.render(context)
+    html_body = template.render(context)
 
-    html = HTML(string=html_string, base_url=request.build_absolute_uri())
+    css_override = """
+    <style>
+      img {
+        display: block;
+        max-width: 100% !important;
+        width: 100% !important;
+        height: auto !important;
+      }
+      /* 1ª imagen (Productos): altura fija más grande */
+      img:nth-of-type(1) {
+        height: 600px !important;
+      }
+    </style>
+    """
+
+    html = HTML(string=css_override + html_body, base_url=request.build_absolute_uri())
     pdf_file = html.write_pdf()
 
     response = HttpResponse(pdf_file, content_type='application/pdf')
