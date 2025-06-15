@@ -8,20 +8,6 @@
 
     <div class="reporteria-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3">
         <button type="button" class="boton-header" onclick="descargarPDF()">📄 Descargar Reporte PDF</button>
-
-        <div class="dropdown">
-            <a href="#" class="boton-header" id="dropdownMenuButton" onclick="toggleDropdown(event)">
-                Filtrar
-                <img src="{% static 'administrador/svg/filter-solid.svg' %}" alt="Filtro">
-            </a>
-            <ul id="filterOptions" class="dropdown-content">
-                <li><a href="#" onclick="applyDateFilter('general')" class="{% if filtro == 'general' %}filtro-activo{% endif %}">General</a></li>
-                <li><a href="#" onclick="applyDateFilter('anual')" class="{% if filtro == 'anual' %}filtro-activo{% endif %}">Anual</a></li>
-                <li><a href="#" onclick="applyDateFilter('mensual')" class="{% if filtro == 'mensual' %}filtro-activo{% endif %}">Mensual</a></li>
-                <li><a href="#" onclick="applyDateFilter('semanal')" class="{% if filtro == 'semanal' %}filtro-activo{% endif %}">Semanal</a></li>
-                <li><a href="#" onclick="applyDateFilter('diario')" class="{% if filtro == 'diario' %}filtro-activo{% endif %}">Diario</a></li>
-            </ul>
-        </div>
     </div>
 
 
