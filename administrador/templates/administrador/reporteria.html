@@ -73,196 +73,191 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const productos = {{ productos|safe }};
-    const nombres = productos.map(p => p.nombre);
-    const cantidades = productos.map(p => p.cantidad);
+  // Datos productos
+  const productos = {{ productos|safe }};
+  const nombresProd = productos.map(p => p.nombre);
+  const cantidadesProd = productos.map(p => p.cantidad);
 
-    const ctxBar = document.getElementById('productosChart').getContext('2d');
-    new Chart(ctxBar, {
-        type: 'bar',
-        data: {
-            labels: nombres,
-            datasets: [{
-                label: 'Cantidad',
-                data: cantidades,
-                backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
+  // Opciones comunes para gráficos de barras con muchos elementos
+  const barOptions = {
+    type: 'bar',
+    options: {
+      indexAxis: 'y',
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          beginAtZero: true,
+          ticks: { font: { size: 14 } }
         },
-        options: {
-            indexAxis: 'y',
-            scales: {
-                x: { beginAtZero: true, ticks: { font: { size: 20 } } },
-                y: { ticks: { font: { size: 20 } } }
-            },
-            plugins: {
-                legend: { labels: { font: { size: 20 } } }
-            }
+        y: {
+          ticks: {
+            font: { size: 14 },
+            autoSkip: true,
+            maxTicksLimit: 20
+          }
         }
-    });
+      },
+      plugins: {
+        legend: { labels: { font: { size: 16 } } },
+        tooltip: { enabled: true }
+      }
+    }
+  };
 
+  // Gráfico Cantidad de productos activos
+  (function(){
+    const ctx = document.getElementById('productosChart').getContext('2d');
+    new Chart(ctx, {
+      ...barOptions,
+      data: {
+        labels: nombresProd,
+        datasets: [{
+          label: 'Cantidad',
+          data: cantidadesProd,
+          barThickness: 12,
+          maxBarThickness: 20,
+          backgroundColor: 'rgba(54, 162, 235, 0.7)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+        }]
+      }
+    });
+  })();
+
+  // Gráfico de Torta Cantidad (Compras, Ventas, Mermas)
+  (function(){
     const dataCantidad = {{ data_cantidad|safe }};
-    const ctxTortaCantidad = document.getElementById('tortaCantidadChart').getContext('2d');
-    new Chart(ctxTortaCantidad, {
-        type: 'pie',
-        data: {
-            labels: ['Compras', 'Ventas', 'Mermas'],
-            datasets: [{
-                data: [dataCantidad.compras, dataCantidad.ventas, dataCantidad.mermas],
-                backgroundColor: [
-                    'rgba(75, 192, 192, 0.7)',
-                    'rgba(255, 206, 86, 0.7)',
-                    'rgba(255, 99, 132, 0.7)'
-                ],
-                borderColor: [
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(255, 99, 132, 1)'
-                ],
-                borderWidth: 1
-            }]
+    const ctx = document.getElementById('tortaCantidadChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: ['Compras', 'Ventas', 'Mermas'],
+        datasets: [{
+          data: [dataCantidad.compras, dataCantidad.ventas, dataCantidad.mermas],
+          backgroundColor: [
+            'rgba(75, 192, 192, 0.7)',
+            'rgba(255, 206, 86, 0.7)',
+            'rgba(255, 99, 132, 0.7)'
+          ],
+          borderColor: [
+            'rgba(75, 192, 192, 1)',
+            'rgba(255, 206, 86, 1)',
+            'rgba(255, 99, 132, 1)'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { font: { size: 16 } } }
         }
+      }
     });
+  })();
 
+  // Gráfico de Torta Total (Compras $, Ventas $, Mermas $)
+  (function(){
     const dataTotal = {{ data_total|safe }};
-    const ctxTortaTotal = document.getElementById('tortaTotalChart').getContext('2d');
-    new Chart(ctxTortaTotal, {
-        type: 'pie',
-        data: {
-            labels: ['Compras ($)', 'Ventas ($)', 'Mermas ($)'],
-            datasets: [{
-                data: [dataTotal.compras, dataTotal.ventas, dataTotal.mermas],
-                backgroundColor: [
-                    'rgba(75, 192, 192, 0.7)',
-                    'rgba(255, 206, 86, 0.7)',
-                    'rgba(255, 99, 132, 0.7)'
-                ],
-                borderColor: [
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(255, 99, 132, 1)'
-                ],
-                borderWidth: 1
-            }]
+    const ctx = document.getElementById('tortaTotalChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: ['Compras ($)', 'Ventas ($)', 'Mermas ($)'],
+        datasets: [{
+          data: [dataTotal.compras, dataTotal.ventas, dataTotal.mermas],
+          backgroundColor: [
+            'rgba(75, 192, 192, 0.7)',
+            'rgba(255, 206, 86, 0.7)',
+            'rgba(255, 99, 132, 0.7)'
+          ],
+          borderColor: [
+            'rgba(75, 192, 192, 1)',
+            'rgba(255, 206, 86, 1)',
+            'rgba(255, 99, 132, 1)'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { font: { size: 16 } } }
         }
+      }
     });
+  })();
 
+  // Gráfico Compras por Usuario
+  (function(){
     const comprasPorUsuario = {{ compras_por_usuario|safe }};
-    const usuarios = comprasPorUsuario.map(u => u.username);
-    const comprasUsuario = comprasPorUsuario.map(u => u.compras);
-
-    const ctxComprasUsuario = document.getElementById('comprasUsuarioChart').getContext('2d');
-    new Chart(ctxComprasUsuario, {
-        type: 'bar',
-        data: {
-            labels: usuarios,
-            datasets: [{
-                label: 'Cantidad de Compras',
-                data: comprasUsuario,
-                backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            scales: {
-                x: { beginAtZero: true, precision: 0, ticks: { font: { size: 20 } } },
-                y: { ticks: { font: { size: 20 } } }
-            },
-            responsive: true,
-            plugins: {
-                legend: { display: true, labels: { font: { size: 20 } } },
-                tooltip: { enabled: true }
-            }
-        }
+    const usuariosC = comprasPorUsuario.map(u => u.username);
+    const comprasC = comprasPorUsuario.map(u => u.compras);
+    const ctx = document.getElementById('comprasUsuarioChart').getContext('2d');
+    new Chart(ctx, {
+      ...barOptions,
+      data: {
+        labels: usuariosC,
+        datasets: [{
+          label: 'Cantidad de Compras',
+          data: comprasC,
+          barThickness: 12,
+          maxBarThickness: 20,
+          backgroundColor: 'rgba(54, 162, 235, 0.7)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+        }]
+      }
     });
+  })();
 
+  // Gráfico Ventas por Usuario
+  (function(){
     const ventasPorUsuario = {{ ventas_por_usuario|safe }};
-    const usuariosVentas = ventasPorUsuario.map(u => u.username);
-    const ventasUsuario = ventasPorUsuario.map(u => u.ventas);
+    const usuariosV = ventasPorUsuario.map(u => u.username);
+    const ventasV = ventasPorUsuario.map(u => u.ventas);
+    const canvas = document.getElementById('ventasUsuarioChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    new Chart(ctx, {
+      ...barOptions,
+      data: {
+        labels: usuariosV,
+        datasets: [{
+          label: 'Cantidad de Ventas',
+          data: ventasV,
+          barThickness: 12,
+          maxBarThickness: 20,
+          backgroundColor: 'rgba(255, 159, 64, 0.7)',
+          borderColor: 'rgba(255, 159, 64, 1)',
+          borderWidth: 1
+        }]
+      }
+    });
+  })();
 
-    const ctxVentasUsuario = document.getElementById('ventasUsuarioChart');
-    if (ctxVentasUsuario) {
-        new Chart(ctxVentasUsuario.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: usuariosVentas,
-                datasets: [{
-                    label: 'Cantidad de Ventas',
-                    data: ventasUsuario,
-                    backgroundColor: 'rgba(255, 159, 64, 0.7)',
-                    borderColor: 'rgba(255, 159, 64, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                scales: {
-                    x: { beginAtZero: true, precision: 0, ticks: { font: { size: 20 } } },
-                    y: { ticks: { font: { size: 20 } } }
-                },
-                responsive: true,
-                plugins: {
-                    legend: { display: true, labels: { font: { size: 20 } } },
-                    tooltip: { enabled: true }
-                }
-            }
-        });
-    }
-
-    // Dropdown y descarga PDF
-    const dropdownBtn = document.getElementById("dropdownMenuButton");
-    if (dropdownBtn) {
-        dropdownBtn.addEventListener("click", function (e) {
-            e.preventDefault();
-            var menu = document.getElementById("filterOptions");
-            if (menu) {
-                menu.style.display = menu.style.display === "none" ? "block" : "none";
-            }
-        });
-    }
-
-    window.applyDateFilter = function (filtro) {
-        const url = new URL(window.location.href);
-        url.searchParams.set('filtro', filtro);
-        window.location.href = url.toString();
+  // Función de descarga de PDF
+  window.descargarPDF = function () {
+    const data = {
+      img_productos: document.getElementById('productosChart').toDataURL('image/png'),
+      img_torta_cantidad: document.getElementById('tortaCantidadChart').toDataURL('image/png'),
+      img_torta_total: document.getElementById('tortaTotalChart').toDataURL('image/png'),
+      img_compras_usuario: document.getElementById('comprasUsuarioChart').toDataURL('image/png'),
+      img_ventas_usuario: document.getElementById('ventasUsuarioChart').toDataURL('image/png'),
     };
-
-    window.descargarPDF = function () {
-        const data = {
-            img_productos: document.getElementById('productosChart').toDataURL('image/png'),
-            img_torta_cantidad: document.getElementById('tortaCantidadChart').toDataURL('image/png'),
-            img_torta_total: document.getElementById('tortaTotalChart').toDataURL('image/png'),
-            img_compras_usuario: document.getElementById('comprasUsuarioChart').toDataURL('image/png'),
-            img_ventas_usuario: document.getElementById('ventasUsuarioChart').toDataURL('image/png'),
-        };
-
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = "{% url 'reporteria_pdf' %}";
-        form.target = '_blank';
-
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        const csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = 'csrfmiddlewaretoken';
-        csrfInput.value = csrfToken;
-        form.appendChild(csrfInput);
-
-        for (const key in data) {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = key;
-            input.value = data[key];
-            form.appendChild(input);
-        }
-
-        document.body.appendChild(form);
-        form.submit();
-        document.body.removeChild(form);
-    };
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = "{% url 'reporteria_pdf' %}";
+    form.target = '_blank';
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    form.innerHTML = '<input type="hidden" name="csrfmiddlewaretoken" value="' + csrfToken + '">';
+    for (const key in data) {
+      form.innerHTML += '<input type="hidden" name="' + key + '" value="' + data[key] + '">';
+    }
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+  };
 });
 </script>
 {% endblock %}
