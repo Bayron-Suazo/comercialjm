@@ -1322,15 +1322,6 @@ def listar_productos_bloqueados(request):
     })
 
 
-def ver_lotes_producto(request, id):
-    producto = get_object_or_404(Producto, id=id)
-    lotes = Lote.objects.filter(producto=producto)
-    return render(request, 'administrador/lotes_por_producto.html', {
-        'producto': producto,
-        'lotes': lotes,
-    })
-
-
 
 
 # ------------------------------------ GESTIÓN DE LOTES ------------------------------------
@@ -1410,84 +1401,6 @@ def ver_lote(request, lote_id):
     return render(request, 'administrador/ver_lote.html', context)
 
 
-
-
-
-def carga_excel_lotes(request):
-    if request.method == 'POST' and request.FILES.get('archivo_excel'):
-        archivo = request.FILES['archivo_excel']
-        df_raw = pd.read_excel(archivo, header=None)
-
-        columnas_esperadas = {'producto', 'cantidad', 'precio'}
-        indice_inicio = None
-
-        for i, fila in df_raw.iterrows():
-            columnas_actuales = set()
-            for celda in fila:
-                if pd.notna(celda):
-                    valor = str(celda).strip().lower()
-                    if valor.endswith('s'):
-                        valor = valor[:-1]
-                    columnas_actuales.add(valor)
-
-            if columnas_esperadas.issubset(columnas_actuales):
-                indice_inicio = i
-                break
-
-        if indice_inicio is None:
-            messages.error(request, 'No se encontraron columnas válidas: producto, cantidad, precio.')
-            return redirect('listar_lotes')
-
-        df = pd.read_excel(archivo, header=indice_inicio)
-        df.columns = [str(c).strip().lower().rstrip('s') for c in df.columns]
-
-        fecha_actual = timezone.now().date()
-        lote_existente = Lote.objects.filter(fecha=fecha_actual).first()
-
-        if lote_existente:
-            lote = lote_existente
-        else:
-            # Contar cuántos días únicos hay registrados
-            dias_registrados = Lote.objects.values_list('fecha', flat=True).distinct().count()
-            numero_lote = f"L-{dias_registrados + 1:03d}"
-            
-            lote = Lote.objects.create(
-                numero=f"L-{numero_lote}",
-                fecha=fecha_actual
-            )
-
-
-        for _, row in df.iterrows():
-            try:
-                producto_nombre = str(row['producto']).strip()
-                cantidad = int(row['cantidad'])
-                precio = float(row['precio'])
-
-                producto = Producto.objects.filter(nombre__iexact=producto_nombre).first()
-                if not producto:
-                    producto = Producto.objects.create(
-                        nombre=producto_nombre,
-                        cantidad=cantidad,
-                        tipo='Automático',
-                        precio=precio
-                    )
-
-                producto, _ = Producto.objects.get_or_create(nombre=producto_nombre)
-
-                DetalleLote.objects.create(
-                    lote=lote,
-                    producto=producto.nombre,  
-                    cantidad=cantidad,
-                    precio=precio
-)
-
-            except Exception:
-                continue  
-
-        messages.success(request, 'Lote cargado exitosamente.')
-        return redirect('listar_lotes')
-
-    return redirect('listar_lotes')
 
 
 
@@ -1668,7 +1581,7 @@ def dashboard_productos(request):
     total_productos = Producto.objects.count()
     activos = Producto.objects.filter(activo=True).count()
     inactivos = total_productos - activos
-    productos_con_merma = Merma.objects.values('producto').distinct().count()
+    productos_con_merma = Merma.objects.values('producto_unidad__producto').distinct().count()
     porcentaje_mermas = (productos_con_merma / total_productos * 100) if total_productos else 0
     tipos_data = Producto.objects.values('tipo').annotate(total=Count('id'))
 
@@ -1688,12 +1601,7 @@ def dashboard_productos(request):
     }
     return render(request, 'administrador/dashboard_productos.html', context)
 
-def debug_url_test(request):
-    try:
-        url = reverse('eliminar_producto', kwargs={'id': 1})
-        return HttpResponse(f"✅ URL encontrada: {url}")
-    except Exception as e:
-        return HttpResponse(f"❌ Error: {e}")
+
     
 
 # ------------------------------------ GESTIÓN DE VENTAS ------------------------------------

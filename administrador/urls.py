@@ -42,7 +42,6 @@ urlpatterns = [
 
 
     # PRODUCTOS, LOTES, MERMAS Y CLIENTES
-    path('lotes/carga_excel/', views.carga_excel_lotes, name='carga_excel_lotes'),
     path('clientes/<int:pk>/desactivar/', views.toggle_estado_cliente, name='toggle_estado_cliente'),
     path('clientes/crear/', views.crear_cliente, name='crear_cliente'),
     path('clientes/eliminar/<int:pk>/', views.eliminar_cliente, name='eliminar_cliente'),
@@ -60,14 +59,11 @@ urlpatterns = [
     path('productos/inactivos/', views.listar_productos_bloqueados, name='productos_inactivos'),
     path('productos/', views.listar_productos, name='listar_productos'),
     path('productos/agregar/', views.agregar_producto, name='agregar_producto'),
-    path('productos/<int:id>/lotes/', views.ver_lotes_producto, name='ver_lotes_producto'),
     path('productos/editar/<int:producto_id>/', views.editar_producto, name='editar_producto'),
     path('lotes/', views.listar_lotes, name='listar_lotes'),
-    path('lotes/carga_excel/', views.carga_excel_lotes, name='carga_excel_lotes'),
     path('lotes/ver/<int:lote_id>/', views.ver_lote, name='ver_lote'),
     path('ventas/dashboard/', views.dashboard_ventas, name='dashboard_ventas'),
     path('ventas/', views.listar_ventas, name='listar_ventas'),
-    path('debug/', views.debug_url_test),
     path('producto/<int:producto_id>/', views.detalle_producto, name='detalle_producto'),
     path('productos/bloquear/', views.bloquear_productos, name='bloquear_productos'),
     path('productos/activar/', views.activar_productos, name='activar_productos'),
