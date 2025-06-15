@@ -1733,6 +1733,55 @@ def registrar_venta(request):
     })
 
 
+@login_required
+def deshacer_venta(request, venta_id):
+    venta = get_object_or_404(Venta, id=venta_id)
+    detalles_venta = DetalleVenta.objects.filter(venta=venta)
+    errores = []
+
+    for detalle in detalles_venta:
+        producto_unidad = detalle.producto_unidad
+        cantidad_a_restaurar = detalle.cantidad
+
+        lotes_disponibles = DetalleLote.objects.filter(
+            producto_unidad=producto_unidad,
+            cantidad__gte=0
+        ).order_by('lote__fecha')
+
+        if not lotes_disponibles.exists():
+            errores.append(f"No hay lotes disponibles para restaurar el stock de {producto_unidad}.")
+            continue
+
+        for detalle_lote in lotes_disponibles:
+            if cantidad_a_restaurar <= 0:
+                break
+            detalle_lote.cantidad += cantidad_a_restaurar
+            detalle_lote.save()
+            cantidad_a_restaurar = 0
+
+        if cantidad_a_restaurar > 0:
+            errores.append(f"No se pudo restaurar completamente el stock de {producto_unidad}.")
+
+    if errores:
+        messages.error(request, "Algunas cantidades no pudieron ser restauradas:\n" + "\n".join(errores))
+        return redirect('listar_ventas')
+
+    venta.delete()
+    messages.success(request, "La venta fue deshecha correctamente y el stock fue restaurado.")
+    return redirect('listar_ventas')
+
+
+@login_required
+def ver_venta(request, venta_id):
+    venta = get_object_or_404(Venta, id=venta_id)
+    detalles = venta.detalles.select_related('producto_unidad__producto')
+
+    context = {
+        'venta': venta,
+        'detalles': detalles,
+    }
+    return render(request, 'administrador/detalle_venta.html', context)
+
 
 # ------------------------------------ REPORTERIA ------------------------------------
 

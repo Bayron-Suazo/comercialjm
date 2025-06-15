@@ -58,12 +58,32 @@
     </div>
 </div>
 
+<div id="confirmModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>¿Deshacer Venta?</h3>
+    <p>Esta acción restaurará los productos al stock original.</p>
+    <div class="modal-actions">
+      <button type="button" id="confirmNo">Cancelar</button>
+      <button type="button" id="confirmYes">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+{% if messages %}
+  <div class="messages">
+    {% for message in messages %}
+      <div class="alert {% if message.tags %}{{ message.tags }}{% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
 
 {% if ventas %}
 <table class="tabla-usuarios tabla-productos">
     <thead>
         <tr>
-            <th><input type="checkbox" id="select-all-ventas"></th>
+            <th><input type="checkbox" id="select-all" class="oculto"></th>
             <th>N° Venta</th>
             <th>Fecha</th>
             <th>Total</th>
@@ -75,19 +95,17 @@
     <tbody>
         {% for venta in ventas %}
         <tr>
-            <td data-label="Seleccionar">
-                <input type="checkbox" class="select-venta" data-venta-id="{{ venta.id }}">
-            </td>
+            <td data-label="Seleccionar"><input type="checkbox" class="select-user oculto" data-compra-id="{{ venta.id }}"></td>
             <td data-label="N° Venta">{{ venta.id }}</td>
             <td data-label="Fecha">{{ venta.fecha|date:"d/m/Y" }}</td>
-            <td data-label="Total">${{ venta.total }}</td>
+            <td data-label="Total">${{ venta.total|floatformat:0 }}</td>
             <td data-label="Cliente">{{ venta.cliente }}</td>
             <td data-label="Encargado">{{ venta.usuario }}</td>
             <td data-label="Acciones" class="acciones">
-                <a href="#" title="Mostrar">
+                <a href="{% url 'ver_venta' venta.id %}" title="Mostrar">
                     <img src="{% static 'administrador/svg/reporteria.svg' %}" alt="Mostrar" class="svg-compra">
                 </a>
-                <button class="btn-deshacer" data-venta-id="{{ venta.id }}" title="Deshacer venta">
+                <button class="btn-deshacer" data-url="{% url 'deshacer_venta' venta.id %}" title="Deshacer venta">
                     <img src="{% static 'administrador/svg/deshacer.svg' %}" alt="Deshacer">
                 </button>
             </td>
@@ -121,5 +139,33 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('confirmModal');
+  const confirmYes = document.getElementById('confirmYes');
+  const confirmNo = document.getElementById('confirmNo');
+
+  let redirectUrl = null;
+
+  document.querySelectorAll('.btn-deshacer').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      redirectUrl = btn.getAttribute('data-url');
+      modal.classList.remove('hidden');
+    });
+  });
+
+  confirmYes.addEventListener('click', () => {
+    if (redirectUrl) {
+      window.location.href = redirectUrl;
+    }
+  });
+
+  confirmNo.addEventListener('click', () => {
+    modal.classList.add('hidden');
+    redirectUrl = null;
+  });
+});
+</script>
 <script src="{% static 'administrador/js/busca_usuarios.js' %}"></script>
 {% endblock %}

@@ -74,6 +74,8 @@ urlpatterns = [
     path('ventas/dashboard/', views.dashboard_ventas, name='dashboard_ventas'),
     path('ventas/', views.listar_ventas, name='listar_ventas'),
     path('ventas/registrar/', views.registrar_venta, name='registrar_venta'),
+    path('ventas/deshacer/<int:venta_id>/', views.deshacer_venta, name='deshacer_venta'),
+    path('ventas/ver/<int:venta_id>/', views.ver_venta, name='ver_venta'),
 
 
     #REPORTERIA
