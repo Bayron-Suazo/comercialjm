@@ -54,7 +54,7 @@ class Producto(models.Model):
         ('Verdura', 'Verdura'),
         ('Otro', 'Otro'),
     ])
-    
+
     fecha = models.DateField(auto_now_add=True)
     activo = models.BooleanField(default=True)
 
@@ -135,6 +135,7 @@ class DetalleCompra(models.Model):
 class Cliente(models.Model):
     nombre = models.CharField(max_length=100)
     rut = models.CharField(max_length=12)
+    direccion = models.CharField(max_length=100)
     categoria = models.CharField(max_length=50)
     correo = models.EmailField()
     telefono = models.CharField(max_length=20)

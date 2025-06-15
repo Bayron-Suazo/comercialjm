@@ -76,6 +76,8 @@ urlpatterns = [
     path('ventas/registrar/', views.registrar_venta, name='registrar_venta'),
     path('ventas/deshacer/<int:venta_id>/', views.deshacer_venta, name='deshacer_venta'),
     path('ventas/ver/<int:venta_id>/', views.ver_venta, name='ver_venta'),
+    path('venta/<int:venta_id>/boleta/', views.generar_boleta_pdf, name='generar_boleta'),
+    path('ventas/<int:venta_id>/factura/', views.generar_factura_pdf, name='generar_factura_pdf'),
 
 
     #REPORTERIA

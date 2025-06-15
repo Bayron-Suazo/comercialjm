@@ -51,7 +51,7 @@ from io import BytesIO
 from django.forms import modelformset_factory
 from decimal import Decimal
 from django.db.models.functions import Coalesce
-
+from django.template.loader import render_to_string
 
 
 # ------------------------------------ GESTIÓN DE USUARIOS ------------------------------------
@@ -1788,6 +1788,43 @@ def registrar_venta(request):
             'stock_map_json': json.dumps(stock_map),
             'price_map_json': json.dumps(price_map),
         })
+
+def generar_boleta_pdf(request, venta_id):
+    venta = get_object_or_404(Venta, pk=venta_id)
+    detalles = venta.detalles.select_related('producto_unidad', 'producto_unidad__producto')
+    
+    html_string = render_to_string('administrador/boleta_pdf.html', {
+        'venta': venta,
+        'detalles': detalles,
+    })
+
+    html = HTML(string=html_string, base_url=request.build_absolute_uri())
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'filename=boleta_venta_{venta.id}.pdf'
+    html.write_pdf(response)
+    return response
+
+def generar_factura_pdf(request, venta_id):
+    venta = get_object_or_404(Venta, pk=venta_id)
+    detalles = venta.detalles.select_related('producto_unidad', 'producto_unidad__producto')
+
+    subtotal = sum([d.subtotal() for d in detalles])
+    iva = (subtotal * Decimal('0.19')).quantize(Decimal('1.'))
+    total = subtotal + iva
+
+    html_string = render_to_string('administrador/factura_pdf.html', {
+        'venta': venta,
+        'detalles': detalles,
+        'subtotal': subtotal,
+        'iva': iva,
+        'total': total,
+    })
+
+    html = HTML(string=html_string, base_url=request.build_absolute_uri())
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'filename=factura_venta_{venta.id}.pdf'
+    html.write_pdf(response)
+    return response
 
 
 @login_required
