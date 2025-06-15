@@ -42,7 +42,7 @@
             <tr>
                 <th></th>
                 <th>Nombre</th>
-                <th>Número de Lote</th>
+                <th>Unidades</th>
                 <th>Tipo</th>
             </tr>
         </thead>
@@ -51,7 +51,13 @@
             <tr>
                 <td><input type="checkbox" name="productos[]" value="{{ producto.id }}" class="checkbox-producto" {% if producto.id in productos_asignados_ids %}checked{% endif %}></td>
                 <td>{{ producto.nombre }}</td>
-                <td>{{ producto.lote_numero }}</td>
+                <td>
+                    {% for unidad in producto.unidades.all %}
+                        {{ unidad.get_unidad_medida_display }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                        Sin unidades
+                    {% endfor %}
+                </td>
                 <td>{{ producto.tipo }}</td>
             </tr>
             {% endfor %}

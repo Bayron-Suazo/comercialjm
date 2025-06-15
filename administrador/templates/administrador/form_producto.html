@@ -103,7 +103,7 @@
 document.addEventListener('DOMContentLoaded', function () {
   const tbody = document.getElementById('formset-body');
   const addButton = document.getElementById('add-formset-row');
-  const totalForms = document.getElementById('id_form-TOTAL_FORMS');
+  const totalForms = document.getElementById('id_{{ formset.prefix }}-TOTAL_FORMS');
   const template = document.getElementById('empty-form-template').content;
 
   function updateAttributes(row, index) {
