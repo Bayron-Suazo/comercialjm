@@ -1450,6 +1450,9 @@ def registrar_merma(request):
     motivo_form = MotivoMermaForm(request.POST or None)
 
     if request.method == 'POST':
+        for form in formset:
+            form.empty_permitted = False
+
         if formset.is_valid() and motivo_form.is_valid():
             motivo = motivo_form.cleaned_data['motivo']
             for form in formset:

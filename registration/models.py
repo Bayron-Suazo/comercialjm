@@ -49,7 +49,12 @@ class Lote(models.Model):
 
 class Producto(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
-    tipo = models.CharField(max_length=50)
+    tipo = models.CharField(max_length=20, choices=[
+        ('Fruta', 'Fruta'),
+        ('Verdura', 'Verdura'),
+        ('Otro', 'Otro'),
+    ])
+    
     fecha = models.DateField(auto_now_add=True)
     activo = models.BooleanField(default=True)
 
