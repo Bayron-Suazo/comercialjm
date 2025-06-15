@@ -1,17 +1,19 @@
 {% extends 'core/base_admin.html' %}
 {% load static %}
+
+{% block title %}Registrar Venta{% endblock %}
+
 {% block extra_head %}
   <link rel="stylesheet" href="{% static 'administrador/css/registrar_venta.css' %}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 {% endblock %}
 
 {% block content %}
-<div class="page-wrapper">
-  <h2 class="titulo">Registrar Venta</h2>
+<h2 class="titulo">Registrar Venta</h2>
 
-  <form method="post" class="formulario-venta">
+<div class="ancho-contenido">
+  <form method="post" class="formulario-proveedor">
     {% csrf_token %}
-
     {% if messages %}
       <ul class="alertas">
         {% for message in messages %}
@@ -20,48 +22,50 @@
       </ul>
     {% endif %}
 
-    <div class="campo-formulario">
-      {{ venta_form.cliente.label_tag }}
-      {{ venta_form.cliente }}
-      {% for err in venta_form.cliente.errors %}<p class="errorlist">{{ err }}</p>{% endfor %}
-    </div>
-
-    <div class="campo-formulario">
-      {{ venta_form.metodo_pago.label_tag }}
-      {{ venta_form.metodo_pago }}
-      {% for err in venta_form.metodo_pago.errors %}<p class="errorlist">{{ err }}</p>{% endfor %}
+    <div class="campo-formulario-horizontal">
+      <div class="contenedor-proveedor">
+        {{ venta_form.cliente.label_tag }}
+        {{ venta_form.cliente }}
+        {{ venta_form.cliente.errors }}
+      </div>
+      <div class="contenedor-proveedor">
+        {{ venta_form.metodo_pago.label_tag }}
+        {{ venta_form.metodo_pago }}
+        {{ venta_form.metodo_pago.errors }}
+      </div>
     </div>
 
     {{ formset.management_form }}
 
-    <table class="tabla-detalle">
+    <table class="tabla-usuarios">
       <thead>
-        <tr>
+        <tr class="cabecera-completa">
           <th>Producto</th>
           <th>Cantidad</th>
-          <th>Eliminar</th>
+          <th>Acciones</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="formset-body">
         {% for form in formset %}
-          <tr>
-            <td class="campo-formulario">
-              {{ form.producto_unidad.label_tag }}
-              {{ form.producto_unidad }}
-              {% for err in form.producto_unidad.errors %}<p class="errorlist">{{ err }}</p>{% endfor %}
-            </td>
-            <td class="campo-formulario">
-              {{ form.cantidad.label_tag }}
-              {{ form.cantidad }}
-              {% for err in form.cantidad.errors %}<p class="errorlist">{{ err }}</p>{% endfor %}
-            </td>
-            <td>
-              <button type="button" class="boton-eliminar-row">
-                <i class="fa fa-trash"></i>
-              </button>
-              {{ form.DELETE }}
-            </td>
-          </tr>
+        <tr class="form-detalle">
+          <td>
+            {{ form.producto_unidad }}
+            {% for error in form.producto_unidad.errors %}
+              <div class="errorlist">{{ error }}</div>
+            {% endfor %}
+          </td>
+          <td>
+            {{ form.cantidad }}
+            {% for error in form.cantidad.errors %}
+              <div class="errorlist">{{ error }}</div>
+            {% endfor %}
+          </td>
+          <td>
+            <button type="button" class="boton-eliminar" title="Eliminar producto">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
@@ -71,111 +75,129 @@
     </div>
 
     <div class="acciones-fila">
-      <button type="button" id="add-row" class="boton-agregar">
-        <i class="fa fa-plus-circle"></i> Agregar Producto
-      </button>
-      <button type="submit" class="boton-guardar">
-        <i class="fa fa-check-circle"></i> Finalizar Venta
+      <button type="submit" class="boton-header">Finalizar Venta</button>
+      <button type="button" id="add-form" class="boton-agregar" title="Agregar producto">
+        <i class="fas fa-plus-circle"></i>
       </button>
     </div>
   </form>
 </div>
 
+<div class="boton-volver-container">
+  <a href="{% url 'listar_ventas' %}" class="boton-volver">Volver</a>
+</div>
+
 <script>
-  const stockMap = {{ stock_map_json|safe }};
-  const priceMap = {{ price_map_json|safe }};
+const stockMap = {{ stock_map_json|safe }};
+const priceMap = {{ price_map_json|safe }};
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const prefix = '{{ formset.prefix }}';
-    const totalFormsInput = document.getElementById(`id_${prefix}-TOTAL_FORMS`);
-    const tbody = document.querySelector('.tabla-detalle tbody');
-    const addBtn = document.getElementById('add-row');
-    const totalSpan = document.getElementById('total-venta');
+document.addEventListener('DOMContentLoaded', () => {
+  const prefix = '{{ formset.prefix }}';
+  const formsetBody = document.getElementById("formset-body");
+  const totalFormsInput = document.querySelector(`input[name="${prefix}-TOTAL_FORMS"]`);
+  const totalSpan = document.getElementById('total-venta');
+  const addButton = document.getElementById('add-form');
 
-    function recalcularTotal() {
-      let total = 0;
-      tbody.querySelectorAll('tr').forEach(row => {
+  function recalcularTotal() {
+    let total = 0;
+    formsetBody.querySelectorAll('.form-detalle').forEach(row => {
+      const deleted = row.querySelector(`input[name$="-DELETE"]`);
+      if (deleted?.checked) return;
 
-        const del = row.querySelector(`input[name$="-DELETE"]`);
-        if (del && del.checked) return;
+      const select = row.querySelector(`select[name$="producto_unidad"]`);
+      const cantidad = parseFloat(row.querySelector(`input[name$="cantidad"]`)?.value || 0);
+      const id = select?.value;
 
-        const sel = row.querySelector(`select[name$="producto_unidad"]`);
-        const qty = row.querySelector(`input[name$="cantidad"]`);
-        const prodId = sel?.value;
-        const cantidad = parseFloat(qty?.value) || 0;
-        if (prodId && priceMap[prodId]) {
-          total += priceMap[prodId] * cantidad;
-        }
-      });
-      totalSpan.textContent = total.toFixed(2);
-    }
+      if (id && priceMap[id]) {
+        total += priceMap[id] * cantidad;
+      }
+    });
+    totalSpan.textContent = total.toFixed(2);
+  }
 
-    function bindRecalculo(el) {
-      el.addEventListener('change', recalcularTotal);
-      el.addEventListener('input', recalcularTotal);
-    }
+  function actualizarEventosFila(row) {
+    const select = row.querySelector(`select[name$="producto_unidad"]`);
+    const input = row.querySelector(`input[name$="cantidad"]`);
+    const deleteBtn = row.querySelector(".boton-eliminar");
 
-    tbody.querySelectorAll('tr').forEach(row => {
-      const sel = row.querySelector(`select[name$="producto_unidad"]`);
-      Array.from(sel.options).forEach(opt => {
-        if (stockMap[opt.value] === 0) opt.remove();
-      });
-      bindRecalculo(sel);
-      const qty = row.querySelector(`input[name$="cantidad"]`);
-      bindRecalculo(qty);
-      const btnDel = row.querySelector('.boton-eliminar-row');
-      btnDel.addEventListener('click', () => {
-        row.querySelector(`input[name$="-DELETE"]`).checked = true;
-        row.style.display = 'none';
-        recalcularTotal();
-      });
+    [select, input].forEach(el => {
+      el?.addEventListener('change', recalcularTotal);
+      el?.addEventListener('input', recalcularTotal);
     });
 
-    addBtn.addEventListener('click', () => {
-      const formCount = parseInt(totalFormsInput.value, 10);
-      const newRow = tbody.querySelector('tr:last-child').cloneNode(true);
+    Array.from(select?.options || []).forEach(opt => {
+      if (stockMap[opt.value] === 0) opt.remove();
+    });
 
-      newRow.querySelectorAll('input, select').forEach(el => {
-        const name = el.name.replace(
-          new RegExp(`${prefix}-\\d+-`),
-          `${prefix}-${formCount}-`
-        );
-        el.name = name;
-        el.id = `id_${name}`;
-        if (el.type === 'checkbox') el.checked = false;
-        else el.value = '';
-      });
+    deleteBtn.addEventListener("click", () => {
+      const filasVisibles = [...formsetBody.querySelectorAll('.form-detalle')].filter(
+        r => r.style.display !== 'none'
+      );
 
-      const selNew = newRow.querySelector(`select[name$="producto_unidad"]`);
-      Array.from(selNew.options).forEach(opt => {
-        if (stockMap[opt.value] === 0) opt.remove();
-      });
-      bindRecalculo(selNew);
+      if (filasVisibles.length <= 1) {
+        alert("Debe haber al menos un producto en la venta.");
+        return;
+      }
 
-      const qtyNew = newRow.querySelector(`input[name$="cantidad"]`);
-      bindRecalculo(qtyNew);
-
-      const tdDel = newRow.querySelector('td:last-child');
-      tdDel.innerHTML = `
-        <button type="button" class="boton-eliminar-row">
-          <i class="fa fa-trash"></i>
-        </button>
-        <input type="checkbox" name="${prefix}-${formCount}-DELETE"
-               id="id_${prefix}-${formCount}-DELETE" style="display:none;">
-      `;
-      const btnDelNew = tdDel.querySelector('.boton-eliminar-row');
-      btnDelNew.addEventListener('click', () => {
-        newRow.querySelector(`input[name$="-DELETE"]`).checked = true;
-        newRow.style.display = 'none';
-        recalcularTotal();
-      });
-
-      tbody.appendChild(newRow);
-      totalFormsInput.value = formCount + 1;
+      const deleteInput = row.querySelector(`input[name$="-DELETE"]`);
+      if (deleteInput) {
+        deleteInput.checked = true;
+        row.style.display = "none";
+      } else {
+        row.remove();
+      }
       recalcularTotal();
     });
+  }
 
+  formsetBody.querySelectorAll('.form-detalle').forEach(actualizarEventosFila);
+
+  addButton.addEventListener('click', () => {
+    let count = parseInt(totalFormsInput.value, 10);
+    const filasVisibles = [...formsetBody.querySelectorAll('.form-detalle')].filter(
+      r => r.style.display !== 'none'
+    );
+
+    // Si no hay ninguna fila visible, usar la última como base (aunque esté oculta)
+    let lastRow = filasVisibles.at(-1) || formsetBody.querySelector('.form-detalle:last-child');
+
+    // Si no hay filas en absoluto (extremo improbable pero seguro), mostrar error
+    if (!lastRow) {
+      alert("Error: no se puede agregar una fila porque no hay ninguna base válida.");
+      return;
+    }
+
+    const newRow = lastRow.cloneNode(true);
+
+    newRow.querySelectorAll('input, select').forEach(el => {
+      const name = el.name.replace(/-\d+-/, `-${count}-`);
+      const id = el.id.replace(/-\d+-/, `-${count}-`);
+      el.name = name;
+      el.id = id;
+
+      if (el.type === 'checkbox') {
+        el.checked = false;
+      } else {
+        el.value = '';
+      }
+    });
+
+    const deleteCell = newRow.querySelector('td:last-child');
+    deleteCell.innerHTML = `
+      <button type="button" class="boton-eliminar" title="Eliminar producto">
+        <i class="fas fa-trash-alt"></i>
+      </button>
+      <input type="checkbox" name="${prefix}-${count}-DELETE" id="id_${prefix}-${count}-DELETE" style="display: none;">
+    `;
+
+    newRow.style.display = ''; // asegurarse que se muestre
+    formsetBody.appendChild(newRow);
+    totalFormsInput.value = count + 1;
+    actualizarEventosFila(newRow);
     recalcularTotal();
   });
+
+  recalcularTotal();
+});
 </script>
 {% endblock %}
