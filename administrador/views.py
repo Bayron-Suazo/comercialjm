@@ -50,6 +50,8 @@ from weasyprint import HTML
 from io import BytesIO
 from django.forms import modelformset_factory
 from decimal import Decimal
+from django.db.models.functions import Coalesce
+
 
 
 # ------------------------------------ GESTIÓN DE USUARIOS ------------------------------------
@@ -1859,7 +1861,7 @@ def reporteria_view(request):
 
     productos = []
     for producto in productos_activos:
-        cantidad_total = detalles_lote.filter(producto=producto.nombre).aggregate(
+        cantidad_total = detalles_lote.filter(producto_unidad__producto=producto).aggregate(
             total=Sum('cantidad')
         )['total'] or 0
 
@@ -1870,7 +1872,7 @@ def reporteria_view(request):
 
     compras_qs = Compra.objects.filter(activo=False, estado='Lista', **filtro_fecha)
     ventas_qs = Venta.objects.filter(**filtro_fecha)
-    mermas_qs = Merma.objects.filter(activo=True, **filtro_fecha)
+    mermas_qs = Merma.objects.filter(**filtro_fecha)
 
     compras_cantidad = compras_qs.count()
     ventas_cantidad = ventas_qs.count()
@@ -1888,6 +1890,14 @@ def reporteria_view(request):
             'username': usuario.username,
             'compras': user_compras
         })
+        
+    ventas_por_usuario = []
+    for usuario in usuarios_activos:
+        user_ventas = ventas_qs.filter(usuario=usuario).count()
+        ventas_por_usuario.append({
+            'username': usuario.username,
+            'ventas': user_ventas
+        })
 
     context = {
         'productos': list(productos),
@@ -1902,6 +1912,7 @@ def reporteria_view(request):
             'mermas': float(mermas_total),
         },
         'compras_por_usuario': compras_por_usuario,
+        'ventas_por_usuario': ventas_por_usuario,
         'filtro': filtro,
     }
     return render(request, 'administrador/reporteria.html', context)
@@ -1909,25 +1920,30 @@ def reporteria_view(request):
 
 def reporteria_pdf_view(request):
     # Recolección de datos
-    cantidad_compras = Compra.objects.count()
+    cantidad_compras = Compra.objects.filter(estado='Lista').count()
     cantidad_ventas = Venta.objects.count()
     cantidad_mermas = Merma.objects.count()
 
-    total_compras = Compra.objects.aggregate(total=Sum('total'))['total'] or 0
+    total_compras = Compra.objects.filter(estado='Lista').aggregate(total=Sum('total'))['total'] or 0
     total_ventas = Venta.objects.aggregate(total=Sum('total'))['total'] or 0
     total_mermas = Merma.objects.aggregate(
         total=Sum(ExpressionWrapper(F('precio') * F('cantidad'), output_field=FloatField()))
     )['total'] or 0
 
-    productos_con_lotes = Producto.objects.annotate(
-        total_cantidad=Sum(
-            'detallecompra__cantidad',
-            filter=Q(detallecompra__compra__estado='Lista')
+    productos_con_lotes = ProductoUnidad.objects.annotate(
+        total_cantidad=Sum('detallelote__cantidad'),
+        subtotal=ExpressionWrapper(
+            F('precio') * Coalesce(Sum('detallelote__cantidad'), 0),
+            output_field=FloatField()
         )
-    )
+    ).select_related('producto').order_by('producto__nombre', 'unidad_medida')
 
     compras_por_usuario = User.objects.annotate(
         total_compras=Count('compras')
+    )
+
+    ventas_por_usuario = User.objects.annotate(
+        total_ventas=Count('ventas')
     )
 
     # Obtener imágenes base64 del POST
@@ -1935,6 +1951,7 @@ def reporteria_pdf_view(request):
     img_torta_cantidad = request.POST.get('img_torta_cantidad')
     img_torta_total = request.POST.get('img_torta_total')
     img_compras_usuario = request.POST.get('img_compras_usuario')
+    img_ventas_usuario = request.POST.get('img_ventas_usuario')
 
     context = {
         'cantidad_compras': cantidad_compras,
@@ -1945,12 +1962,14 @@ def reporteria_pdf_view(request):
         'total_mermas': total_mermas,
         'productos_con_lotes': productos_con_lotes,
         'compras_por_usuario': compras_por_usuario,
+        'ventas_por_usuario': ventas_por_usuario,
 
         # Las imágenes
         'img_productos': img_productos,
         'img_torta_cantidad': img_torta_cantidad,
         'img_torta_total': img_torta_total,
         'img_compras_usuario': img_compras_usuario,
+        'img_ventas_usuario': img_ventas_usuario,
     }
 
     template = get_template('administrador/reporteria_pdf.html')

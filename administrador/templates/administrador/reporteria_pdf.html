@@ -29,15 +29,26 @@
     </div>
 
     <div class="section">
-        <h3>Cantidad de Productos Registrados</h3>
+        <h3>Cantidad de Productos Registrados por Unidad</h3>
         <table class="table">
-            <tr><th>Producto</th><th>Cantidad</th></tr>
-            {% for item in productos_con_lotes %}
+            <thead>
                 <tr>
-                    <td>{{ item.nombre }}</td>
-                    <td>{{ item.total_cantidad|default_if_none:"0" }}</td>
+                    <th>Producto</th>
+                    <th>Unidad de Medida</th>
+                    <th>Cantidad Total (en Lotes)</th>
+                    <th>Subtotal</th>
                 </tr>
-            {% endfor %}
+            </thead>
+            <tbody>
+                {% for item in productos_con_lotes %}
+                    <tr>
+                        <td>{{ item.producto.nombre }}</td>
+                        <td>{{ item.get_unidad_medida_display }}</td>
+                        <td>{{ item.total_cantidad|default_if_none:"0" }}</td>
+                        <td>${{ item.subtotal|floatformat:0 }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
         </table>
     </div>
 
@@ -52,11 +63,25 @@
     </div>
 
     <div class="section">
+        <h3>Ventas por Usuario</h3>
+        <table class="table">
+            <tr><th>Usuario</th><th>Cantidad de Ventas</th></tr>
+            {% for user in ventas_por_usuario %}
+                <tr>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.total_ventas }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="section">
         <h3>Gráficos</h3>
         <img class="chart-img" src="{{ img_productos }}" style="width: 500px; height: 500px;" alt="Gráfico de productos">
         <img class="chart-img" src="{{ img_torta_cantidad }}" style="width: 350px; height: 350px;" alt="Gráfico cantidad">
         <img class="chart-img" src="{{ img_torta_total }}" style="width: 350px; height: 350px;" alt="Gráfico total">
         <img class="chart-img" src="{{ img_compras_usuario }}" style="width: 500px; height: 500px;" alt="Compras por usuario">
+        <img class="chart-img" src="{{ img_ventas_usuario }}" style="width: 500px; height: 500px;" alt="Ventas por usuario">
     </div>
 </body>
 </html>

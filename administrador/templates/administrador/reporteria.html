@@ -74,6 +74,19 @@
             </div>
         </div>
     </div>
+    <!-- Gráfico de Barras - Ventas por Usuario -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    Cantidad de ventas por usuario activo
+                </div>
+                <div class="card-body">
+                    <canvas id="ventasUsuarioChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -247,12 +260,14 @@
         const canvasTortaCantidad = document.getElementById('tortaCantidadChart');
         const canvasTortaTotal = document.getElementById('tortaTotalChart');
         const canvasComprasUsuario = document.getElementById('comprasUsuarioChart');
+        const canvasVentasUsuario = document.getElementById('ventasUsuarioChart');  // <- Añadido
 
         const data = {
             img_productos: canvasProductos.toDataURL('image/png'),
             img_torta_cantidad: canvasTortaCantidad.toDataURL('image/png'),
             img_torta_total: canvasTortaTotal.toDataURL('image/png'),
             img_compras_usuario: canvasComprasUsuario.toDataURL('image/png'),
+            img_ventas_usuario: canvasVentasUsuario.toDataURL('image/png'),  // <- Añadido
         };
 
         // Crear formulario dinámico
@@ -282,6 +297,58 @@
         form.submit();
         document.body.removeChild(form);
     }
+    const ventasPorUsuario = {{ ventas_por_usuario|safe }};
+    const usuariosVentas = ventasPorUsuario.map(u => u.username);
+    const ventasUsuario = ventasPorUsuario.map(u => u.ventas);
 
+    const ctxVentasUsuario = document.getElementById('ventasUsuarioChart').getContext('2d');
+    new Chart(ctxVentasUsuario, {
+        type: 'bar',
+        data: {
+            labels: usuariosVentas,
+            datasets: [{
+                label: 'Cantidad de Ventas',
+                data: ventasUsuario,
+                backgroundColor: 'rgba(255, 159, 64, 0.7)',
+                borderColor: 'rgba(255, 159, 64, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    precision: 0,
+                    ticks: {
+                        font: {
+                            size: 20
+                        }
+                    }
+                },
+                y: {
+                    ticks: {
+                        font: {
+                            size: 20
+                        }
+                    }
+                }
+            },
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    labels: {
+                        font: {
+                            size: 20
+                        }
+                    }
+                },
+                tooltip: {
+                    enabled: true
+                }
+            }
+        }
+    });
 </script>
 {% endblock %}
