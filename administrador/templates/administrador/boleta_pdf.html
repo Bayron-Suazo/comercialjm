@@ -76,7 +76,11 @@
     </tbody>
   </table>
 
-  <p class="total">Total: ${{ venta.total|floatformat:0 }}</p>
+  <div class="total">
+    <p>Subtotal: ${{ subtotal }}</p>
+    <p>Descuento {{ descuento_porcentaje }}%: ${{ monto_descuento }}</p>
+    <p>Total: ${{ venta.total|floatformat:0 }}</p>
+  </div>
 
   <div class="footer">
     <p>Gracias por su compra</p>

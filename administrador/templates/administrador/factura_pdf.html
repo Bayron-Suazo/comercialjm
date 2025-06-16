@@ -74,9 +74,11 @@
   </table>
 
   <div class="totales">
-    <p>Subtotal: ${{ subtotal|floatformat:0 }}</p>
-    <p>IVA (19%): ${{ iva|floatformat:0 }}</p>
-    <p><strong>Total: ${{ total|floatformat:0 }}</strong></p>
+    <p>Subtotal sin descuento: ${{ subtotal }}</p>
+    <p>Descuento {{ descuento_porcentaje }}%: ${{ descuento }}</p>
+    <p>Subtotal con descuento: ${{ venta.total|floatformat:0 }}</p>
+    <p>IVA (19%): ${{ iva }}</p>
+    <p><strong>Total: ${{ total }}</strong></p>
   </div>
 
   <div class="footer">

@@ -1838,12 +1838,35 @@ def generar_boleta_pdf(request, venta_id):
     if rut_cliente: rut_cliente = unquote(rut_cliente)
     if direccion_cliente: direccion_cliente = unquote(direccion_cliente)
 
+    # Calcular subtotal
+    subtotal = detalles.aggregate(
+        subtotal=Sum(
+            ExpressionWrapper(
+                F('cantidad') * F('producto_unidad__precio'),
+                output_field=DecimalField()
+            )
+        )
+    )['subtotal'] or Decimal('0')
+
+    subtotal = subtotal.quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+    total = venta.total.quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+
+    if subtotal > 0:
+        descuento_porcentaje = ((subtotal - total) * 100 / subtotal).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+    else:
+        descuento_porcentaje = Decimal('0')
+
+    monto_descuento = (subtotal - total).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+
     html_string = render_to_string('administrador/boleta_pdf.html', {
         'venta': venta,
         'detalles': detalles,
         'nombre_cliente_manual': nombre_cliente,
         'rut_cliente_manual': rut_cliente,
         'direccion_cliente_manual': direccion_cliente,
+        'subtotal': subtotal,
+        'monto_descuento': monto_descuento,
+        'descuento_porcentaje': descuento_porcentaje,
     })
 
     html = HTML(string=html_string, base_url=request.build_absolute_uri())
@@ -1857,8 +1880,19 @@ def generar_factura_pdf(request, venta_id):
     detalles = venta.detalles.select_related('producto_unidad', 'producto_unidad__producto')
 
     subtotal = sum([d.subtotal() for d in detalles])
-    iva = (subtotal * Decimal('0.19')).quantize(Decimal('1.'))
-    total = subtotal + iva
+    subtotal = Decimal(subtotal).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+
+    total_venta = venta.total.quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+    descuento = (subtotal - total_venta).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+
+    if subtotal > 0:
+        descuento_porcentaje = ((descuento * 100) / subtotal).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+    else:
+        descuento_porcentaje = Decimal('0')
+
+    # Calcular IVA y total con IVA en base al total de venta
+    iva = (total_venta * Decimal('0.19')).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+    total_con_iva = total_venta + iva
 
     if venta.cliente is None:
         nombre_cliente = request.GET.get('nombre_cliente', 'Cliente no registrado')
@@ -1875,12 +1909,14 @@ def generar_factura_pdf(request, venta_id):
         'venta': venta,
         'detalles': detalles,
         'subtotal': subtotal,
+        'descuento': descuento,
+        'descuento_porcentaje': descuento_porcentaje,
         'iva': iva,
-        'total': total,
+        'total': total_con_iva,
         'nombre_cliente': nombre_cliente,
         'rut_cliente': rut_cliente,
         'direccion_cliente': direccion_cliente,
-        'giro_cliente' : giro_cliente,
+        'giro_cliente': giro_cliente,
         'emisor': settings.EMPRESA_EMISOR,
         'rut_emisor': settings.EMPRESA_RUT,
         'direccion_emisor': settings.EMPRESA_DIRECCION,

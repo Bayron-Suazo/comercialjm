@@ -54,6 +54,23 @@
     </div>
 </div>
 
+<div id="confirmModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>¿Deshacer Venta?</h3>
+    <p>Esta acción eliminará la venta y restaurará el stock de productos asociados.</p>
+    <div class="modal-actions">
+      <button type="button" id="confirmNo">Cancelar</button>
+      <button type="button" id="confirmYes">Confirmar</button>
+    </div>
+  </div>
+</div>
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
 {% if ventas %}
 <table class="tabla-usuarios tabla-productos">
   <thead>
@@ -246,6 +263,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnBoleta.addEventListener('click', () => enviarComprobante('boleta'));
   btnFactura.addEventListener('click', () => enviarComprobante('factura'));
+});
+document.addEventListener('DOMContentLoaded', () => {
+  const confirmModal = document.getElementById('confirmModal');
+  const confirmYes = document.getElementById('confirmYes');
+  const confirmNo = document.getElementById('confirmNo');
+
+  let deshacerUrl = '';
+
+  // Al hacer click en el botón deshacer
+  document.querySelectorAll('.btn-deshacer').forEach(btn => {
+    btn.addEventListener('click', () => {
+      deshacerUrl = btn.getAttribute('data-url');
+      confirmModal.classList.remove('hidden');
+      confirmModal.style.display = 'flex';
+    });
+  });
+
+  // Cancelar
+  confirmNo.addEventListener('click', () => {
+    confirmModal.classList.add('hidden');
+    confirmModal.style.display = 'none';
+    deshacerUrl = '';
+  });
+
+  // Confirmar acción
+  confirmYes.addEventListener('click', () => {
+    if (deshacerUrl) {
+      window.location.href = deshacerUrl;
+    }
+  });
+
+  // Cerrar modal al hacer click fuera
+  window.addEventListener('click', (e) => {
+    if (e.target === confirmModal) {
+      confirmModal.classList.add('hidden');
+      confirmModal.style.display = 'none';
+    }
+  });
 });
 </script>
 <script src="{% static 'administrador/js/busca_usuarios.js' %}"></script>
