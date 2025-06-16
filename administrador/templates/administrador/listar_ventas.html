@@ -232,6 +232,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const texto = mensajeClienteRegistrado.textContent;
       const match = texto.match(/a nombre de: (.+)$/);
       nombre = match ? match[1] : '';
+      
+      // Extrae los valores directamente del botón que abrió el modal
+      const botonActivo = [...document.querySelectorAll('.btn-comprobante')].find(btn => btn.dataset.ventaId === ventaId);
+      rut = botonActivo ? botonActivo.dataset.rut : '';
+      direccion = botonActivo ? botonActivo.dataset.direccion : '';
     } else {
       nombre = form.nombre_cliente.value.trim();
       rut = form.rut_cliente.value.trim();
