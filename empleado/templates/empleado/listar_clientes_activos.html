@@ -11,12 +11,12 @@
 
 {% block content %}
 <div class="acciones-derecha ancho-contenido">
-    <a href="{% url 'ranking_clientes' %}" class="boton-header">
+    <a href="{% url 'ranking_clientes_empleado' %}" class="boton-header">
         Ranking de Clientes
         <img src="{% static 'empleado/svg/user-profile.svg' %}">
     </a>
 
-    <a href="{% url 'crear_cliente' %}" class="boton-header">
+    <a href="{% url 'crear_cliente_empleado' %}" class="boton-header">
         Agregar Cliente
         <img src="{% static 'empleado/svg/plus.svg' %}">
     </a>
@@ -54,8 +54,8 @@
     </div>
 
     <div class="toggle-estado-usuarios">
-        <a href="{% url 'listar_clientes_activos' %}" class="estado-btn activo">Activos</a>
-        <a href="{% url 'listar_clientes_inactivos' %}" class="estado-btn">Bloqueados</a>
+        <a href="{% url 'listar_clientes_activos_empleado' %}" class="estado-btn activo">Activos</a>
+        <a href="{% url 'listar_clientes_inactivos_empleado' %}" class="estado-btn">Bloqueados</a>
     </div>
 </div>
 
@@ -93,7 +93,7 @@
             <td data-label="Correo" class="correo-cell" title="{{ cliente.correo }}">{{ cliente.correo }}</td>
             <td data-label="Teléfono">{{ cliente.telefono }}</td>
             <td data-label="Acciones" class="acciones">
-            <a href="{% url 'editar_clientes' cliente.id %}" title="Editar">
+            <a href="{% url 'editar_clientes_empleado' cliente.id %}" title="Editar">
                 <img src="{% static 'empleado/svg/lapiz.svg' %}" alt="Editar">
             </a>
             <button title="Bloquear" class="btn-bloquear" data-product-id="{{ cliente.id }}">
@@ -237,7 +237,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    window.location.href = "{% url 'listar_clientes_inactivos' %}";
+                    window.location.href = "{% url 'listar_clientes_inactivos_empleado' %}";
                 } else {
                     alert("Error al bloquear cliente(s): " + (data.error || 'Error desconocido'));
                 }

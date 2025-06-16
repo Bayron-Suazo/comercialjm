@@ -12,7 +12,7 @@
 {% block content %}
 
 <div class="acciones-derecha ancho-contenido">
-  <a class="boton-header" href="{% url 'registrar_venta' %}">
+  <a class="boton-header" href="{% url 'registrar_venta_empleado' %}">
     Registrar Venta
     <img src="{% static 'empleado/svg/plus.svg' %}">
   </a>
@@ -89,7 +89,7 @@
       <td data-label="Cliente">{{ venta.cliente }}</td>
       <td data-label="Encargado">{{ venta.usuario }}</td>
       <td data-label="Acciones" class="acciones">
-        <a href="{% url 'ver_venta' venta.id %}" title="Mostrar">
+        <a href="{% url 'ver_venta_empleado' venta.id %}" title="Mostrar">
           <img src="{% static 'empleado/svg/reporteria.svg' %}" alt="Mostrar" class="svg-compra">
         </a>
         <button class="btn-deshacer" data-url="{% url 'deshacer_venta' venta.id %}" title="Deshacer venta">

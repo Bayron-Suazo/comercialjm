@@ -11,11 +11,11 @@
 {% block content %}
 
 <div class="acciones-derecha ancho-contenido">
-    <a class="boton-header" href="{% url 'listar_clientes_activos' %}">
+    <a class="boton-header" href="{% url 'listar_clientes_activos_empleado' %}">
         Listado Clientes
         <img src="{% static 'empleado/svg/user-profile.svg' %}">
     </a>
-    <a href="{% url 'crear_cliente' %}" class="boton-header">
+    <a href="{% url 'crear_cliente_empleado' %}" class="boton-header">
         Agregar Cliente
         <img src="{% static 'empleado/svg/plus.svg' %}">
     </a>
@@ -64,7 +64,7 @@
                 <td>{{ cliente.total_ventas|floatformat:0 }}$</td>
                 <td>{{ cliente.cantidad_ventas }}</td>
                 <td class="acciones">
-                    <a href="{% url 'detalle_compras_cliente' cliente.id %}" title="Ver compras">
+                    <a href="{% url 'detalle_compras_cliente_empleado' cliente.id %}" title="Ver compras">
                         <img src="{% static 'empleado/svg/reporteria.svg' %}" style="filter: brightness(0) saturate(100%);" />
                     </a>        
                 </td>

@@ -12,7 +12,7 @@
 {% block content %}
 
 <div class="acciones-derecha ancho-contenido">
-    <a href="{% url 'registrar_compra' %}" class="boton-header">
+    <a href="{% url 'registrar_compra_empleado' %}" class="boton-header">
         Registrar Compra
         <img src="{% static 'empleado/svg/plus.svg' %}">
     </a>
@@ -51,8 +51,8 @@
     </div>
 
     <div class="toggle-estado-usuarios">
-        <a href="{% url 'lista_compras_activas' %}" class="estado-btn activo">Pendientes</a>
-        <a href="{% url 'lista_compras_bloqueadas' %}" class="estado-btn">Listas</a>
+        <a href="{% url 'lista_compras_activas_empleado' %}" class="estado-btn activo">Pendientes</a>
+        <a href="{% url 'lista_compras_bloqueadas_empleado' %}" class="estado-btn">Listas</a>
     </div>
 </div>
 
@@ -115,7 +115,7 @@
                 <td data-label="Fecha Compra">{{ compra.fecha|date:"d/m/Y"}}</td>
                 <td data-label="Estado">{{ compra.estado}}</td>
                 <td data-label="Acciones">           
-                    <a href="{% url 'detalle_compra' compra.id %}" title="Mostrar">
+                    <a href="{% url 'detalle_compra_empleado' compra.id %}" title="Mostrar">
                         <img src="{% static 'empleado/svg/reporteria.svg' %}" alt="Mostrar" class="svg-compra">
                     </a>
                     <button title="Bloquear" class="btn-bloquear" data-compra-id="{{ compra.id }}">

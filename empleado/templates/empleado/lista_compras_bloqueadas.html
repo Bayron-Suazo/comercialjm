@@ -11,7 +11,7 @@
 {% block content %}
 
 <div class="acciones-derecha ancho-contenido">
-    <a href="{% url 'registrar_compra' %}" class="boton-header">
+    <a href="{% url 'registrar_compra_empleado' %}" class="boton-header">
         Registrar Compra
         <img src="{% static 'empleado/svg/plus.svg' %}">
     </a>
@@ -43,8 +43,8 @@
     </div>
 
     <div class="toggle-estado-usuarios">
-        <a href="{% url 'lista_compras_activas' %}" class="estado-btn">Pendientes</a>
-        <a href="{% url 'lista_compras_bloqueadas' %}" class="estado-btn activo">Listas</a>
+        <a href="{% url 'lista_compras_activas_empleado' %}" class="estado-btn">Pendientes</a>
+        <a href="{% url 'lista_compras_bloqueadas_empleado' %}" class="estado-btn activo">Listas</a>
     </div>
 </div>
 
@@ -90,7 +90,7 @@
                         <img src="{% static 'empleado/svg/circle-xmark-solid.svg' %}" alt="Bloquear">
                     </button>
 
-                    <a href="{% url 'detalle_compra' compra.id %}" title="Mostrar">
+                    <a href="{% url 'detalle_compra_empleado' compra.id %}" title="Mostrar">
                         <img src="{% static 'empleado/svg/reporteria.svg' %}" alt="Mostrar" class="svg-compra">
                     </a>
 

@@ -272,7 +272,7 @@ ComercialJM
                 fail_silently=False,
             )
 
-            return redirect('lista_compras_activas')
+            return redirect('lista_compras_activas_empleado')
 
     else:
         compra_form = CompraForm(initial={'proveedor': proveedor_id})
@@ -466,7 +466,7 @@ def crear_cliente(request):
             cliente = form.save(commit=False)
             cliente.activo = True
             cliente.save()
-            return redirect('listar_clientes_activos')
+            return redirect('listar_clientes_activos_empleado')
         else:
             print("Errores del formulario:", form.errors) 
     else:
@@ -526,7 +526,7 @@ def editar_cliente(request, cliente_id):
         form = ClienteForm(request.POST, instance=cliente)
         if form.is_valid():
             form.save()
-            return redirect('listar_clientes_activos')
+            return redirect('listar_clientes_activos_empleado')
     else:
         form = ClienteForm(instance=cliente)
     return render(request, 'empleado/editar_clientes.html', {'form': form})
@@ -689,7 +689,7 @@ def registrar_venta(request):
                     if cliente:
                         cliente.save()  # Guardar cambios del contador
 
-                return redirect('listar_ventas')
+                return redirect('listar_ventas_empleado')
 
             else:
                 return render(request, 'empleado/registrar_venta.html', {
@@ -857,11 +857,11 @@ def deshacer_venta(request, venta_id):
 
     if errores:
         messages.error(request, "Algunas cantidades no pudieron ser restauradas:\n" + "\n".join(errores))
-        return redirect('listar_ventas')
+        return redirect('listar_ventas_empleado')
 
     venta.delete()
     messages.success(request, "La venta fue deshecha correctamente y el stock fue restaurado.")
-    return redirect('listar_ventas')
+    return redirect('listar_ventas_empleado')
 
 
 @login_required
