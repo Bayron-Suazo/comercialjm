@@ -16,7 +16,6 @@
         <p><strong>Cliente:</strong> {{ venta.cliente }}</p>
         <p><strong>Encargado:</strong> {{ venta.usuario }}</p>
         <p><strong>Fecha de Venta:</strong> {{ venta.fecha|date:"d/m/Y" }}</p>
-        <p><strong>Total:</strong> ${{ venta.total|floatformat:0 }}</p>
 
         {% if detalles %}
             <h3 style="margin-top: 30px;">Productos Vendidos</h3>
@@ -43,6 +42,11 @@
                 </tbody>
             </table>
         {% endif %}
+        <div class="resumen-venta" style="margin-top: 20px;">
+            <p><strong>Subtotal:</strong> ${{ subtotal|floatformat:0 }}</p>
+            <p><strong>Descuento {{ descuento_porcentaje }}%:</strong> ${{ monto_descuento|floatformat:0 }}</p>
+            <p><strong>Total:</strong> ${{ venta.total|floatformat:0 }}</p>
+        </div>
     </div>
 
     <div class="boton-header">

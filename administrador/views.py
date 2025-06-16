@@ -52,6 +52,8 @@ from django.forms import modelformset_factory
 from decimal import Decimal
 from django.db.models.functions import Coalesce
 from django.template.loader import render_to_string
+from django.db.models import F, Sum, DecimalField, ExpressionWrapper
+from decimal import Decimal, ROUND_HALF_UP
 
 
 # ------------------------------------ GESTIÓN DE USUARIOS ------------------------------------
@@ -1935,9 +1937,31 @@ def ver_venta(request, venta_id):
     venta = get_object_or_404(Venta, id=venta_id)
     detalles = venta.detalles.select_related('producto_unidad__producto')
 
+    subtotal = detalles.aggregate(
+        subtotal=Sum(
+            ExpressionWrapper(
+                F('cantidad') * F('producto_unidad__precio'),
+                output_field=DecimalField()
+            )
+        )
+    )['subtotal'] or Decimal('0')
+
+    subtotal = subtotal.quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+    total = venta.total.quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+
+    if subtotal > 0:
+        descuento_porcentaje = ((subtotal - total) * 100 / subtotal).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+    else:
+        descuento_porcentaje = Decimal('0')
+
+    monto_descuento = (subtotal - total).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+
     context = {
         'venta': venta,
         'detalles': detalles,
+        'subtotal': subtotal,
+        'monto_descuento': monto_descuento,
+        'descuento_porcentaje': descuento_porcentaje,
     }
     return render(request, 'administrador/detalle_venta.html', context)
 
