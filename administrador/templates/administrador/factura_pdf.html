@@ -65,7 +65,7 @@
       <tr>
         <td>{{ detalle.producto_unidad.producto.nombre }}</td>
         <td>{{ detalle.producto_unidad.get_unidad_medida_display }}</td>
-        <td>${{ detalle.producto_unidad.precio }}</td>
+        <td>${{ detalle.producto_unidad.precio|floatformat:0 }}</td>
         <td>{{ detalle.cantidad }}</td>
         <td>${{ detalle.subtotal|floatformat:0 }}</td>
       </tr>

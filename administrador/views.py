@@ -1829,12 +1829,12 @@ def generar_factura_pdf(request, venta_id):
         nombre_cliente = request.GET.get('nombre_cliente', 'Cliente no registrado')
         rut_cliente = request.GET.get('rut_cliente', 'Sin RUT')
         direccion_cliente = request.GET.get('direccion_cliente', 'Sin dirección')
-        giro_cliente = 'Particular'
+        giro_cliente = request.GET.get('giro_cliente', 'Particular')
     else:
         nombre_cliente = venta.cliente.nombre
         rut_cliente = venta.cliente.rut
         direccion_cliente = venta.cliente.direccion
-        giro_cliente = venta.cliente.giro if venta.cliente.giro else 'No informado'
+        giro_cliente = request.GET.get('giro_cliente') or venta.cliente.giro or 'No informado'
 
     html_string = render_to_string('administrador/factura_pdf.html', {
         'venta': venta,
@@ -1845,6 +1845,7 @@ def generar_factura_pdf(request, venta_id):
         'nombre_cliente': nombre_cliente,
         'rut_cliente': rut_cliente,
         'direccion_cliente': direccion_cliente,
+        'giro_cliente' : giro_cliente,
         'emisor': settings.EMPRESA_EMISOR,
         'rut_emisor': settings.EMPRESA_RUT,
         'direccion_emisor': settings.EMPRESA_DIRECCION,

@@ -46,7 +46,7 @@
     <p><strong>RUT:</strong> {{ venta.cliente.rut }}</p>
     <p><strong>Dirección:</strong> {{ venta.cliente.direccion }}</p>
     {% else %}
-    <p><strong>Cliente:</strong> {{ nombre_cliente_manual|default:"Sin cliente" }}</p>
+    <p><strong>Cliente:</strong> {{ nombre_cliente_manual|default:"-" }}</p>
     <p><strong>RUT:</strong> {{ rut_cliente_manual|default:"-" }}</p>
     <p><strong>Dirección:</strong> {{ direccion_cliente_manual|default:"-" }}</p>
     {% endif %}
@@ -68,7 +68,7 @@
         <tr>
           <td>{{ detalle.producto_unidad.producto.nombre }}</td>
           <td>{{ detalle.producto_unidad.get_unidad_medida_display }}</td>
-          <td>${{ detalle.producto_unidad.precio }}</td>
+          <td>${{ detalle.producto_unidad.precio|floatformat:0 }}</td>
           <td>{{ detalle.cantidad }}</td>
           <td>${{ detalle.subtotal|floatformat:0 }}</td>
         </tr>

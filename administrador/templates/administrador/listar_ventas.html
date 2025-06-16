@@ -7,34 +7,6 @@
   <link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
   <link rel="stylesheet" href="{% static 'administrador/css/modal_factura.css' %}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <style>
-    /* Estilos básicos para el modal */
-    #modalComprobante {
-      display: none;
-      position: fixed; 
-      top: 0; left: 0; 
-      width: 100vw; height: 100vh; 
-      background: rgba(0,0,0,0.5); 
-      z-index: 1000;
-    }
-    #modalComprobante .modal-content {
-      background: white;
-      margin: 100px auto;
-      padding: 20px;
-      width: 300px;
-      position: relative;
-      border-radius: 8px;
-    }
-    #modalCerrar {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      font-size: 24px;
-      cursor: pointer;
-      border: none;
-      background: none;
-    }
-  </style>
 {% endblock %}
 
 {% block content %}
@@ -125,7 +97,7 @@
   </tbody>
 </table>
 
-<div id="modalComprobante">
+<div id="modalComprobante" style="display: none;">
   <div class="modal-content">
     <button id="modalCerrar" title="Cerrar">&times;</button>
     <h3>Ingresar datos para factura</h3>
@@ -145,6 +117,9 @@
         <label for="direccion_cliente">Dirección:</label>
         <input type="text" id="direccion_cliente" name="direccion_cliente" required>
       </div>
+
+      <label for="giro_cliente">Giro del Cliente:</label>
+      <input type="text" name="giro_cliente" id="giro_cliente">
 
       <div class="modal-actions" style="margin-top: 15px;">
         <button type="button" id="btnGenerarBoleta">Generar Boleta</button>
@@ -176,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const mensajeClienteRegistrado = document.getElementById('mensajeClienteRegistrado');
 
   function mostrarModal() {
-    modal.style.display = 'block';
+    modal.style.display = 'flex';
   }
 
   function ocultarModal() {
@@ -230,27 +205,32 @@ document.addEventListener('DOMContentLoaded', () => {
     let nombre = '';
     let rut = '';
     let direccion = '';
+    let giro = '';
 
     if (camposCliente.style.display === 'none') {
       const texto = mensajeClienteRegistrado.textContent;
       const match = texto.match(/a nombre de: (.+)$/);
       nombre = match ? match[1] : '';
+      giro = form.giro_cliente.value.trim();  // también se puede ingresar manualmente
     } else {
       nombre = form.nombre_cliente.value.trim();
       rut = form.rut_cliente.value.trim();
       direccion = form.direccion_cliente.value.trim();
+      giro = form.giro_cliente.value.trim();
 
-      if (!nombre || !rut || !direccion) {
-        alert('Complete todos los campos');
-        return;
+      if (tipo === 'factura') {
+        if (!nombre || !rut || !direccion) {
+          alert('Complete todos los campos para generar la factura');
+          return;
+        }
       }
     }
 
     let url = '';
     if (tipo === 'boleta') {
-      url = `/administrador/venta/${ventaId}/boleta/?nombre_cliente=${encodeURIComponent(nombre)}&rut_cliente=${encodeURIComponent(rut)}&direccion_cliente=${encodeURIComponent(direccion)}`;
+      url = `/administrador/venta/${ventaId}/boleta/?nombre_cliente=${encodeURIComponent(nombre)}&rut_cliente=${encodeURIComponent(rut)}&direccion_cliente=${encodeURIComponent(direccion)}&giro_cliente=${encodeURIComponent(giro)}`;
     } else {
-      url = `/administrador/ventas/${ventaId}/factura/?nombre_cliente=${encodeURIComponent(nombre)}&rut_cliente=${encodeURIComponent(rut)}&direccion_cliente=${encodeURIComponent(direccion)}`;
+      url = `/administrador/ventas/${ventaId}/factura/?nombre_cliente=${encodeURIComponent(nombre)}&rut_cliente=${encodeURIComponent(rut)}&direccion_cliente=${encodeURIComponent(direccion)}&giro_cliente=${encodeURIComponent(giro)}`;
     }
 
     window.open(url, '_blank');
