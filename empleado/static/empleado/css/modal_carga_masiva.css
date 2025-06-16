@@ -1,0 +1,56 @@
+.modal.hidden {
+  display: none;
+}
+
+.modal {
+  position: fixed;
+  z-index: 9999;
+  left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex; justify-content: center; align-items: center;
+}
+
+.modal-content.modal-carga {
+  background: #fff;
+  padding: 30px;
+  border-radius: 10px;
+  width: 500px;
+  text-align: center;
+}
+
+.dropzone {
+  border: 2px dashed #888;
+  padding: 40px 20px;
+  border-radius: 10px;
+  margin: 20px 0;
+  cursor: pointer;
+  background: #f9f9f9;
+}
+
+.dropzone.dragover {
+  background: #e0f7fa;
+  border-color: #00796b;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.modal-actions .btn-descargar {
+  padding: 10px 20px;
+  border: none;
+  background: #4CAF50;
+  color: #fff;
+  border-radius: 5px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.modal-actions button {
+  background: #b7291f;
+  color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+}

@@ -1,0 +1,567 @@
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f9f8e8;
+    margin: 0;
+    padding: 0;
+    color: #2e2e2e;
+}
+
+.titulo {
+    text-align: center;
+    margin: 50px 0 25px;
+    font-size: 48px;
+    font-weight: normal;
+}
+
+.busqueda-agregar {
+    width: 90%;
+    margin: 0 auto 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.input-busqueda {
+    width: 85%;
+    padding: 16px 20px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    font-size: 20px;
+    background-color: #fff;
+    background-image: url('/static/administrador/svg/lupa.svg');
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 28px;
+    padding-right: 40px;
+}
+
+.boton-agregar {
+    background-color: transparent;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 75px;
+}
+
+.boton-agregar i{
+    color: #4CAF50;
+}
+
+.tabla-usuarios td:first-child,
+.tabla-usuarios th:first-child {
+    text-align: right;
+    padding-right: 25px;
+}
+
+.tabla-usuarios thead th:first-child {
+    border-top-left-radius: 25px;
+}
+
+.tabla-usuarios thead th:last-child {
+    border-top-right-radius: 25px;
+}
+
+.tabla-usuarios {
+    width: 90%;
+    margin: 0 auto;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+}
+
+.tabla-usuarios thead {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.tabla-usuarios thead th {
+    padding: 20px 12px;
+    text-align: center;
+    border-bottom: none;
+    font-weight: normal;
+    font-size: 24px;
+}
+
+.tabla-usuarios tbody tr {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    font-size: 20px;
+}
+
+.tabla-usuarios tbody td {
+    padding: 16px 12px;
+    border-bottom: none;
+    text-align: center;
+}
+
+.tabla-usuarios td:last-child {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+}
+
+.tabla-usuarios button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.tabla-usuarios img {
+    width: 40px;
+    height: 40px;
+}
+
+.custom-pagination {
+    display: flex;
+    justify-content: center;
+    margin: 30px 0;
+    gap: 10px;
+}
+
+.page-btn {
+    display: inline-block;
+    padding: 8px 14px;
+    font-size: 20px;
+    color: black;
+    background-color: #FFFFFF;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+.page-btn.current {
+    background-color: #FFFFFF;
+    color: black;
+    font-weight: normal;
+    pointer-events: none;
+}
+
+.page-btn.disabled {
+    background-color: #FFFFFF;
+    color: black;
+    pointer-events: none;
+}
+
+.ancho-contenido {
+    width: 90%;
+    margin: 0 auto;
+}
+
+.acciones-derecha {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.boton-header {
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    padding: 15px 25px;
+    border-radius: 25px;
+    font-size: 20px;
+    font-weight: 500;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.boton-header img {
+    width: 28px;
+    height: 28px;
+}
+
+.boton-header:hover {
+    background-color: #45a049;
+}
+
+.ancho-contenido {
+    width: 90%;
+    margin: 0 auto;
+}
+
+.boton-header img {
+    filter: brightness(0) invert(1);
+}
+
+.barra-acciones-usuarios {
+    width: 90%;
+    margin: 0 auto 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.barra-acciones-usuarios {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    position: relative;
+}
+
+.boton-activar-seleccionados {
+    flex: 1;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.boton-activar-seleccionados button {
+    background-color: #A5D6A7;
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 25px;
+    font-size: 18px;
+    cursor: not-allowed;
+    transition: background-color 0.3s ease, cursor 0.3s ease;
+}
+
+.svg-compra {
+    filter: brightness(0) saturate(100%);
+}
+
+.boton-activar-seleccionados button.activo {
+    background-color: #4CAF50;
+    cursor: pointer;
+}
+
+.boton-bloquear-seleccionados {
+    flex: 1;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.boton-bloquear-seleccionados button {
+    background-color: #A5D6A7;
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 25px;
+    font-size: 18px;
+    cursor: not-allowed;
+    transition: background-color 0.3s ease, cursor 0.3s ease;
+}
+
+.boton-bloquear-seleccionados button.activo {
+    background-color: #4CAF50;
+    cursor: pointer;
+}
+
+.toggle-estado-usuarios {
+    display: flex;
+    width: 240px;
+    border-radius: 25px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.estado-btn {
+    flex: 1;
+    padding: 15px 0;
+    font-size: 20px;
+    border: none;
+    cursor: pointer;
+    background-color: #fff;
+    color: #4CAF50;
+    font-weight: normal;
+    transition: background-color 0.3s ease;
+    text-decoration: none;
+    text-align: center;
+}
+
+.estado-btn.activo {
+    background-color: #4CAF50;
+    color: #fff;
+    text-align: center;
+
+}
+
+.boton-activar-seleccionados button {
+    background-color: #A5D6A7;
+    color: #fff;
+    border: none;
+    padding: 15px 25px;
+    border-radius: 25px;
+    font-size: 20px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background-color 0.3s ease;
+    cursor: not-allowed;
+}
+
+.boton-activar-seleccionados button.activo {
+    background-color: #4CAF50;
+    cursor: pointer;
+}
+
+.boton-bloquear-seleccionados button {
+    background-color: #A5D6A7;
+    color: #fff;
+    border: none;
+    padding: 15px 25px;
+    border-radius: 25px;
+    font-size: 20px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background-color 0.3s ease;
+    cursor: not-allowed;
+}
+
+.boton-bloquear-seleccionados button.activo {
+    background-color: #4CAF50;
+    cursor: pointer;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Estilos del modal cuando está visible */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Contenido del modal */
+.modal-content {
+  background-color: #fff;
+  padding: 30px 25px;
+  border-radius: 12px;
+  width: 400px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* Título del modal */
+.modal-content h3 {
+  font-size: 25px;
+  margin-bottom: 40px;
+  color: #2e2e2e;
+  font-weight: normal;
+}
+
+/* Mensaje del modal */
+.modal-content p {
+  font-size: 20px;
+  color: #2e2e2e;
+  margin: 10px 0 40px;
+}
+
+/* Contenedor de los botones */
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 50px;
+}
+
+/* Botones */
+.modal-actions button {
+  min-width: 110px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 5px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+/* Botón Confirmar */
+.modal-actions button#confirmYes {
+  background-color: #28a745;
+  color: white;
+}
+
+.modal-actions button#confirmYes:hover {
+  background-color: #218838;
+}
+
+/* Botón Cancelar */
+.modal-actions button#confirmNo {
+  background-color: #dc3545;
+  color: white;
+}
+
+.modal-actions button#confirmNo:hover {
+  background-color: #c82333;
+}
+
+/* Botón Confirmar */
+.modal-actions button#confirmAprobarBtn {
+  background-color: #28a745;
+  color: white;
+}
+
+.modal-actions button#confirmAprobarBtn:hover {
+  background-color: #218838;
+}
+
+/* Botón Cancelar */
+.modal-actions button#cancelAprobarBtn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.modal-actions button#cancelAprobarBtn:hover {
+  background-color: #c82333;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+
+.dropdown-content {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #ffffff;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    border-radius: 8px;
+    padding: 8px 0;
+    display: none;
+    min-width: 100%;
+}
+
+
+.boton-filtrar {
+    display: inline-block;
+    padding: 12px 20px;
+    border-radius: 8px;
+    background-color: #4CAF50;
+    color: white;
+    font-size: 16px;
+    text-align: center;
+    cursor: pointer;
+    width: 100%;
+}
+
+.dropdown-content li {
+    list-style: none;
+    padding: 0;
+}
+
+.dropdown-content a {
+    display: block;
+    padding: 10px 16px;
+    text-decoration: none;
+    color: black;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.dropdown-content a:hover {
+    background-color: #f0f0f0;
+    color: black;
+}
+
+.filtro-activo {
+    background-color: #e0f3e0;
+    font-weight: bold;
+    color: #2d8a4f;
+}
+
+.oculto {
+  visibility: hidden;
+}
+
+@media screen and (max-width: 1024px) {
+    .busqueda-agregar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+
+    .input-busqueda {
+        width: 100%;
+        font-size: 18px;
+    }
+
+    .dropdown {
+        align-self: flex-end;
+    }
+
+    .tabla-usuarios thead {
+        display: none;
+    }
+
+    .tabla-usuarios, .tabla-usuarios tbody, .tabla-usuarios tr, .tabla-usuarios td {
+        display: block;
+        width: 100%;
+    }
+
+    .tabla-usuarios tbody tr {
+        margin-bottom: 15px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        padding: 10px;
+        border-radius: 10px;
+    }
+
+    .tabla-usuarios tbody td {
+        text-align: left;
+        padding: 8px 12px;
+        font-size: 16px;
+        position: relative;
+    }
+
+    .tabla-usuarios tbody td::before {
+        content: attr(data-label);
+        font-weight: bold;
+        display: block;
+        margin-bottom: 5px;
+        color: #4CAF50;
+    }
+
+    .tabla-usuarios td:last-child {
+        justify-content: flex-start;
+    }
+
+    .acciones-derecha,
+    .barra-acciones-usuarios {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+
+    .boton-header,
+    .boton-bloquear-seleccionados button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .toggle-estado-usuarios {
+        position: static;
+        transform: none;
+        width: 100%;
+    }
+
+    .estado-btn {
+        padding: 12px 0;
+        font-size: 18px;
+    }
+}

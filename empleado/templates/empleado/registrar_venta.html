@@ -1,0 +1,284 @@
+{% extends 'core/base_empleado.html' %}
+{% load static %}
+
+{% block title %}Registrar Venta{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'empleado/css/registrar_venta.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    /* Ocultar el checkbox DELETE del formset */
+    input[type=checkbox][name$="-DELETE"] {
+      display: none;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+<h2 class="titulo">Registrar Venta</h2>
+
+<div class="ancho-contenido">
+  <form method="post" class="formulario-proveedor">
+    {% csrf_token %}
+    {% if messages %}
+      <ul class="alertas">
+        {% for message in messages %}
+          <li class="alert {{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <div class="campo-formulario-horizontal">
+      <div class="contenedor-proveedor">
+        {{ venta_form.cliente.label_tag }}
+        {{ venta_form.cliente }}
+        {{ venta_form.cliente.errors }}
+      </div>
+      <div class="contenedor-proveedor">
+        {{ venta_form.metodo_pago.label_tag }}
+        {{ venta_form.metodo_pago }}
+        {{ venta_form.metodo_pago.errors }}
+      </div>
+    </div>
+
+    {{ formset.management_form }}
+
+    <table class="tabla-usuarios">
+      <thead>
+        <tr class="cabecera-completa">
+          <th>Producto</th>
+          <th>Cantidad</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="formset-body">
+        {% for form in formset %}
+          {% with form.DELETE.value as delete_value %}
+          <tr class="form-detalle" {% if delete_value %} style="display:none;" {% endif %}>
+            <td>
+              {{ form.producto_unidad }}
+              {% for error in form.producto_unidad.errors %}
+                <div class="errorlist">{{ error }}</div>
+              {% endfor %}
+            </td>
+            <td>
+              {{ form.cantidad }}
+              {% for error in form.cantidad.errors %}
+                <div class="errorlist">{{ error }}</div>
+              {% endfor %}
+            </td>
+            <td>
+              <button type="button" class="boton-eliminar" title="Eliminar producto">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+              {{ form.DELETE }}
+            </td>
+          </tr>
+          {% endwith %}
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="contenedor-flex">
+      <div class="subtotal-descuento">
+        Subtotal: $<span id="subtotal-venta">0</span><br>
+        Descuento: <span id="descuento-aplicado">0%</span><br>
+      </div>
+      
+      <button type="button" id="add-form" class="boton-agregar" title="Agregar producto">
+        <i class="fas fa-plus-circle"></i>
+      </button>
+    </div>
+
+    <div class="total-venta">
+      Total: $<span id="total-venta">0</span>
+    </div>
+
+    <div class="acciones-fila">
+      <button type="submit" class="boton-header">Finalizar Venta</button>
+    </div>
+  </form>
+</div>
+
+<div class="boton-volver-container">
+  <a href="{% url 'listar_ventas' %}" class="boton-volver">Volver</a>
+</div>
+
+<script>
+const clientesInfo = {{ clientes_info_json|safe }};
+const stockMap = {{ stock_map_json|safe }};
+const priceMap = {{ price_map_json|safe }};
+
+function inicializarFormularioVenta() {
+  const prefix = '{{ formset.prefix }}';
+  const formsetBody = document.getElementById("formset-body");
+  const totalFormsInput = document.querySelector(`input[name="${prefix}-TOTAL_FORMS"]`);
+  
+  const subtotalSpan = document.getElementById('subtotal-venta');
+  const descuentoSpan = document.getElementById('descuento-aplicado');
+  const totalVentaSpan = document.getElementById('total-venta');
+  const addButton = document.getElementById('add-form');
+  const clienteSelect = document.getElementById("id_cliente");
+
+  function recalcularTotal() {
+    let subtotal = 0;
+    formsetBody.querySelectorAll('.form-detalle').forEach(row => {
+      const deleted = row.querySelector(`input[name$="-DELETE"]`);
+      if (deleted?.checked) return;
+
+      const select = row.querySelector(`select[name$="producto_unidad"]`);
+      const cantidad = parseFloat(row.querySelector(`input[name$="cantidad"]`)?.value || 0);
+      const id = select?.value;
+
+      if (id && priceMap[id]) {
+        subtotal += priceMap[id] * cantidad;
+      }
+    });
+
+    subtotalSpan.textContent = Math.round(subtotal);
+
+    let descuento = 0;
+    const clienteId = clienteSelect.value;
+    if (clienteId && clientesInfo[clienteId]) {
+      const info = clientesInfo[clienteId];
+      const categoria = info.categoria;
+      const contador = info.contador_cupon;
+
+      if (categoria === "frecuente" && contador >= 50) {
+        descuento = 10;
+      } else if (categoria === "mayorista" && contador >= 30) {
+        descuento = 15;
+      }
+    }
+
+    descuentoSpan.textContent = descuento + "%";
+
+    const totalFinal = Math.round(subtotal - (subtotal * (descuento / 100)));
+    totalVentaSpan.textContent = totalFinal;
+  }
+
+  function actualizarOpcionesProductos() {
+    const selects = [...formsetBody.querySelectorAll(`select[name$="producto_unidad"]`)].filter(
+      s => s.closest('.form-detalle')?.style.display !== 'none'
+    );
+
+    const seleccionados = selects.map(s => s.value).filter(v => v);
+
+    selects.forEach(select => {
+      const valorActual = select.value;
+
+      Array.from(select.options).forEach(option => {
+        if (option.value === "" || option.value === valorActual) {
+          option.hidden = false;
+        } else {
+          option.hidden = seleccionados.includes(option.value);
+        }
+      });
+    });
+  }
+
+  function actualizarEventosFila(row) {
+    const select = row.querySelector(`select[name$="producto_unidad"]`);
+    const input = row.querySelector(`input[name$="cantidad"]`);
+    const deleteBtn = row.querySelector(".boton-eliminar");
+
+    if (select) {
+      select.addEventListener('change', () => {
+        recalcularTotal();
+        actualizarOpcionesProductos();
+      });
+
+      Array.from(select.options || []).forEach(opt => {
+        if (stockMap[opt.value] === 0) opt.remove();
+      });
+    }
+
+    if (input) {
+      input.addEventListener('input', recalcularTotal);
+    }
+
+    if (deleteBtn) {
+      deleteBtn.addEventListener("click", () => {
+        const filasVisibles = [...formsetBody.querySelectorAll('.form-detalle')].filter(
+          r => r.style.display !== 'none'
+        );
+
+        if (filasVisibles.length <= 1) {
+          alert("Debe haber al menos un producto en la venta.");
+          return;
+        }
+
+        const deleteInput = row.querySelector(`input[name$="-DELETE"]`);
+        if (deleteInput) {
+          deleteInput.checked = true;
+          row.style.display = "none";
+        }
+        recalcularTotal();
+        actualizarOpcionesProductos();
+      });
+    }
+  }
+
+  // Escuchar cambio en cliente para recalcular descuento
+  if (clienteSelect) {
+    clienteSelect.addEventListener('change', () => {
+      recalcularTotal();
+    });
+  }
+
+  // Inicializar eventos para filas existentes
+  formsetBody.querySelectorAll('.form-detalle').forEach(actualizarEventosFila);
+
+  // Agregar nueva fila con botón
+  if (addButton) {
+    addButton.addEventListener('click', () => {
+      let count = parseInt(totalFormsInput.value, 10);
+      const filasVisibles = [...formsetBody.querySelectorAll('.form-detalle')].filter(
+        r => r.style.display !== 'none'
+      );
+      const lastRow = filasVisibles.at(-1) || formsetBody.querySelector('.form-detalle:last-child');
+
+      const newRow = lastRow.cloneNode(true);
+
+      newRow.querySelectorAll('input, select').forEach(el => {
+        const newName = el.name.replace(/-\d+-/, `-${count}-`);
+        const newId = el.id.replace(/-\d+-/, `-${count}-`);
+        el.name = newName;
+        el.id = newId;
+
+        if (el.type === 'checkbox') {
+          el.checked = false;
+        } else {
+          el.value = '';
+        }
+      });
+
+      const deleteCell = newRow.querySelector('td:last-child');
+      deleteCell.innerHTML = `
+        <button type="button" class="boton-eliminar" title="Eliminar producto">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+        <input type="checkbox" name="${prefix}-${count}-DELETE" id="id_${prefix}-${count}-DELETE" style="display: none;">
+      `;
+
+      newRow.style.display = '';
+      formsetBody.appendChild(newRow);
+      totalFormsInput.value = count + 1;
+
+      actualizarEventosFila(newRow);
+      recalcularTotal();
+      actualizarOpcionesProductos();
+    });
+  }
+
+  // Calcular total inicial
+  recalcularTotal();
+  actualizarOpcionesProductos();
+}
+
+// Ejecutar al cargar el DOM
+document.addEventListener('DOMContentLoaded', inicializarFormularioVenta);
+</script>
+
+{% endblock %}

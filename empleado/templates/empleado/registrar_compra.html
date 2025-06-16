@@ -1,0 +1,216 @@
+{% extends 'core/base_empleado.html' %}
+{% load static %}
+
+{% block title %}Registrar Compra{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'empleado/css/registrar_compra.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<h2 class="titulo">Registrar Compra</h2>
+
+<div class="ancho-contenido">
+  <form method="get" class="formulario-proveedor">
+    {% if compra_form.non_field_errors %}
+      <ul class="errorlist">
+        {% for error in compra_form.non_field_errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <div class="campo-formulario-horizontal">
+      <div class="contenedor-proveedor">
+        {{ compra_form.proveedor.label_tag }}
+        {{ compra_form.proveedor }}
+        {{ compra_form.proveedor.errors }}
+      </div>
+      <button type="submit" class="boton-header boton-cargar">Cargar Productos</button>
+    </div>
+  </form>
+
+  {% if detalle_formset.non_form_errors %}
+    <ul class="errorlist">
+      {% for error in detalle_formset.non_form_errors %}
+        <li>{{ error }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  <form method="post" id="form-detalles-compra">
+    {% csrf_token %}
+    {{ detalle_formset.management_form }}
+    <input type="hidden" name="proveedor" value="{{ compra_form.proveedor.value }}">
+
+    <table class="tabla-usuarios">
+      <thead>
+        <tr class="cabecera-completa">
+          <th>Producto</th>
+          <th>Cantidad</th>
+          <th>Observaciones</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="formset-body">
+      {% for form in detalle_formset %}
+      <tr class="form-detalle">
+        <td>
+          {{ form.producto_unidad }}
+          {% for error in form.producto_unidad.errors %}
+            <div class="errorlist">{{ error }}</div>
+          {% endfor %}
+        </td>
+        <td>
+          {{ form.cantidad }}
+          {% for error in form.cantidad.errors %}
+            <div class="errorlist">{{ error }}</div>
+          {% endfor %}
+        </td>
+        <td>
+          {{ form.observaciones }}
+          {% for error in form.observaciones.errors %}
+            <div class="errorlist">{{ error }}</div>
+          {% endfor %}
+        </td>
+        <td>
+          <button type="button" class="boton-eliminar" title="Eliminar producto">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    </table>
+
+    <div class="acciones-fila">
+      <button type="submit" name="submit" class="boton-header">Registrar Compra</button>
+      <button type="button" id="add-form" class="boton-agregar" title="Agregar producto">
+        <i class="fas fa-plus-circle"></i>
+      </button>
+    </div>
+  </form>
+</div>
+<div class="boton-volver-container">
+  <a href="{% url 'lista_compras_activas' %}" class="boton-volver">
+    Volver
+  </a>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const addButton = document.getElementById("add-form");
+    const formsetBody = document.getElementById("formset-body");
+    const totalFormsInput = document.querySelector('input[name$="TOTAL_FORMS"]');
+
+    let emptyFormTemplate = null;
+    const firstForm = document.querySelector(".form-detalle");
+    if (firstForm) {
+        emptyFormTemplate = firstForm.cloneNode(true);
+        emptyFormTemplate.querySelectorAll("input, select, textarea").forEach(el => {
+            if (el.tagName === "SELECT") {
+                el.selectedIndex = 0;
+            } else {
+                el.value = "";
+            }
+        });
+    }
+
+    addButton.addEventListener("click", function () {
+        const currentFormCount = parseInt(totalFormsInput.value);
+
+        let newForm;
+        if (formsetBody.querySelector(".form-detalle")) {
+            newForm = formsetBody.querySelector(".form-detalle").cloneNode(true);
+            newForm.querySelectorAll("input, select, textarea").forEach(el => {
+                if (el.tagName === "SELECT") {
+                    el.selectedIndex = 0;
+                } else {
+                    el.value = "";
+                }
+            });
+        } else if (emptyFormTemplate) {
+            newForm = emptyFormTemplate.cloneNode(true);
+        } else {
+            return;
+        }
+
+        newForm.querySelectorAll("input, select, textarea").forEach(function (el) {
+            if (el.name) {
+                el.name = el.name.replace(/-\d+-/, `-${currentFormCount}-`);
+            }
+            if (el.id) {
+                el.id = el.id.replace(/-\d+-/, `-${currentFormCount}-`);
+            }
+        });
+
+        formsetBody.appendChild(newForm);
+        totalFormsInput.value = currentFormCount + 1;
+    });
+
+    formsetBody.addEventListener("click", function (e) {
+        if (e.target.closest(".boton-eliminar")) {
+            const row = e.target.closest("tr");
+            row.remove();
+
+            // Recontar formularios visibles y actualizar el total
+            const rows = formsetBody.querySelectorAll(".form-detalle");
+            rows.forEach((row, index) => {
+                row.querySelectorAll("input, select, textarea").forEach(el => {
+                    if (el.name) {
+                        el.name = el.name.replace(/-\d+-/, `-${index}-`);
+                    }
+                    if (el.id) {
+                        el.id = el.id.replace(/-\d+-/, `-${index}-`);
+                    }
+                });
+            });
+            totalFormsInput.value = rows.length;
+            
+        }
+    });
+    function actualizarOpcionesProductoUnidad() {
+      const selects = document.querySelectorAll('select[name$="producto_unidad"]');
+
+      // Obtener los valores seleccionados actuales
+      const valoresSeleccionados = Array.from(selects)
+        .map(s => s.value)
+        .filter(val => val !== "");
+
+      selects.forEach(select => {
+        const valorActual = select.value;
+
+        Array.from(select.options).forEach(option => {
+          // Mostrar todas las opciones antes de filtrar
+          option.hidden = false;
+
+          if (
+            valoresSeleccionados.includes(option.value) &&
+            option.value !== valorActual
+          ) {
+            option.hidden = true;
+          }
+        });
+      });
+    }
+
+    // Ejecutar al cargar la página
+    actualizarOpcionesProductoUnidad();
+
+    // Ejecutar cada vez que cambie un select
+    document.getElementById("formset-body").addEventListener("change", function (e) {
+      if (e.target.matches('select[name$="producto_unidad"]')) {
+        actualizarOpcionesProductoUnidad();
+      }
+    });
+
+    // También ejecutar después de agregar un nuevo formulario
+    document.getElementById("add-form").addEventListener("click", function () {
+      setTimeout(actualizarOpcionesProductoUnidad, 100);  // pequeño delay para asegurar que se renderice
+    });
+  });
+
+
+</script>
+{% endblock %}

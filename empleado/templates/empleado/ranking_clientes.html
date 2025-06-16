@@ -1,0 +1,87 @@
+{% extends 'core/base_empleado.html' %}
+{% load static %}
+
+{% block title %}Ranking de clientes{% endblock %}
+
+{% block extra_head%}
+    <link rel="stylesheet" href="{% static 'empleado/css/lista_usuarios.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+
+<div class="acciones-derecha ancho-contenido">
+    <a class="boton-header" href="{% url 'listar_clientes_activos' %}">
+        Listado Clientes
+        <img src="{% static 'empleado/svg/user-profile.svg' %}">
+    </a>
+    <a href="{% url 'crear_cliente' %}" class="boton-header">
+        Agregar Cliente
+        <img src="{% static 'empleado/svg/plus.svg' %}">
+    </a>
+</div>
+{% if messages %}
+    <ul class="messages">
+    {% for message in messages %}
+        <li class="{{ message.tags }}">{{ message }}</li>
+    {% endfor %}
+    </ul>
+{% endif %}
+
+<h2 class="titulo">Ranking de Clientes</h2>
+
+<div class="busqueda-agregar">
+    <input type="text" placeholder="Buscar Clientes .........." class="input-busqueda">
+    <div class="dropdown">
+        <a href="#" class="boton-header" id="dropdownMenuButton">
+            Filtrar
+            <img src="{% static 'empleado/svg/filter-solid.svg' %}">
+        </a>
+        <ul id="filterOptions" class="dropdown-content" style="display:none;">
+            <li><a href="#" onclick="applyFilter('nombre')" data-filter="nombre" class="{% if order_by == 'nombre' %}filtro-activo{% endif %}">Nombre</a></li>
+            <li><a href="#" onclick="applyFilter('rut')" data-filter="rut" class="{% if order_by == 'rut' %}filtro-activo{% endif %}">Rut</a></li>
+            <li><a href="#" onclick="clearOrderFilter()">Limpiar filtro</a></li>
+        </ul>
+    </div>
+</div>
+    <table class="tabla-usuarios">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>RUT</th>
+                <th>Categoría</th>
+                <th>Total Comprado</th>
+                <th>Total de Compras</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cliente in clientes %}
+            <tr>
+                <td title="{{ cliente.nombre }}">{{ cliente.nombre }}</td>
+                <td>{{ cliente.rut }}</td>
+                <td title="{{ cliente.categoria }}">{{ cliente.categoria }}</td>
+                <td>{{ cliente.total_ventas|floatformat:0 }}$</td>
+                <td>{{ cliente.cantidad_ventas }}</td>
+                <td class="acciones">
+                    <a href="{% url 'detalle_compras_cliente' cliente.id %}" title="Ver compras">
+                        <img src="{% static 'empleado/svg/reporteria.svg' %}" style="filter: brightness(0) saturate(100%);" />
+                    </a>        
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align: center;">No hay clientes activos con ventas registradas.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+<script>
+
+</script>
+<script src="{% static 'empleado/js/filtro_orden_usuario.js' %}"></script>
+<script src="{% static 'empleado/js/busca_usuarios.js' %}"></script>
+{% endblock %}

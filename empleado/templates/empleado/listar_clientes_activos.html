@@ -1,0 +1,259 @@
+{% extends 'core/base_empleado.html' %}
+{% load static %}
+
+{% block title %}Listado de Clientes Activos{% endblock %}
+<head>
+{% block extra_head%}
+    <link rel="stylesheet" href="{% static 'empleado/css/lista_usuarios.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% endblock %}
+</head>
+
+{% block content %}
+<div class="acciones-derecha ancho-contenido">
+    <a href="{% url 'ranking_clientes' %}" class="boton-header">
+        Ranking de Clientes
+        <img src="{% static 'empleado/svg/user-profile.svg' %}">
+    </a>
+
+    <a href="{% url 'crear_cliente' %}" class="boton-header">
+        Agregar Cliente
+        <img src="{% static 'empleado/svg/plus.svg' %}">
+    </a>
+</div>
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<h2 class="titulo">Listado de Clientes Activos</h2>
+
+<div class="busqueda-agregar">
+    <input type="text" placeholder="Buscar Cliente .........." class="input-busqueda">
+
+
+    <div class="dropdown">
+        <a href="#" class="boton-header" id="dropdownMenuButton">
+            Filtrar
+            <img src="{% static 'empleado/svg/filter-solid.svg' %}">
+        </a>
+        <ul id="filterOptions" class="dropdown-content" style="display:none;">
+            <li><a href="#" onclick="applyFilter('nombre')" data-filter="nombre" class="{% if order_by == 'nombre' %}filtro-activo{% endif %}">Nombre</a></li>
+            <li><a href="#" onclick="applyFilter('rut')" data-filter="rut" class="{% if order_by == 'rut' %}filtro-activo{% endif %}">Rut</a></li>
+            <li><a href="#" onclick="clearOrderFilter()">Limpiar filtro</a></li>
+        </ul>
+    </div>
+</div>
+
+<div class="barra-acciones-usuarios ancho-contenido">
+    <div class="boton-bloquear-seleccionados">
+        <button id="bloquearBtn" disabled>Bloquear</button>
+    </div>
+
+    <div class="toggle-estado-usuarios">
+        <a href="{% url 'listar_clientes_activos' %}" class="estado-btn activo">Activos</a>
+        <a href="{% url 'listar_clientes_inactivos' %}" class="estado-btn">Bloqueados</a>
+    </div>
+</div>
+
+<div id="confirmModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>¿Bloquear Cliente?</h3>
+    <p>Los clientes bloqueados pasarán al listado de usuarios bloqueados y no se tendrán en cuenta para las ventas.</p>
+    <div class="modal-actions">
+      <button type="button" id="confirmNo">Cancelar</button>
+      <button type="button" id="confirmYes">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+{% if clientes %}
+    <table class="tabla-usuarios">
+        <thead>
+            <tr>
+                <th><input type="checkbox" id="selectAll" /></th>
+                <th>Nombre</th>
+                <th>RUT</th>
+                <th>Categoría</th>
+                <th>Correo</th>
+                <th>Teléfono</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for cliente in clientes %}
+        <tr>
+            <td><input type="checkbox" class="selectCliente" value="{{ cliente.id }}" /></td>
+            <td data-label="Nombre">{{ cliente.nombre }}</td>
+            <td data-label="RUT">{{ cliente.rut }}</td>
+            <td data-label="Categoría">{{ cliente.categoria }}</td>
+            <td data-label="Correo" class="correo-cell" title="{{ cliente.correo }}">{{ cliente.correo }}</td>
+            <td data-label="Teléfono">{{ cliente.telefono }}</td>
+            <td data-label="Acciones" class="acciones">
+            <a href="{% url 'editar_clientes' cliente.id %}" title="Editar">
+                <img src="{% static 'empleado/svg/lapiz.svg' %}" alt="Editar">
+            </a>
+            <button title="Bloquear" class="btn-bloquear" data-product-id="{{ cliente.id }}">
+                <img src="{% static 'core/svg/lock-open-solid.svg' %}" alt="Bloquear">
+            </button>      
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <div class="custom-pagination">
+        {% if clientes.has_previous %}
+        <a href="?page=1{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&laquo;</a>
+        <a href="?page={{ clientes.previous_page_number }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&lsaquo;</a>
+        {% else %}
+        <span class="page-btn disabled">&laquo;</span>
+        <span class="page-btn disabled">&lsaquo;</span>
+        {% endif %}
+
+        <span class="page-btn current">{{ clientes.number }}</span>
+
+        {% if clientes.has_next %}
+        <a href="?page={{ clientes.next_page_number }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&rsaquo;</a>
+        <a href="?page={{ clientes.paginator.num_pages }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&raquo;</a>
+        {% else %}
+        <span class="page-btn disabled">&rsaquo;</span>
+        <span class="page-btn disabled">&raquo;</span>
+        {% endif %}
+    </div>
+{% else %}
+    <p style="text-align: center; font-size: 24px; margin-top: 40px;">No hay clientes activos.</p>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- FILTRO ---
+        const dropdownBtn = document.getElementById('dropdownMenuButton');
+        const filterOptions = document.getElementById('filterOptions');
+
+        dropdownBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            filterOptions.style.display = filterOptions.style.display === 'none' ? 'block' : 'none';
+        });
+
+        window.applyFilter = function (filter) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('order_by', filter);
+            url.searchParams.set('page', 1);
+            window.location.href = url.toString();
+        };
+
+        window.clearOrderFilter = function () {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('order_by');
+            url.searchParams.set('page', 1);
+            window.location.href = url.toString();
+        };
+
+        // --- SELECCIÓN DE CLIENTES ---
+        const bloquearBtn = document.querySelector('#bloquearBtn');
+        const checkboxes = document.querySelectorAll('.selectCliente');
+        const selectAll = document.getElementById('selectAll');
+
+        function updateBloquearButton() {
+            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+            bloquearBtn.disabled = !anyChecked;
+            bloquearBtn.classList.toggle('activo', anyChecked);
+        }
+
+        checkboxes.forEach(cb => cb.addEventListener('change', updateBloquearButton));
+
+        selectAll.addEventListener('change', () => {
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+            updateBloquearButton();
+        });
+
+        updateBloquearButton();
+
+        // --- MODAL BLOQUEAR CLIENTE(S) ---
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmYes = document.getElementById('confirmYes');
+        const confirmNo = document.getElementById('confirmNo');
+        let selectedIds = [];
+
+        // Mostrar modal al presionar botón "Bloquear" múltiple
+        bloquearBtn.addEventListener('click', () => {
+            selectedIds = Array.from(checkboxes)
+                            .filter(cb => cb.checked)
+                            .map(cb => cb.value);
+
+            if (selectedIds.length > 0) {
+                confirmModal.querySelector('h3').textContent = '¿Bloquear Clientes Seleccionados?';
+                confirmModal.querySelector('p').textContent = 'Los clientes bloqueados pasarán al listado de usuarios bloqueados y no se tendrán en cuenta para las ventas.';
+                confirmModal.classList.remove('hidden');
+            }
+        });
+
+        // Mostrar modal al presionar botón "Bloquear" individual por fila
+        document.querySelectorAll('.btn-bloquear').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                selectedIds = [btn.getAttribute('data-product-id')];
+                confirmModal.querySelector('h3').textContent = '¿Bloquear Cliente?';
+                confirmModal.querySelector('p').textContent = 'Los clientes bloqueados pasarán al listado de usuarios bloqueados y no se tendrán en cuenta para las ventas.';
+                confirmModal.classList.remove('hidden');
+            });
+        });
+
+        // Función para obtener el token CSRF desde la cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrfToken = getCookie('csrftoken');
+
+        // Confirmar bloqueo
+        confirmYes.addEventListener('click', () => {
+            fetch("{% url 'bloquear_cliente' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrfToken
+                },
+                body: new URLSearchParams({
+                    'cliente_ids': JSON.stringify(selectedIds)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = "{% url 'listar_clientes_inactivos' %}";
+                } else {
+                    alert("Error al bloquear cliente(s): " + (data.error || 'Error desconocido'));
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                alert("Error al bloquear cliente(s).");
+            });
+        });
+
+        // Cancelar acción bloqueo
+        confirmNo.addEventListener('click', () => {
+            confirmModal.classList.add('hidden');
+            selectedIds = [];
+        });
+    });
+</script>
+<script src="{% static 'empleado/js/busca_usuarios.js' %}"></script>
+{% endblock %}

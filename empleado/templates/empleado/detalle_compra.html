@@ -1,0 +1,53 @@
+{% extends 'core/base_empleado.html' %}
+
+{% load static %}
+
+{% block title %}Detalle de Compra{% endblock %}
+
+{% block content %}
+
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'empleado/css/detalle_compra.css' %}">
+{% endblock %}
+
+<div class="page-wrapper">
+    <h2 class="titulo">Detalle de la Compra N°{{ compra.id }}</h2>
+
+    <div class="detalle-compra">
+        <p><strong>Proveedor:</strong> {{ compra.proveedor.nombre }}</p>
+        <p><strong>Encargado:</strong> {{ compra.usuario }}</p>
+        <p><strong>Fecha de Compra:</strong> {{ compra.fecha|date:"d/m/Y" }}</p>
+        <p><strong>Estado:</strong> {{ compra.estado }}</p>
+
+        {% if compra.detalles.all %}
+            <h3 style="margin-top: 30px;">Productos Asociados</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Observaciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detalle in compra.detalles.all %}
+                    <tr>
+                        <td>{{ detalle.producto_unidad }}</td>
+                        <td style="text-align: center;">{{ detalle.cantidad }}</td>
+                        <td>{{ detalle.observaciones|default:"" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+
+    <div class="boton-header">
+        {% if compra.estado == 'Pendiente' %}
+            <a href="{% url 'lista_compras_activas' %}">Volver</a>
+        {% else %}
+            <a href="{% url 'lista_compras_bloqueadas' %}">Volver</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

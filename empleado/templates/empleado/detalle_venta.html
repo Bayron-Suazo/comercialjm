@@ -1,0 +1,57 @@
+{% extends 'core/base_empleado.html' %}
+{% load static %}
+
+{% block title %}Detalle de Venta{% endblock %}
+
+{% block content %}
+
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'empleado/css/detalle_compra.css' %}">
+{% endblock %}
+
+<div class="page-wrapper">
+    <h2 class="titulo">Detalle de la Venta N°{{ venta.id }}</h2>
+
+    <div class="detalle-compra">
+        <p><strong>Cliente:</strong> {{ venta.cliente }}</p>
+        <p><strong>Encargado:</strong> {{ venta.usuario }}</p>
+        <p><strong>Fecha de Venta:</strong> {{ venta.fecha|date:"d/m/Y" }}</p>
+
+        {% if detalles %}
+            <h3 style="margin-top: 30px;">Productos Vendidos</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Unidad</th>
+                        <th>Precio Unitario</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detalle in detalles %}
+                    <tr>
+                        <td>{{ detalle.producto_unidad.producto.nombre }}</td>
+                        <td>{{ detalle.cantidad }}</td>
+                        <td>{{ detalle.producto_unidad.get_unidad_medida_display }}</td>
+                        <td>${{ detalle.producto_unidad.precio|floatformat:0 }}</td>
+                        <td>${{ detalle.subtotal|floatformat:0 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+        <div class="resumen-venta" style="margin-top: 20px;">
+            <p><strong>Subtotal:</strong> ${{ subtotal|floatformat:0 }}</p>
+            <p><strong>Descuento {{ descuento_porcentaje }}%:</strong> ${{ monto_descuento|floatformat:0 }}</p>
+            <p><strong>Total:</strong> ${{ venta.total|floatformat:0 }}</p>
+        </div>
+    </div>
+
+    <div class="boton-header">
+        <a href="{% url 'listar_ventas' %}">Volver</a>
+    </div>
+</div>
+
+{% endblock %}

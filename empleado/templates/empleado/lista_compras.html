@@ -1,0 +1,325 @@
+{% extends 'core/base_empleado.html' %}
+{% load static %}
+
+{% block title %}Listado de Compras Pendientes{% endblock %}
+<head>
+{% block extra_head%}
+    <link rel="stylesheet" href="{% static 'empleado/css/lista_usuarios.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% endblock %}
+</head>
+
+{% block content %}
+
+<div class="acciones-derecha ancho-contenido">
+    <a href="{% url 'registrar_compra' %}" class="boton-header">
+        Registrar Compra
+        <img src="{% static 'empleado/svg/plus.svg' %}">
+    </a>
+</div>
+
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<h2 class="titulo">Listado de Compras Pendientes</h2>
+
+<div class="busqueda-agregar">
+    <input type="text" placeholder="Buscar Compra .........." class="input-busqueda">
+
+
+    <div class="dropdown">
+        <a href="#" class="boton-header" id="dropdownMenuButton">
+            Filtrar
+            <img src="{% static 'empleado/svg/filter-solid.svg' %}">
+        </a>
+        <ul id="filterOptions" class="dropdown-content" style="display:none;">
+            <li><a href="#" onclick="applyFilter('proveedor')" data-filter="proveedor" class="{% if order_by == 'proveedor' %}filtro-activo{% endif %}">Proveedor</a></li>
+            <li><a href="#" onclick="applyFilter('usuario')" data-filter="usuario" class="{% if order_by == 'usuario' %}filtro-activo{% endif %}">Encargado</a></li>
+            <li><a href="#" onclick="clearOrderFilter()">Limpiar filtro</a></li>
+        </ul>
+    </div>
+</div>
+
+<div class="barra-acciones-usuarios ancho-contenido">
+    <div class="boton-bloquear-seleccionados">
+        <button id="bloquearBtn" class="oculto" disabled>Cancelar</button>
+    </div>
+
+    <div class="toggle-estado-usuarios">
+        <a href="{% url 'lista_compras_activas' %}" class="estado-btn activo">Pendientes</a>
+        <a href="{% url 'lista_compras_bloqueadas' %}" class="estado-btn">Listas</a>
+    </div>
+</div>
+
+<div id="confirmModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>¿Cancelar Compra?</h3>
+    <p>Las compras canceladas serán informadas al proveedor correspondiente.</p>
+    <div class="modal-actions">
+      <button type="button" id="confirmNo">Cancelar</button>
+      <button type="button" id="confirmYes">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div id="confirmAprobarModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>¿Aprobar Compra?</h3>
+    <p>Se creará un lote con la fecha actual y los productos solicitados</p>
+    <form id="formAprobacionCompra">
+        <div class="form-group" style="margin-bottom: 16px;">
+            <label for="totalCompra">Total de la compra ($):</label>
+            <input type="number" name="total" id="totalCompra" class="form-control" required min="1" style="width: 100%; padding: 8px;">
+        </div>
+        <div class="modal-actions">     
+            <button type="button" id="cancelAprobarBtn" class="btn-cancel">Cancelar</button>
+            <button type="submit" id="confirmAprobarBtn" class="btn-confirm">Confirmar</button>
+        </div>
+    </form>
+  </div>
+</div>
+
+<div id="detalleCompraModal" class="modal hidden">
+  <div class="modal-content">
+    <span class="close-modal" id="cerrarDetalleCompra">&times;</span>
+    <div id="contenidoDetalleCompra">
+    </div>
+  </div>
+</div>
+
+{% if compras %}
+    <table class="tabla-usuarios">
+        <thead>
+            <tr>
+                <th><input type="checkbox" id="select-all" class="oculto"></th>
+                <th>ID Compra</th>
+                <th>Proveedor</th>
+                <th>Encargado</th>
+                <th>Fecha Compra</th>
+                <th>Estado</th>            
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for compra in compras %}
+            <tr>
+                <td data-label="Seleccionar"><input type="checkbox" class="select-user oculto" data-compra-id="{{ compra.id }}"></td>
+                <td data-label="ID Compra">{{ compra.id }}</td>
+                <td data-label="Proveedor">{{ compra.proveedor.nombre }}</td>
+                <td data-label="Encargado">{{ compra.usuario }}</td>
+                <td data-label="Fecha Compra">{{ compra.fecha|date:"d/m/Y"}}</td>
+                <td data-label="Estado">{{ compra.estado}}</td>
+                <td data-label="Acciones">           
+                    <a href="{% url 'detalle_compra' compra.id %}" title="Mostrar">
+                        <img src="{% static 'empleado/svg/reporteria.svg' %}" alt="Mostrar" class="svg-compra">
+                    </a>
+                    <button title="Bloquear" class="btn-bloquear" data-compra-id="{{ compra.id }}">
+                        <img src="{% static 'empleado/svg/circle-xmark-solid.svg' %}" alt="Bloquear">
+                    </button>
+                    <button class="btn-aprobar" data-id="{{ compra.id }}">
+                        <img src="{% static 'empleado/svg/circle-check-solid.svg' %}" alt="Confirmar">
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="custom-pagination">
+        {% if compras.has_previous %}
+        <a href="?page=1{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&laquo;</a>
+        <a href="?page={{ compras.previous_page_number }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&lsaquo;</a>
+        {% else %}
+        <span class="page-btn disabled">&laquo;</span>
+        <span class="page-btn disabled">&lsaquo;</span>
+        {% endif %}
+
+        <span class="page-btn current">{{ compras.number }}</span>
+
+        {% if compras.has_next %}
+        <a href="?page={{ compras.next_page_number }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&rsaquo;</a>
+        <a href="?page={{ compras.paginator.num_pages }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&raquo;</a>
+        {% else %}
+        <span class="page-btn disabled">&rsaquo;</span>
+        <span class="page-btn disabled">&raquo;</span>
+        {% endif %}
+    </div>
+{% else %}
+    <p style="text-align: center; font-size: 24px; margin-top: 40px;">No hay compras registradas.</p>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const aprobarButtons = document.querySelectorAll('.btn-aprobar');
+
+    aprobarButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            const compraId = this.getAttribute('data-id');
+            const form = document.getElementById('formAprobacionCompra');
+            form.dataset.compraId = compraId;  // Asigna el ID de compra al formulario
+            showConfirmAprobarModal();
+        });
+    });
+
+    function showConfirmAprobarModal(callback) {
+        const modal = document.getElementById('confirmAprobarModal');
+        const form = document.getElementById('formAprobacionCompra');
+        const totalInput = document.getElementById('totalCompra');
+        const cancelBtn = document.getElementById('cancelAprobarBtn');
+
+        modal.classList.remove('hidden');
+
+        form.onsubmit = function (e) {
+            e.preventDefault();
+            const total = totalInput.value;
+            if (!total || total <= 0) {
+                alert("Ingrese un total válido.");
+                return;
+            }
+
+            // Guardar el id de la compra temporalmente
+            const compraId = form.dataset.compraId;
+
+            fetch("{% url 'aprobar_compra' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: new URLSearchParams({
+                    'compra_id': compraId,
+                    'total': total
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Ocurrió un error al aprobar la compra.');
+                }
+            })
+            .catch(error => {
+                console.error('Error en fetch:', error);
+                alert('Error inesperado al aprobar la compra.');
+            });
+
+            modal.classList.add('hidden');
+        };
+
+        cancelBtn.onclick = function () {
+            modal.classList.add('hidden');
+        };
+    }
+
+    // Funcionalidad para bloquear compra con modal de confirmación
+    const bloquearButtons = document.querySelectorAll('.btn-bloquear');
+
+    bloquearButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            const compraId = this.getAttribute('data-compra-id');
+            const modal = document.getElementById('confirmModal');
+
+            modal.classList.remove('hidden');
+
+            const confirmYes = document.getElementById('confirmYes');
+            const confirmNo = document.getElementById('confirmNo');
+
+            function closeModal() {
+                modal.classList.add('hidden');
+                confirmYes.removeEventListener('click', onConfirm);
+                confirmNo.removeEventListener('click', closeModal);
+            }
+
+            function onConfirm() {
+                fetch("{% url 'bloquear_compra' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: new URLSearchParams({ 'compra_id': compraId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Error al bloquear la compra.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Ocurrió un error inesperado.');
+                })
+                .finally(() => {
+                    closeModal();
+                });
+            }
+
+            confirmYes.addEventListener('click', onConfirm);
+            confirmNo.addEventListener('click', closeModal);
+        });
+    });
+
+    window.applyFilter = function(filter) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('order_by', filter);
+        url.searchParams.delete('page');
+        window.location.href = url.toString();
+    }
+
+    window.clearOrderFilter = function() {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('order_by');
+        url.searchParams.delete('page');
+        window.location.href = url.toString();
+    }
+
+    const inputBusqueda = document.querySelector('.input-busqueda');
+    if(inputBusqueda){
+        inputBusqueda.addEventListener('keyup', function(event) {
+            const query = event.target.value.toLowerCase();
+
+            const filas = document.querySelectorAll('.tabla-usuarios tbody tr');
+            filas.forEach(fila => {
+                const textoFila = fila.textContent.toLowerCase();
+                fila.style.display = textoFila.includes(query) ? '' : 'none';
+            });
+        });
+    }
+
+    window.onclick = function(event) {
+        const modals = ['confirmModal', 'confirmAprobarModal', 'detalleCompraModal'];
+        modals.forEach(modalId => {
+            const modal = document.getElementById(modalId);
+            if (modal && event.target == modal) {
+                modal.classList.add('hidden');
+            }
+        });
+    };
+
+    const cerrarDetalleCompra = document.getElementById('cerrarDetalleCompra');
+    if(cerrarDetalleCompra){
+        cerrarDetalleCompra.addEventListener('click', () => {
+            const modal = document.getElementById('detalleCompraModal');
+            if(modal){
+                modal.classList.add('hidden');
+            }
+        });
+    }
+});
+</script>
+
+<script src="{% static 'empleado/js/filtro_orden_usuario.js' %}"></script>
+<script src="{% static 'empleado/js/busca_usuarios.js' %}"></script>
+
+
+{% endblock %}

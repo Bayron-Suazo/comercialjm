@@ -1,0 +1,167 @@
+{% extends 'core/base_empleado.html' %}
+{% load static %}
+
+{% block title %}Editar Cliente{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'empleado/css/agregar_usuario.css' %}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% endblock %}
+
+{% block content %}
+<h2 class="titulo">Editar Cliente</h2>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="form-errors">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <div class="form-container">
+        <div class="form-column">
+            <div class="form-group">
+                <label for="id_nombre">Nombre</label>
+                {{ form.nombre }}
+                {{ form.nombre.errors }}
+            </div>
+            <div class="form-group">
+                <label for="id_rut">RUT</label>
+                {{ form.rut }}
+                {{ form.rut.errors }}
+            </div>
+            <div class="form-group">
+                <label for="id_categoria">Categoría</label>
+                {{ form.categoria }}
+                {{ form.categoria.errors }}
+            </div>
+        </div>
+
+        <div class="form-column">
+            <div class="form-group">
+                <label for="id_correo">Correo</label>
+                {{ form.correo }}
+                {{ form.correo.errors }}
+            </div>
+            <div class="form-group">
+                <label for="id_telefono">Teléfono</label>
+                {{ form.telefono }}
+                {{ form.telefono.errors }}
+            </div>
+            <div class="form-group">
+                <label for="id_direccion">Dirección</label>
+                {{ form.direccion }}
+                {{ form.direccion.errors }}
+            </div>
+        </div>
+    </div>
+
+    <div class="button-group">
+        <button type="button" class="cancelar" onclick="history.back()">Cancelar</button>
+        <button type="submit" class="añadir">Guardar</button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+
+
+{% if form.errors %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const errores = {{ form.errors.as_json|safe }};
+        if (errores.rut && errores.rut[0].message === "rut_invalido_swal") {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'El RUT ingresado no es válido.',
+                confirmButtonColor: '#4CAF50'
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Revisa los campos del formulario antes de guardar.',
+                confirmButtonColor: '#4CAF50'
+            });
+        }
+    });
+</script>
+{% endif %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // 🔹 NOMBRE: solo letras y espacios (bloquea números/símbolos incluso al pegar)
+    const nombreInput = document.getElementById("nombre");
+    if (nombreInput) {
+        // Bloquea teclas inválidas
+        nombreInput.addEventListener("keypress", function (e) {
+            const char = e.key;
+            if (!/[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/.test(char)) {
+                e.preventDefault();
+            }
+        });
+
+        // Limpia contenido inválido al pegar
+        nombreInput.addEventListener("input", function () {
+            this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
+        });
+
+        // Bloquea Ctrl+V
+        nombreInput.addEventListener("paste", function (e) {
+            e.preventDefault();
+        });
+    }
+
+    // 🔹 RUT: solo números + K/k, formatea como 12345678-K
+    const rutInput = document.getElementById("rut");
+    if (rutInput) {
+        rutInput.addEventListener("input", function () {
+            let val = this.value.replace(/[^0-9kK]/g, "").toUpperCase();
+            if (val.length > 1) {
+                val = val.slice(0, -1) + "-" + val.slice(-1);
+            }
+            this.value = val;
+        });
+
+        // Bloquea Ctrl+V
+        rutInput.addEventListener("paste", function (e) {
+            e.preventDefault();
+        });
+
+        // Bloquea letras inválidas
+        rutInput.addEventListener("keypress", function (e) {
+            if (!/[0-9kK]/.test(e.key)) {
+                e.preventDefault();
+            }
+        });
+    }
+
+    // 🔹 TELÉFONO: solo dígitos, empieza con 9, exactamente 9 dígitos
+    const telInput = document.getElementById("telefono");
+    if (telInput) {
+        telInput.addEventListener("input", function () {
+            let val = this.value.replace(/\D/g, ""); // Elimina todo lo que no sea número
+            if (!val.startsWith("9")) {
+                val = "9" + val;
+            }
+            this.value = val.slice(0, 9);
+        });
+
+        // Bloquea teclas inválidas y límite de 9 dígitos
+        telInput.addEventListener("keypress", function (e) {
+            if (!/[0-9]/.test(e.key) || this.value.length >= 9) {
+                e.preventDefault();
+            }
+        });
+
+        // Bloquea Ctrl+V
+        telInput.addEventListener("paste", function (e) {
+            e.preventDefault();
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    h1 { text-align: center; font-size: 24px; }
+    .seccion { margin-bottom: 20px; font-size: 14px; }
+    .seccion p { margin: 2px 0; }
+    .tabla {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .tabla th, .tabla td {
+      border: 1px solid #000;
+      padding: 6px;
+      text-align: center;
+    }
+    .totales {
+      margin-top: 20px;
+      text-align: right;
+      font-size: 14px;
+    }
+    .footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Factura Electrónica</h1>
+
+<div class="seccion">
+    <p><strong>Emisor:</strong> {{ emisor }}</p>
+    <p><strong>RUT:</strong> {{ rut_emisor }}</p>
+    <p><strong>Dirección:</strong> {{ direccion_emisor }}</p>
+    <p><strong>Giro:</strong> {{ giro_emisor }}</p>
+</div>
+
+  <div class="seccion">
+    <p><strong>Cliente:</strong> {{ nombre_cliente }}</p>
+    <p><strong>RUT Cliente:</strong> {{ rut_cliente }}</p>
+    <p><strong>Dirección Cliente:</strong> {{ direccion_cliente }}</p>
+    <p><strong>Giro Cliente:</strong> {{ giro_cliente }}</p>
+    <p><strong>Fecha:</strong> {{ venta.fecha|date:"d/m/Y H:i" }}</p>
+    <p><strong>N° Factura:</strong> {{ venta.id }}</p>
+    <p><strong>Método de pago:</strong> {{ venta.metodo_pago }}</p>
+    </div>
+
+  <table class="tabla">
+    <thead>
+      <tr>
+        <th>Producto</th>
+        <th>Unidad</th>
+        <th>Precio</th>
+        <th>Cantidad</th>
+        <th>Subtotal</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for detalle in detalles %}
+      <tr>
+        <td>{{ detalle.producto_unidad.producto.nombre }}</td>
+        <td>{{ detalle.producto_unidad.get_unidad_medida_display }}</td>
+        <td>${{ detalle.producto_unidad.precio|floatformat:0 }}</td>
+        <td>{{ detalle.cantidad }}</td>
+        <td>${{ detalle.subtotal|floatformat:0 }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="totales">
+    <p>Subtotal sin descuento: ${{ subtotal }}</p>
+    <p>Descuento {{ descuento_porcentaje }}%: ${{ descuento }}</p>
+    <p>Subtotal con descuento: ${{ venta.total|floatformat:0 }}</p>
+    <p>IVA (19%): ${{ iva }}</p>
+    <p><strong>Total: ${{ total }}</strong></p>
+  </div>
+
+  <div class="footer">
+    <p>Gracias por su preferencia</p>
+  </div>
+
+</body>
+</html>

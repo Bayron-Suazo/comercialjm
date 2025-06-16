@@ -1,0 +1,307 @@
+{% extends 'core/base_empleado.html' %}
+{% load static %}
+
+{% block title %}Listado de Lotes Activos{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'empleado/css/lista_usuarios.css' %}">
+  <link rel="stylesheet" href="{% static 'empleado/css/modal_factura.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+
+<div class="acciones-derecha ancho-contenido">
+  <a class="boton-header" href="{% url 'registrar_venta' %}">
+    Registrar Venta
+    <img src="{% static 'empleado/svg/plus.svg' %}">
+  </a>
+</div>
+
+<h2 class="titulo">Listado de Ventas</h2>
+
+<div class="busqueda-agregar">
+    <input type="text" placeholder="Buscar Venta .........." class="input-busqueda">
+
+
+    <div class="dropdown">
+        <a href="#" class="boton-header" id="dropdownMenuButton">
+            Filtrar
+            <img src="{% static 'empleado/svg/filter-solid.svg' %}">
+        </a>
+        <ul id="filterOptions" class="dropdown-content" style="display:none;">
+            <li><a href="#" onclick="applyFilter('id')" data-filter="id" class="{% if order_by == 'id' %}filtro-activo{% endif %}">N° Venta</a></li>
+            <li><a href="#" onclick="applyFilter('cliente')" data-filter="cliente" class="{% if order_by == 'cliente' %}filtro-activo{% endif %}">Cliente</a></li>
+            <li><a href="#" onclick="applyFilter('user')" data-filter="user" class="{% if order_by == 'user' %}filtro-activo{% endif %}">Encargado</a></li>
+            <li><a href="#" onclick="clearOrderFilter()">Limpiar filtro</a></li>
+        </ul>
+    </div>
+</div>
+
+<div class="barra-acciones-usuarios ancho-contenido" style="visibility: hidden;">
+    <div class="boton-bloquear-seleccionados">
+        <button id="bloquearBtn" disabled>Bloquear</button>
+    </div>
+
+    <div class="toggle-estado-usuarios">
+        <a href="#" class="estado-btn activo">Activos</a>
+        <a href="#" class="estado-btn">Bloqueados</a>
+    </div>
+</div>
+
+<div id="confirmModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>¿Deshacer Venta?</h3>
+    <p>Esta acción eliminará la venta y restaurará el stock de productos asociados.</p>
+    <div class="modal-actions">
+      <button type="button" id="confirmNo">Cancelar</button>
+      <button type="button" id="confirmYes">Confirmar</button>
+    </div>
+  </div>
+</div>
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+{% if ventas %}
+<table class="tabla-usuarios tabla-productos">
+  <thead>
+    <tr>
+      <th><input type="checkbox" id="select-all" class="oculto"></th>
+      <th>N° Venta</th>
+      <th>Fecha</th>
+      <th>Total</th>
+      <th>Cliente</th>
+      <th>Encargado</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for venta in ventas %}
+    <tr>
+      <td data-label="Seleccionar"><input type="checkbox" class="select-user oculto" data-compra-id="{{ venta.id }}"></td>
+      <td data-label="N° Venta">{{ venta.id }}</td>
+      <td data-label="Fecha">{{ venta.fecha|date:"d/m/Y" }}</td>
+      <td data-label="Total">${{ venta.total|floatformat:0 }}</td>
+      <td data-label="Cliente">{{ venta.cliente }}</td>
+      <td data-label="Encargado">{{ venta.usuario }}</td>
+      <td data-label="Acciones" class="acciones">
+        <a href="{% url 'ver_venta' venta.id %}" title="Mostrar">
+          <img src="{% static 'empleado/svg/reporteria.svg' %}" alt="Mostrar" class="svg-compra">
+        </a>
+        <button class="btn-deshacer" data-url="{% url 'deshacer_venta' venta.id %}" title="Deshacer venta">
+          <img src="{% static 'empleado/svg/deshacer.svg' %}" alt="Deshacer">
+        </button>
+        <a class="boton-header btn-comprobante"
+          data-venta-id="{{ venta.id }}"
+          data-nombre="{{ venta.cliente.nombre|default_if_none:'' }}"
+          data-rut="{{ venta.cliente.rut|default_if_none:'' }}"
+          data-direccion="{{ venta.cliente.direccion|default_if_none:'' }}"
+          style="cursor: pointer;">
+          Comprobante
+        </a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div id="modalComprobante" style="display: none;">
+  <div class="modal-content">
+    <button id="modalCerrar" title="Cerrar">&times;</button>
+    <h3>Ingresar datos para factura</h3>
+
+    <div id="mensajeClienteRegistrado" style="margin-bottom:15px; display:none; font-weight:bold;"></div>
+
+    <form id="formComprobante">
+      <input type="hidden" name="venta_id" id="venta_id">
+
+      <div id="camposCliente">
+        <label for="nombre_cliente">Nombre / Empresa:</label>
+        <input type="text" id="nombre_cliente" name="nombre_cliente" required>
+
+        <label for="rut_cliente">RUT:</label>
+        <input type="text" id="rut_cliente" name="rut_cliente" pattern="\\d{1,2}\\.\\d{3}\\.\\d{3}-[\\dkK]" title="Formato RUT válido" required>
+
+        <label for="direccion_cliente">Dirección:</label>
+        <input type="text" id="direccion_cliente" name="direccion_cliente" required>
+      </div>
+
+      <label for="giro_cliente">Giro del Cliente:</label>
+      <input type="text" name="giro_cliente" id="giro_cliente">
+
+      <div id="mensajeError" style="color: red; font-weight: normal; display: none; margin-top: 10px;"></div>
+
+      <div class="modal-actions" style="margin-top: 15px;">
+        <button type="button" id="btnGenerarBoleta">Generar Boleta</button>
+        <button type="button" id="btnGenerarFactura">Generar Factura</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% else %}
+<p style="text-align: center; font-size: 24px; margin-top: 40px;">No hay ventas registradas.</p>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('modalComprobante');
+  const btnCerrar = document.getElementById('modalCerrar');
+  const botonesComprobante = document.querySelectorAll('.btn-comprobante');
+  const form = document.getElementById('formComprobante');
+  const ventaIdInput = document.getElementById('venta_id');
+
+  const btnBoleta = document.getElementById('btnGenerarBoleta');
+  const btnFactura = document.getElementById('btnGenerarFactura');
+
+  const camposCliente = document.getElementById('camposCliente');
+  const mensajeClienteRegistrado = document.getElementById('mensajeClienteRegistrado');
+
+  function mostrarModal() {
+    modal.style.display = 'flex';
+  }
+
+  function ocultarModal() {
+    modal.style.display = 'none';
+  }
+
+  botonesComprobante.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const ventaId = btn.dataset.ventaId || '';
+      const nombre = btn.dataset.nombre || '';
+      const rut = btn.dataset.rut || '';
+      const direccion = btn.dataset.direccion || '';
+
+      ventaIdInput.value = ventaId;
+
+      console.log('Datos cliente:', {nombre, rut, direccion});
+
+      const tieneCliente = nombre.trim() !== '' && rut.trim() !== '' && direccion.trim() !== '';
+
+      if (tieneCliente) {
+        camposCliente.style.display = 'none';
+        mensajeClienteRegistrado.style.display = 'block';
+        mensajeClienteRegistrado.textContent = `Se generará el comprobante a nombre de: ${nombre}`;
+
+        mostrarModal();
+      } else {
+        camposCliente.style.display = 'block';
+        mensajeClienteRegistrado.style.display = 'none';
+
+        form.nombre_cliente.value = '';
+        form.rut_cliente.value = '';
+        form.direccion_cliente.value = '';
+
+        mostrarModal();
+      }
+    });
+  });
+
+  btnCerrar.addEventListener('click', () => {
+    ocultarModal();
+  });
+
+  window.addEventListener('click', (event) => {
+    if (event.target === modal) {
+      ocultarModal();
+    }
+  });
+
+  function enviarComprobante(tipo) {
+    const ventaId = ventaIdInput.value;
+    let nombre = '';
+    let rut = '';
+    let direccion = '';
+    let giro = form.giro_cliente.value.trim();
+
+    const mensajeError = document.getElementById('mensajeError');
+
+    if (camposCliente.style.display === 'none') {
+      const texto = mensajeClienteRegistrado.textContent;
+      const match = texto.match(/a nombre de: (.+)$/);
+      nombre = match ? match[1] : '';
+      
+      // Extrae los valores directamente del botón que abrió el modal
+      const botonActivo = [...document.querySelectorAll('.btn-comprobante')].find(btn => btn.dataset.ventaId === ventaId);
+      rut = botonActivo ? botonActivo.dataset.rut : '';
+      direccion = botonActivo ? botonActivo.dataset.direccion : '';
+    } else {
+      nombre = form.nombre_cliente.value.trim();
+      rut = form.rut_cliente.value.trim();
+      direccion = form.direccion_cliente.value.trim();
+    }
+
+    // Validación obligatoria para FACTURA (en ambos casos)
+    if (tipo === 'factura') {
+      if (!nombre || !rut || !direccion || !giro) {
+        mensajeError.style.display = 'block';
+        mensajeError.textContent = 'Debe completar todos los campos para generar la factura.';
+        return;
+      } else {
+        mensajeError.style.display = 'none';
+        mensajeError.textContent = '';
+      }
+    }
+
+    let url = '';
+    if (tipo === 'boleta') {
+      url = `/empleado/venta/${ventaId}/boleta/?nombre_cliente=${encodeURIComponent(nombre)}&rut_cliente=${encodeURIComponent(rut)}&direccion_cliente=${encodeURIComponent(direccion)}&giro_cliente=${encodeURIComponent(giro)}`;
+    } else {
+      url = `/empleado/ventas/${ventaId}/factura/?nombre_cliente=${encodeURIComponent(nombre)}&rut_cliente=${encodeURIComponent(rut)}&direccion_cliente=${encodeURIComponent(direccion)}&giro_cliente=${encodeURIComponent(giro)}`;
+    }
+
+    window.open(url, '_blank');
+    ocultarModal();
+  }
+
+  btnBoleta.addEventListener('click', () => enviarComprobante('boleta'));
+  btnFactura.addEventListener('click', () => enviarComprobante('factura'));
+});
+document.addEventListener('DOMContentLoaded', () => {
+  const confirmModal = document.getElementById('confirmModal');
+  const confirmYes = document.getElementById('confirmYes');
+  const confirmNo = document.getElementById('confirmNo');
+
+  let deshacerUrl = '';
+
+  // Al hacer click en el botón deshacer
+  document.querySelectorAll('.btn-deshacer').forEach(btn => {
+    btn.addEventListener('click', () => {
+      deshacerUrl = btn.getAttribute('data-url');
+      confirmModal.classList.remove('hidden');
+      confirmModal.style.display = 'flex';
+    });
+  });
+
+  // Cancelar
+  confirmNo.addEventListener('click', () => {
+    confirmModal.classList.add('hidden');
+    confirmModal.style.display = 'none';
+    deshacerUrl = '';
+  });
+
+  // Confirmar acción
+  confirmYes.addEventListener('click', () => {
+    if (deshacerUrl) {
+      window.location.href = deshacerUrl;
+    }
+  });
+
+  // Cerrar modal al hacer click fuera
+  window.addEventListener('click', (e) => {
+    if (e.target === confirmModal) {
+      confirmModal.classList.add('hidden');
+      confirmModal.style.display = 'none';
+    }
+  });
+});
+</script>
+<script src="{% static 'empleado/js/busca_usuarios.js' %}"></script>
+{% endblock %}
