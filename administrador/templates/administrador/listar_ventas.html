@@ -121,6 +121,8 @@
       <label for="giro_cliente">Giro del Cliente:</label>
       <input type="text" name="giro_cliente" id="giro_cliente">
 
+      <div id="mensajeError" style="color: red; font-weight: normal; display: none; margin-top: 10px;"></div>
+
       <div class="modal-actions" style="margin-top: 15px;">
         <button type="button" id="btnGenerarBoleta">Generar Boleta</button>
         <button type="button" id="btnGenerarFactura">Generar Factura</button>
@@ -205,24 +207,29 @@ document.addEventListener('DOMContentLoaded', () => {
     let nombre = '';
     let rut = '';
     let direccion = '';
-    let giro = '';
+    let giro = form.giro_cliente.value.trim();
+
+    const mensajeError = document.getElementById('mensajeError');
 
     if (camposCliente.style.display === 'none') {
       const texto = mensajeClienteRegistrado.textContent;
       const match = texto.match(/a nombre de: (.+)$/);
       nombre = match ? match[1] : '';
-      giro = form.giro_cliente.value.trim();  // también se puede ingresar manualmente
     } else {
       nombre = form.nombre_cliente.value.trim();
       rut = form.rut_cliente.value.trim();
       direccion = form.direccion_cliente.value.trim();
-      giro = form.giro_cliente.value.trim();
+    }
 
-      if (tipo === 'factura') {
-        if (!nombre || !rut || !direccion) {
-          alert('Complete todos los campos para generar la factura');
-          return;
-        }
+    // Validación obligatoria para FACTURA (en ambos casos)
+    if (tipo === 'factura') {
+      if (!nombre || !rut || !direccion || !giro) {
+        mensajeError.style.display = 'block';
+        mensajeError.textContent = 'Debe completar todos los campos para generar la factura.';
+        return;
+      } else {
+        mensajeError.style.display = 'none';
+        mensajeError.textContent = '';
       }
     }
 
