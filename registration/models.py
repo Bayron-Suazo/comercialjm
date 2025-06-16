@@ -140,6 +140,7 @@ class Cliente(models.Model):
     correo = models.EmailField()
     telefono = models.CharField(max_length=20)
     activo = models.BooleanField(default=True)
+    contador_cupon = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.nombre

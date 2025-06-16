@@ -1681,6 +1681,13 @@ def registrar_venta(request):
     unidades = ProductoUnidad.objects.all()
     stock_map = {}
     price_map = {}
+    clientes_info = {
+        c.id: {
+            'categoria': c.categoria.lower(),
+            'contador_cupon': c.contador_cupon
+        }
+        for c in Cliente.objects.all()
+    }
     for pu in unidades:
         total_stock = DetalleLote.objects.filter(
             producto_unidad=pu, cantidad__gt=0, lote__activo=True
@@ -1708,6 +1715,7 @@ def registrar_venta(request):
                         'formset': formset,
                         'stock_map_json': json.dumps(stock_map),
                         'price_map_json': json.dumps(price_map),
+                        'clientes_info_json': json.dumps(clientes_info),
                     })
 
                 for detalle in detalles:
@@ -1729,9 +1737,24 @@ def registrar_venta(request):
                             'formset': formset,
                             'stock_map_json': json.dumps(stock_map),
                             'price_map_json': json.dumps(price_map),
+                            'clientes_info_json': json.dumps(clientes_info),
                         })
 
                 with transaction.atomic():
+                    cliente = venta.cliente
+                    descuento = 0
+
+                    # Verificar y aplicar descuento si corresponde
+                    if cliente:
+                        cliente.contador_cupon += 1  # Incrementar contador
+
+                        if cliente.categoria.lower() == "frecuente" and cliente.contador_cupon >= 50:
+                            descuento = 10
+                            cliente.contador_cupon = 0  # Reiniciar
+                        elif cliente.categoria.lower() == "mayorista" and cliente.contador_cupon >= 30:
+                            descuento = 15
+                            cliente.contador_cupon = 0  # Reiniciar
+
                     venta.save()
                     total = 0
 
@@ -1758,8 +1781,15 @@ def registrar_venta(request):
                         detalle.save()
                         total += detalle.subtotal()
 
+                    # Aplicar descuento si corresponde
+                    if descuento:
+                        total -= total * (Decimal(descuento) / Decimal('100'))
+
                     venta.total = total
                     venta.save()
+
+                    if cliente:
+                        cliente.save()  # Guardar cambios del contador
 
                 return redirect('listar_ventas')
 
@@ -1769,6 +1799,7 @@ def registrar_venta(request):
                     'formset': formset,
                     'stock_map_json': json.dumps(stock_map),
                     'price_map_json': json.dumps(price_map),
+                    'clientes_info_json': json.dumps(clientes_info),
                 })
         else:
             formset = DetalleVentaFormSet(instance=Venta())
@@ -1777,6 +1808,7 @@ def registrar_venta(request):
                 'formset': formset,
                 'stock_map_json': json.dumps(stock_map),
                 'price_map_json': json.dumps(price_map),
+                'clientes_info_json': json.dumps(clientes_info),
             })
 
     else:
@@ -1787,6 +1819,7 @@ def registrar_venta(request):
             'formset': formset,
             'stock_map_json': json.dumps(stock_map),
             'price_map_json': json.dumps(price_map),
+            'clientes_info_json': json.dumps(clientes_info),
         })
 
 from urllib.parse import unquote

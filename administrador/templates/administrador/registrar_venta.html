@@ -80,15 +80,23 @@
       </tbody>
     </table>
 
+    <div class="contenedor-flex">
+      <div class="subtotal-descuento">
+        Subtotal: $<span id="subtotal-venta">0</span><br>
+        Descuento: <span id="descuento-aplicado">0%</span><br>
+      </div>
+      
+      <button type="button" id="add-form" class="boton-agregar" title="Agregar producto">
+        <i class="fas fa-plus-circle"></i>
+      </button>
+    </div>
+
     <div class="total-venta">
       Total: $<span id="total-venta">0</span>
     </div>
 
     <div class="acciones-fila">
       <button type="submit" class="boton-header">Finalizar Venta</button>
-      <button type="button" id="add-form" class="boton-agregar" title="Agregar producto">
-        <i class="fas fa-plus-circle"></i>
-      </button>
     </div>
   </form>
 </div>
@@ -98,6 +106,7 @@
 </div>
 
 <script>
+const clientesInfo = {{ clientes_info_json|safe }};
 const stockMap = {{ stock_map_json|safe }};
 const priceMap = {{ price_map_json|safe }};
 
@@ -105,11 +114,15 @@ function inicializarFormularioVenta() {
   const prefix = '{{ formset.prefix }}';
   const formsetBody = document.getElementById("formset-body");
   const totalFormsInput = document.querySelector(`input[name="${prefix}-TOTAL_FORMS"]`);
-  const totalSpan = document.getElementById('total-venta');
+  
+  const subtotalSpan = document.getElementById('subtotal-venta');
+  const descuentoSpan = document.getElementById('descuento-aplicado');
+  const totalVentaSpan = document.getElementById('total-venta');
   const addButton = document.getElementById('add-form');
+  const clienteSelect = document.getElementById("id_cliente");
 
   function recalcularTotal() {
-    let total = 0;
+    let subtotal = 0;
     formsetBody.querySelectorAll('.form-detalle').forEach(row => {
       const deleted = row.querySelector(`input[name$="-DELETE"]`);
       if (deleted?.checked) return;
@@ -119,10 +132,30 @@ function inicializarFormularioVenta() {
       const id = select?.value;
 
       if (id && priceMap[id]) {
-        total += priceMap[id] * cantidad;
+        subtotal += priceMap[id] * cantidad;
       }
     });
-    totalSpan.textContent = Math.round(total);
+
+    subtotalSpan.textContent = Math.round(subtotal);
+
+    let descuento = 0;
+    const clienteId = clienteSelect.value;
+    if (clienteId && clientesInfo[clienteId]) {
+      const info = clientesInfo[clienteId];
+      const categoria = info.categoria;
+      const contador = info.contador_cupon;
+
+      if (categoria === "frecuente" && contador >= 50) {
+        descuento = 10;
+      } else if (categoria === "mayorista" && contador >= 30) {
+        descuento = 15;
+      }
+    }
+
+    descuentoSpan.textContent = descuento + "%";
+
+    const totalFinal = Math.round(subtotal - (subtotal * (descuento / 100)));
+    totalVentaSpan.textContent = totalFinal;
   }
 
   function actualizarOpcionesProductos() {
@@ -187,10 +220,17 @@ function inicializarFormularioVenta() {
     }
   }
 
-  // Inicializar filas existentes
+  // Escuchar cambio en cliente para recalcular descuento
+  if (clienteSelect) {
+    clienteSelect.addEventListener('change', () => {
+      recalcularTotal();
+    });
+  }
+
+  // Inicializar eventos para filas existentes
   formsetBody.querySelectorAll('.form-detalle').forEach(actualizarEventosFila);
 
-  // Agregar fila nueva
+  // Agregar nueva fila con botón
   if (addButton) {
     addButton.addEventListener('click', () => {
       let count = parseInt(totalFormsInput.value, 10);
@@ -232,6 +272,7 @@ function inicializarFormularioVenta() {
     });
   }
 
+  // Calcular total inicial
   recalcularTotal();
   actualizarOpcionesProductos();
 }

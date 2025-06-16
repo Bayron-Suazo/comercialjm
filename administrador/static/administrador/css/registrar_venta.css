@@ -222,15 +222,15 @@ body {
   font-size: 48px;
   font-weight: bold;
   background-color: #f3f3f3;
-  border: 2px dashed #4CAF50;
+  border: 2px dashed #57b363;
   padding: 50px 20px;
   border-radius: 12px;
   color: #333;
   text-align: right;
   display: flex;
   justify-content: flex-start;
-  width: fit-content;       /* Aquí crece según contenido */
-  max-width: 100%;          /* No pasa del 100% */
+  width: fit-content;   
+  max-width: 100%;    
   white-space: nowrap;
   overflow-x: auto;
   align-items: center;
@@ -238,7 +238,7 @@ body {
 }
 
 #total-venta {
-  color: #2e7d32;
+  color: #57b363;
   font-size: 48px;
   font-weight: 700;
   white-space: nowrap;
@@ -257,6 +257,34 @@ body {
 .tabla-usuarios thead tr.cabecera-completa th:nth-child(3),
 .tabla-usuarios tbody tr td:nth-child(3) {
   width: 25%;
+}
+
+.subtotal-descuento {
+  background-color: #f1f1f1;
+  border: 1px solid #ccc;
+  padding: 15px 20px;
+  margin-top: 20px;
+  border-radius: 8px;
+  font-size: 20px;
+  color: #333;
+  width: fit-content;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.subtotal-descuento span {
+  font-weight: bold;
+  color: #333;
+}
+
+.subtotal-descuento br {
+  margin-bottom: 10px;
+}
+
+.contenedor-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
 }
 
 @media (max-width: 768px) {
