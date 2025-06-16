@@ -147,7 +147,25 @@
     </form>
   </div>
 </div>
+<div class="custom-pagination">
+  {% if ventas.has_previous %}
+    <a href="?page=1{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&laquo;</a>
+    <a href="?page={{ ventas.previous_page_number }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&lsaquo;</a>
+  {% else %}
+    <span class="page-btn disabled">&laquo;</span>
+    <span class="page-btn disabled">&lsaquo;</span>
+  {% endif %}
 
+  <span class="page-btn current">{{ ventas.number }}</span>
+
+  {% if ventas.has_next %}
+    <a href="?page={{ ventas.next_page_number }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&rsaquo;</a>
+    <a href="?page={{ ventas.paginator.num_pages }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&raquo;</a>
+  {% else %}
+    <span class="page-btn disabled">&rsaquo;</span>
+    <span class="page-btn disabled">&raquo;</span>
+  {% endif %}
+</div>
 {% else %}
 <p style="text-align: center; font-size: 24px; margin-top: 40px;">No hay ventas registradas.</p>
 {% endif %}
@@ -307,6 +325,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+document.addEventListener('DOMContentLoaded', () => {
+  const dropdownBtn = document.getElementById('dropdownMenuButton');
+  const dropdownContent = document.getElementById('filterOptions');
+
+  // Mostrar / ocultar el menú de filtros
+  dropdownBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    dropdownContent.style.display = dropdownContent.style.display === 'none' ? 'block' : 'none';
+  });
+
+  // Ocultar menú si haces clic fuera
+  document.addEventListener('click', (e) => {
+    if (!dropdownBtn.contains(e.target) && !dropdownContent.contains(e.target)) {
+      dropdownContent.style.display = 'none';
+    }
+  });
+});
+
+// Función para aplicar un filtro de orden
+function applyFilter(orderBy) {
+  const currentUrl = new URL(window.location.href);
+  currentUrl.searchParams.set('order_by', orderBy);
+  window.location.href = currentUrl.toString();
+}
+
+// Función para limpiar el filtro
+function clearOrderFilter() {
+  const currentUrl = new URL(window.location.href);
+  currentUrl.searchParams.delete('order_by');
+  window.location.href = currentUrl.toString();
+}
 </script>
 <script src="{% static 'administrador/js/busca_usuarios.js' %}"></script>
 {% endblock %}
