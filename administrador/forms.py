@@ -477,9 +477,66 @@ class AprobarCompraForm(forms.ModelForm):
 # ------------------ CLIENTE ------------------
 
 class ClienteForm(forms.ModelForm):
+    CATEGORIAS = [
+        ('mayorista', 'Mayorista'),
+        ('frecuente', 'Frecuente'),
+    ]
+
+    categoria = forms.ChoiceField(choices=CATEGORIAS)
+
     class Meta:
         model = Cliente
-        fields = ['nombre', 'rut', 'categoria', 'correo', 'telefono']
+        fields = ['nombre', 'rut', 'categoria', 'correo', 'telefono', 'direccion']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'input-estilo', 'id': 'nombre', 'autocomplete': 'off'}),
+            'rut': forms.TextInput(attrs={'class': 'input-estilo', 'id': 'rut', 'autocomplete': 'off'}),
+            'categoria': forms.Select(attrs={'class': 'input-estilo', 'id': 'categoria'}),
+            'correo': forms.EmailInput(attrs={'class': 'input-estilo', 'id': 'correo', 'autocomplete': 'off'}),
+            'telefono': forms.TextInput(attrs={'class': 'input-estilo', 'id': 'telefono', 'autocomplete': 'off'}),
+            'direccion': forms.TextInput(attrs={'class': 'input-estilo', 'id': 'direccion', 'autocomplete': 'off'}),
+        }
+
+
+
+    def clean_nombre(self):
+        nombre = self.cleaned_data['nombre']
+        if not re.match(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$', nombre):
+            raise ValidationError("El nombre solo debe contener letras.")
+        return nombre
+
+    def clean_rut(self):
+        rut = self.cleaned_data.get('rut')
+
+        # Si estamos editando y el RUT no cambió, lo aceptamos directamente
+        if self.instance and self.instance.pk and rut == self.instance.rut:
+            return rut
+
+        # Si es un nuevo registro o cambió el RUT, validamos normalmente
+        if not validar_rut_chileno(rut):
+            raise forms.ValidationError("rut_invalido_swal")
+
+        return rut
+
+
+
+    def clean_categoria(self):
+        categoria = self.cleaned_data['categoria'].lower()
+        if categoria not in ['mayorista', 'frecuente']:
+            raise ValidationError("La categoría debe ser 'mayorista' o 'frecuente'")
+        return categoria
+
+    def clean_correo(self):
+        correo = self.cleaned_data['correo']
+        if "@" not in correo:
+            raise ValidationError("El correo debe contener '@'.")
+        return correo
+
+    def clean_telefono(self):
+        telefono = self.cleaned_data['telefono']
+        if not re.match(r'^9\d{8}$', telefono):
+            raise ValidationError("El teléfono debe comenzar con 9 y tener 9 dígitos en total.")
+        return telefono
+    
 
 from django import forms
 from registration .models import Producto, ProductoUnidad, UnidadMedida
@@ -685,66 +742,7 @@ def validar_rut_chileno(rut):
         return False
 
 
-class ClienteForm(forms.ModelForm):
-    CATEGORIAS = [
-        ('mayorista', 'Mayorista'),
-        ('frecuente', 'Frecuente'),
-        ('ambos', 'Ambos'),
-    ]
 
-    categoria = forms.ChoiceField(choices=CATEGORIAS)
-
-    class Meta:
-        model = Cliente
-        fields = ['nombre', 'rut', 'categoria', 'correo', 'telefono']
-        widgets = {
-            'nombre': forms.TextInput(attrs={'class': 'input-estilo', 'id': 'nombre', 'autocomplete': 'off'}),
-            'rut': forms.TextInput(attrs={'class': 'input-estilo', 'id': 'rut', 'autocomplete': 'off'}),
-            'categoria': forms.Select(attrs={'class': 'input-estilo', 'id': 'categoria'}),
-            'correo': forms.EmailInput(attrs={'class': 'input-estilo', 'id': 'correo', 'autocomplete': 'off'}),
-            'telefono': forms.TextInput(attrs={'class': 'input-estilo', 'id': 'telefono', 'autocomplete': 'off'}),
-        }
-
-
-
-    def clean_nombre(self):
-        nombre = self.cleaned_data['nombre']
-        if not re.match(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$', nombre):
-            raise ValidationError("El nombre solo debe contener letras.")
-        return nombre
-
-    def clean_rut(self):
-        rut = self.cleaned_data.get('rut')
-
-        # Si estamos editando y el RUT no cambió, lo aceptamos directamente
-        if self.instance and self.instance.pk and rut == self.instance.rut:
-            return rut
-
-        # Si es un nuevo registro o cambió el RUT, validamos normalmente
-        if not validar_rut_chileno(rut):
-            raise forms.ValidationError("rut_invalido_swal")
-
-        return rut
-
-
-
-    def clean_categoria(self):
-        categoria = self.cleaned_data['categoria'].lower()
-        if categoria not in ['mayorista', 'frecuente', 'ambos']:
-            raise ValidationError("La categoría debe ser 'mayorista', 'frecuente' o 'ambos'.")
-        return categoria
-
-    def clean_correo(self):
-        correo = self.cleaned_data['correo']
-        if "@" not in correo:
-            raise ValidationError("El correo debe contener '@'.")
-        return correo
-
-    def clean_telefono(self):
-        telefono = self.cleaned_data['telefono']
-        if not re.match(r'^9\d{8}$', telefono):
-            raise ValidationError("El teléfono debe comenzar con 9 y tener 9 dígitos en total.")
-        return telefono
     
 class CargaMasivaProveedorForm(forms.Form):
     archivo = forms.FileField(label="Archivo Excel", required=True)

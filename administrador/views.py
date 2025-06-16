@@ -1493,13 +1493,101 @@ def deshacer_merma(request, merma_id):
 
 
 
+@login_required
 def listar_clientes_activos(request):
-    clientes = Cliente.objects.filter(activo=True)
-    return render(request, 'administrador/listar_clientes_activos.html', {'clientes': clientes})
+    order_by = request.GET.get('order_by', '')
 
+    clientes_activos = Cliente.objects.filter(activo=True)
+
+    if order_by:
+        if order_by == 'nombre':
+            clientes = clientes_activos.order_by('nombre')
+        elif order_by == 'rut':
+            clientes = clientes_activos.order_by('rut')
+        else:
+            clientes = clientes_activos
+    else:
+        clientes = clientes_activos
+
+    paginator = Paginator(clientes, 10)
+    page_number = request.GET.get('page')
+    clientes = paginator.get_page(page_number)
+
+    return render(request, 'administrador/listar_clientes_activos.html', {
+        'clientes': clientes,
+        'order_by': order_by
+    })
+
+@require_POST
+@login_required
+def bloquear_cliente(request):
+    try:
+        cliente_id = request.POST.get('cliente_id')
+        cliente_ids = json.loads(request.POST.get('cliente_ids', '[]')) if request.POST.get('cliente_ids') else []
+
+        if cliente_id:
+            cliente_ids = [cliente_id]
+
+        cliente_ids = [int(uid) for uid in cliente_ids]
+        clientes = Cliente.objects.filter(id__in=cliente_ids, activo=True)
+        updated_count = clientes.update(activo=False)
+
+        return JsonResponse({'success': True, 'updated': updated_count})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
 def listar_clientes_inactivos(request):
-    clientes = Cliente.objects.filter(activo=False)
-    return render(request, 'administrador/listar_clientes_inactivos.html', {'clientes': clientes})
+    order_by = request.GET.get('order_by', '')
+
+    clientes_bloqueados = Cliente.objects.filter(activo=False)
+
+    if order_by:
+        if order_by == 'nombre':
+            clientes = clientes_bloqueados.order_by('nombre')
+        elif order_by == 'rut':
+            clientes = clientes_bloqueados.order_by('rut')
+        else:
+            clientes = clientes_bloqueados 
+    else:
+        clientes = clientes_bloqueados  
+
+    paginator = Paginator(clientes, 10)
+    page_number = request.GET.get('page')
+    clientes = paginator.get_page(page_number)
+
+    return render(
+        request,
+        'administrador/listar_clientes_inactivos.html',
+        {'clientes': clientes, 'order_by': order_by}
+    )
+
+
+@require_POST
+@login_required
+def activar_cliente(request):
+    try:
+        cliente_id = request.POST.get('cliente_id')
+        cliente_ids = json.loads(request.POST.get('cliente_ids', '[]')) if request.POST.get('cliente_ids') else []
+
+        if cliente_id:
+            cliente_ids = [int(cliente_id)]
+
+        cliente_ids = [int(uid) for uid in cliente_ids]
+        clientes = Cliente.objects.filter(id__in=cliente_ids, activo=False)
+
+        updated_count = 0
+        for cliente in clientes:
+            cliente.activo = True
+            cliente.save()
+            updated_count += 1
+
+        return JsonResponse({'success': True, 'updated': updated_count})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
 
 def crear_cliente(request):
     if request.method == 'POST':
@@ -1508,30 +1596,36 @@ def crear_cliente(request):
             cliente = form.save(commit=False)
             cliente.activo = True
             cliente.save()
-
-            return redirect('listar_clientes_activos')  
+            return redirect('listar_clientes_activos')
+        else:
+            print("Errores del formulario:", form.errors) 
     else:
         form = ClienteForm()
-    
+
     return render(request, 'administrador/crear_cliente.html', {'form': form})
-
-def eliminar_cliente(request, pk):
-    cliente = get_object_or_404(Cliente, pk=pk)
-    cliente.delete()
-    return redirect('listar_clientes_activos')
-
-def toggle_estado_cliente(request, pk):
-    cliente = get_object_or_404(Cliente, pk=pk)
-    cliente.activo = not cliente.activo  
-    cliente.save()
-
-    if cliente.activo:
-        return redirect('listar_clientes_inactivos')
-    else:
-        return redirect('listar_clientes_activos')
     
+
 def ranking_clientes(request):
-    return render(request, 'administrador/ranking_clientes.html') 
+    q = request.GET.get('q', '')
+
+    clientes = Cliente.objects.filter(activo=True)
+
+    if q:
+        clientes = clientes.filter(
+            Q(nombre__icontains=q) |
+            Q(rut__icontains=q) |
+            Q(categoria__icontains=q)
+        )
+
+    clientes = clientes.annotate(
+        total_ventas=Sum('ventas__total'),
+        cantidad_ventas=Count('ventas')
+    ).order_by('-cantidad_ventas')
+
+    return render(request, 'administrador/ranking_clientes.html', {
+        'clientes': clientes
+    })
+
 
 def dashboard_clientes(request):
     total_clientes = Cliente.objects.count()
@@ -1568,6 +1662,20 @@ def editar_cliente(request, cliente_id):
     return render(request, 'administrador/editar_clientes.html', {'form': form})
 
 
+from django.db.models import Prefetch
+def detalle_compras_cliente(request, cliente_id):
+    cliente = get_object_or_404(Cliente, id=cliente_id)
+    ventas = Venta.objects.filter(cliente=cliente).prefetch_related(
+        Prefetch('detalles', queryset=DetalleVenta.objects.select_related('producto_unidad__producto'))
+    )
+
+    return render(request, 'administrador/detalle_compras_cliente.html', {
+        'cliente': cliente,
+        'ventas': ventas
+    })
+
+
+# ------------------------------------ GESTIÓN DE PRODUCTOS ------------------------------------
 
 
 def dashboard_productos(request):

@@ -41,14 +41,15 @@ urlpatterns = [
 
 
     # CLIENTES
-    path('clientes/<int:pk>/desactivar/', views.toggle_estado_cliente, name='toggle_estado_cliente'),
     path('clientes/crear/', views.crear_cliente, name='crear_cliente'),
-    path('clientes/eliminar/<int:pk>/', views.eliminar_cliente, name='eliminar_cliente'),
     path('clientes/dashboard/', views.dashboard_clientes, name='dashboard_clientes'),
     path('clientes/activos/', views.listar_clientes_activos, name='listar_clientes_activos'),
     path('clientes/inactivos/', views.listar_clientes_inactivos, name='listar_clientes_inactivos'),
     path('clientes/ranking/', views.ranking_clientes, name='ranking_clientes'),
     path('clientes/editar/<int:cliente_id>/', views.editar_cliente, name='editar_clientes'),
+    path('clientes/<int:cliente_id>/compras/', views.detalle_compras_cliente, name='detalle_compras_cliente'),
+    path('clientes/bloquear/', views.bloquear_cliente, name='bloquear_cliente'),
+    path('clientes/activar/', views.activar_cliente, name='activar_cliente'),
 
 
     # PRODUCTOS

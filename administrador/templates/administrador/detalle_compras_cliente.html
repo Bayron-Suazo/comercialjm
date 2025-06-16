@@ -1,0 +1,64 @@
+{% extends 'core/base_admin.html' %}
+{% load static %}
+
+{% block title %}Compras de {{ cliente.nombre }}{% endblock %}
+
+{% block extra_head %}
+<link href="{% static 'administrador/css/detalle_compras_cliente.css' %}" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+{% endblock %}
+
+{% block content %}
+<div class="detalle-container">
+    <h1 class="titulo-venta">Compras de {{ cliente.nombre }}</h1>
+
+    <div class="cliente-info">
+        <p><strong>RUT:</strong> {{ cliente.rut }}</p>
+        <p><strong>Categoría:</strong> {{ cliente.categoria }}</p>
+        <p><strong>Correo:</strong> {{ cliente.correo }}</p>
+        <p><strong>Teléfono:</strong> {{ cliente.telefono }}</p>
+    </div>
+
+    {% if ventas %}
+        {% for venta in ventas %}
+        <div class="bloque-venta">
+            <h3>Venta #{{ venta.id }}</h3>
+            
+            <div class="info-venta">
+                <p><strong>Fecha:</strong> {{ venta.fecha|date:"d/m/Y H:i" }}</p>
+                <p><strong>Método de pago:</strong> {{ venta.metodo_pago|capfirst }}</p>
+                <p><strong>Total:</strong> <span class="valor-dinero">${{ venta.total|floatformat:0  }}</span></p>
+            </div>
+
+            <table class="tabla-detalle">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detalle in venta.detalles.all %}
+                    <tr>
+                        <td>{{ detalle.producto_unidad.producto.nombre }} - {{ detalle.producto_unidad.get_unidad_medida_display }}</td>
+                        <td>{{ detalle.cantidad }}</td>
+                        <td>${{ detalle.subtotal|floatformat:0  }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="sin-compras">
+            <i class="fas fa-shopping-cart" style="font-size: 2em; margin-bottom: 15px; color: #ccc;"></i>
+            <p>Este cliente aún no ha realizado compras.</p>
+        </div>
+    {% endif %}
+
+    <a href="{% url 'ranking_clientes' %}" class="volver-link">
+        Ranking de Clientes
+    </a>
+</div>
+{% endblock %}

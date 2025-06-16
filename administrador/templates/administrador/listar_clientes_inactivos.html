@@ -1,106 +1,263 @@
 {% extends 'core/base_admin.html' %}
 {% load static %}
 
-{% block title %}Listado de Clientes Inactivos{% endblock %}
+{% block title %}Listado de clientes inactivos{% endblock %}
 
 {% block extra_head %}
-<link href="{% static 'administrador/css/productos.css' %}" rel="stylesheet"/>
-<link href="{% static 'administrador/css/lista_usuarios.css' %}" rel="stylesheet"/>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+
+    <link rel="stylesheet" href="{% static 'administrador/css/lista_usuarios.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 {% endblock %}
 
 {% block content %}
+
 <div class="acciones-derecha ancho-contenido">
-  <a class="boton-header" href="#" id="carga-masiva-btn">
-          Carga masiva
-          <img src="{% static 'administrador/svg/carga-masiva.svg' %}"/>
-  </a>
-  <a class="boton-header" href="{% url 'dashboard_clientes' %}">
-          Dashboard
-          <img src="{% static 'administrador/svg/reporteria.svg' %}"/>
-  </a>
-  <a class="boton-header" href="{% url 'ranking_clientes' %}">
-          Beneficios y descuentos
-          <i class="fa fa-percent"></i>
-  </a>
+    <a class="boton-header" href="{% url 'dashboard_clientes' %}">
+        Dashboard Clientes
+        <img src="{% static 'administrador/svg/reporteria.svg' %}">
+    </a>
 
-  <a class="boton-header" href="{% url 'crear_cliente' %}">
-          Agregar clientes 
-          <img src="{% static 'administrador/svg/plus.svg' %}"/>
-  </a>
-  
+    <a href="{% url 'ranking_clientes' %}" class="boton-header">
+        Ranking de Clientes
+        <img src="{% static 'administrador/svg/user-profile.svg' %}">
+    </a>
+
+    <a href="{% url 'crear_cliente' %}" class="boton-header">
+        Agregar Cliente
+        <img src="{% static 'administrador/svg/plus.svg' %}">
+    </a>
+    
 </div>
 
-<div style="margin-top: 40px;"></div>
+<h2 class="titulo">Listado de Clientes Bloqueados</h2>
 
-<h1 class="titulo-pagina">Listado de Clientes Inactivos</h1>
+<div class="busqueda-agregar">
+    <input type="text" placeholder="Buscar Cliente .........." class="input-busqueda">
 
-<div class="buscador-wrapper">
-  <form action="" method="GET">
-    <div class="contenedor-busqueda">
-      <div class="input-icono">
-        <input name="q" placeholder="Buscar Cliente..." type="text"/>
-        <i class="fa fa-search icono-input"></i>
-      </div>
-      <button class="btn-filtrar" type="submit">
-        Filtrar <i class="fa fa-filter"></i>
-      </button>
+
+    <div class="dropdown">
+        <a href="#" class="boton-header" id="dropdownMenuButton">
+            Filtrar
+            <img src="{% static 'administrador/svg/filter-solid.svg' %}">
+        </a>
+        <ul id="filterOptions" class="dropdown-content" style="display:none;">
+            <li><a href="#" onclick="applyFilter('nombre')" data-filter="nombre" class="{% if order_by == 'nombre' %}filtro-activo{% endif %}">Nombre</a></li>
+            <li><a href="#" onclick="applyFilter('rut')" data-filter="rut" class="{% if order_by == 'rut' %}filtro-activo{% endif %}">Rut</a></li>
+            <li><a href="#" onclick="clearOrderFilter()">Limpiar filtro</a></li>
+        </ul>
     </div>
-  </form>
+</div>
 
-  <div class="selector-estado">
-    <a href="{% url 'listar_clientes_activos' %}" class="{% if request.path == '/administrador/clientes/activos/' %}activo{% endif %}">Clientes Activos</a>
-    <a href="{% url 'listar_clientes_inactivos' %}" class="{% if request.path == '/administrador/clientes/inactivos/' %}activo{% endif %}">Clientes Inactivos</a>
+<div class="barra-acciones-usuarios ancho-contenido">
+    <div class="boton-activar-seleccionados">
+        <button id="activarBtn" disabled>Activar</button>
+    </div>
+
+    <div class="toggle-estado-usuarios">
+        <a href="{% url 'listar_clientes_activos' %}" class="estado-btn">Activos</a>
+        <a href="{% url 'listar_clientes_inactivos' %}" class="estado-btn activo">Bloqueados</a>
+    </div>
+</div>
+
+<div id="confirmModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>¿Activar Cliente?</h3>
+    <p>Los clientes activados volverán al listado de clientes activos y podrán realizar compras nuevamente.</p>
+    <div class="modal-actions">
+      <button type="button" id="confirmNo">Cancelar</button>
+      <button type="button" id="confirmYes">Confirmar</button>
+    </div>
   </div>
-  
 </div>
 
-<div class="filtro-busqueda ancho-contenido">
-  <form class="formulario-busqueda" method="GET">
-    <!-- Opcional: filtros -->
-  </form>
-</div>
+{% if clientes %}
+    <table class="tabla-usuarios tabla-productos">
+        <thead>
+            <tr>
+                <th><input type="checkbox" id="select-all-clientes"></th>
+                <th>Nombre</th>
+                <th>RUT</th>
+                <th>Categoría</th>
+                <th>Correo</th>
+                <th>Teléfono</th>
+                <th class="acciones-header">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cliente in clientes %}
+            <tr>
+                <td data-label="Seleccionar">
+                    <input type="checkbox" class="select-cliente" data-cliente-id="{{ cliente.id }}">
+                </td>
+                <td data-label="Nombre">{{ cliente.nombre }}</td>
+                <td data-label="RUT">{{ cliente.rut }}</td>
+                <td data-label="Categoría">{{ cliente.categoria }}</td>
+                <td data-label="Correo" class="correo-cell" title="{{ cliente.correo }}">{{ cliente.correo }}</td>
+                <td data-label="Teléfono">{{ cliente.telefono }}</td>
+                <td data-label="Acciones" class="acciones">
+                    <a href="{% url 'editar_clientes' cliente.id %}" title="Editar">
+                        <img src="{% static 'administrador/svg/lapiz.svg' %}" alt="Editar">
+                    </a>
+                    <button title="Activar" class="btn-activar" data-cliente-id="{{ cliente.id }}">
+                        <img src="{% static 'core/svg/lock-solid.svg' %}" alt="Activar">
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-<div class="contenedor-tabla ancho-contenido">
-  <table class="tabla-usuarios tabla-productos">
-    <thead>
-      <tr>
-        <th><input type="checkbox" disabled/></th>
-        <th>Nombre</th>
-        <th>RUT</th>
-        <th>Categoría</th>
-        <th>Correo</th>
-        <th>Teléfono</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for cliente in clientes %}
-      <tr>
-        <td><input type="checkbox" disabled /></td>
-        <td>{{ cliente.nombre }}</td>
-        <td>{{ cliente.rut }}</td>
-        <td>{{ cliente.categoria }}</td>
-        <td>{{ cliente.correo }}</td>
-        <td>{{ cliente.telefono }}</td>
-        <td class="acciones">
-          <a href="{% url 'editar_clientes' cliente.id %}" class="btn-editar">
-            <i class="fas fa-edit"></i>
-          </a>
-          <a href="{% url 'toggle_estado_cliente' pk=cliente.id %}" title="Activar" onclick="return confirm('¿Estás seguro de activar este cliente?');">
-            <i class="fa fa-lock-open" style="color: blue;"></i>
-          </a>
-          <a href="{% url 'eliminar_cliente' pk=cliente.id %}" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar este cliente?');">
-                <i class="fa fa-trash" style="color: blue;"></i>
-          </a>      
-        </td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="7">No hay clientes Inactivos.</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+    <div class="custom-pagination">
+        {% if clientes.has_previous %}
+        <a href="?page=1{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&laquo;</a>
+        <a href="?page={{ clientes.previous_page_number }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&lsaquo;</a>
+        {% else %}
+        <span class="page-btn disabled">&laquo;</span>
+        <span class="page-btn disabled">&lsaquo;</span>
+        {% endif %}
+
+        <span class="page-btn current">{{ clientes.number }}</span>
+
+        {% if clientes.has_next %}
+        <a href="?page={{ clientes.next_page_number }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&rsaquo;</a>
+        <a href="?page={{ clientes.paginator.num_pages }}{% if order_by %}&order_by={{ order_by }}{% endif %}" class="page-btn">&raquo;</a>
+        {% else %}
+        <span class="page-btn disabled">&rsaquo;</span>
+        <span class="page-btn disabled">&raquo;</span>
+        {% endif %}
+    </div>
+    {% else %}
+    <p style="text-align: center; font-size: 24px; margin-top: 40px;">No hay clientes inactivos.</p>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- FILTRO ---
+    const dropdownBtn = document.getElementById('dropdownMenuButton');
+    const filterOptions = document.getElementById('filterOptions');
+
+    dropdownBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        filterOptions.style.display = filterOptions.style.display === 'none' ? 'block' : 'none';
+    });
+
+    window.applyFilter = function (filter) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('order_by', filter);
+        url.searchParams.set('page', 1);
+        window.location.href = url.toString();
+    };
+
+    window.clearOrderFilter = function () {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('order_by');
+        url.searchParams.set('page', 1);
+        window.location.href = url.toString();
+    };
+
+    // --- SELECCIÓN DE CLIENTES ---
+    const activarBtn = document.querySelector('#activarBtn');
+    const checkboxes = document.querySelectorAll('.select-cliente');
+    const selectAll = document.getElementById('select-all-clientes');
+
+    function updateActivarButton() {
+        const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+        activarBtn.disabled = !anyChecked;
+        activarBtn.classList.toggle('activo', anyChecked);
+    }
+
+    checkboxes.forEach(cb => cb.addEventListener('change', updateActivarButton));
+
+    selectAll.addEventListener('change', () => {
+        checkboxes.forEach(cb => cb.checked = selectAll.checked);
+        updateActivarButton();
+    });
+
+    updateActivarButton();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const activarBtn = document.querySelector('#activarBtn');
+    const checkboxes = document.querySelectorAll('.select-cliente');
+    const selectAll = document.getElementById('select-all-clientes');
+    const confirmModal = document.getElementById('confirmModal');
+    const confirmYes = document.getElementById('confirmYes');
+    const confirmNo = document.getElementById('confirmNo');
+    let selectedIds = [];
+
+    // Mostrar modal al presionar "Activar"
+    activarBtn.addEventListener('click', () => {
+        selectedIds = Array.from(checkboxes)
+                          .filter(cb => cb.checked)
+                          .map(cb => cb.getAttribute('data-cliente-id'));
+
+        if (selectedIds.length > 0) {
+            confirmModal.classList.remove('hidden');
+        }
+    });
+
+    // Activar desde botón individual (de una fila)
+    document.querySelectorAll('.btn-activar').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            selectedIds = [btn.getAttribute('data-cliente-id')];
+            confirmModal.classList.remove('hidden');
+        });
+    });
+
+    // Función para obtener el token CSRF desde la cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const csrfToken = getCookie('csrftoken');
+
+    confirmYes.addEventListener('click', () => {
+        fetch("{% url 'activar_cliente' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrfToken
+            },
+            body: new URLSearchParams({
+                'cliente_ids': JSON.stringify(selectedIds)
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.updated > 0) {
+                location.reload();  // recarga sin mostrar JSON
+            } else {
+                alert("No se pudieron activar clientes.");
+            }
+        })
+        .catch(error => {
+            console.error(error);
+            alert("Error en la activación.");
+        });
+    });
+
+    // Cancelar acción
+    confirmNo.addEventListener('click', () => {
+        confirmModal.classList.add('hidden');
+        selectedIds = [];
+    });
+});
+</script>
+
+<script src="{% static 'administrador/js/busca_usuarios.js' %}"></script>
 {% endblock %}
